@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand};
+use dotenv::dotenv;
 use ethers::providers::Middleware;
 use ethers::types::{Address, TransactionRequest};
 use rootstock_wallet::provider;
 use rootstock_wallet::qr::generate_qr_code;
 use rootstock_wallet::wallet::Wallet;
+use rootstock_wallet::web;
 use std::str::FromStr;
-use dotenv::dotenv;
 
 #[derive(Parser)]
 #[command(name = "Rootstock Wallet")]
@@ -331,7 +332,14 @@ async fn handle_estimate_gas(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
     env_logger::init(); // Initialize the logger
+
+    tokio::spawn(async {
+        if let Err(e) = web::start_web_server().await {
+            eprintln!("Failed to start web server: {}", e);
+        }
+    });
 
     let wallet_file = "wallet.json";
 

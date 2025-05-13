@@ -3,3 +3,4 @@ pub mod provider;
 pub mod qr;
 pub mod transactions;
 pub mod wallet;
+pub mod web;
