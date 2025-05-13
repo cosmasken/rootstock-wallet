@@ -31,7 +31,11 @@ impl TransactionService {
         provider: Provider<Http>,
         private_key: Zeroizing<String>,
     ) -> Result<Self, TransferError> {
-        let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(31u64); // Chain ID 31 for Rootstock Testnet
+        let chain_id: u64 = std::env::var("CHAIN_ID")
+            .expect("CHAIN_ID environment variable not set")
+            .parse()
+            .expect("Invalid CHAIN_ID value");
+        let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id); // Chain ID 31 for Rootstock Testnet
         Ok(Self { provider, wallet })
     }
 
