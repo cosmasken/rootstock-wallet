@@ -50,162 +50,162 @@ Run the CLI application:
    Send RBTC to a recipient address.
 
    ```bash
-   ./rootstock-wallet transfer --recipient <ADDRESS> --amount <AMOUNT>
+   ./target/release/rootstock-wallet transfer --recipient <ADDRESS> --amount <AMOUNT>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
+   ./target/release/rootstock-wallet transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
    ```
 
 2. **Get Balance**:
    Fetch the RBTC balance of an address.
 
    ```bash
-   ./rootstock-wallet get-balance --address <ADDRESS>
+   ./target/release/rootstock-wallet get-balance --address <ADDRESS>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet get-balance --address 0x7be423bf55e894f05a2b2f6a692d00ce258b203d
+   ./target/release/rootstock-wallet get-balance --address 0x7be423bf55e894f05a2b2f6a692d00ce258b203d
    ```
 
 3. **Show Wallet**:
    Display the wallet's address and public key.
 
    ```bash
-   ./rootstock-wallet show-wallet
+   ./target/release/rootstock-wallet show-wallet
    ```
 
 4. **Generate QR Code**:
    Generate a QR code for the wallet address.
 
    ```bash
-   ./rootstock-wallet generate-qr --output <FILENAME>
+   ./target/release/rootstock-wallet generate-qr --output <FILENAME>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet generate-qr --output wallet_qr.png
+   ./target/release/rootstock-wallet generate-qr --output wallet_qr.png
    ```
 
 5. **Estimate Gas**:
    Estimate gas costs for a transaction.
 
    ```bash
-   ./rootstock-wallet estimate-gas --recipient <ADDRESS> --amount <AMOUNT>
+   ./target/release/rootstock-wallet estimate-gas  <ADDRESS>  <AMOUNT>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet estimate-gas --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
+   ./target/release/rootstock-wallet estimate-gas  0x09aB514B6974601967E7b379478EFf4073cceD06  0.0001
    ```
 
 6. **Export Private Key**:
    Export the wallet's private key to a file.
 
    ```bash
-   ./rootstock-wallet export-private-key --output <FILENAME>
+   ./target/release/rootstock-wallet export-private-key --output <FILENAME>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet export-private-key --output private.key
+   ./target/release/rootstock-wallet export-private-key --output private.key
    ```
 
 7. **Import Wallet**:
    Import a wallet from a mnemonic phrase or private key.
 
    ```bash
-   ./rootstock-wallet import-wallet --mnemonic <MNEMONIC> --private-key <PRIVATE_KEY>
+   ./target/release/rootstock-wallet import-wallet --mnemonic <MNEMONIC> --private-key <PRIVATE_KEY>
    ```
 
    Example (using a mnemonic):
 
    ```bash
-   ./rootstock-wallet import-wallet --mnemonic "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+   ./target/release/rootstock-wallet import-wallet --mnemonic "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
    ```
 
    Example (using a private key):
 
    ```bash
-   ./rootstock-wallet import-wallet --private-key 4e944490912ef6c16fd8731beadf228c601da4ac0a6bd6b0b348a0a92f32d97f
+   ./target/release/rootstock-wallet import-wallet --private-key 4e944490912ef6c16fd8731beadf228c601da4ac0a6bd6b0b348a0a92f32d97f
    ```
 
 8. **Export Keystore**:
    Export the wallet in JSON keystore format.
 
    ```bash
-   ./rootstock-wallet export-keystore --password <PASSWORD> --output <FILENAME>
+   ./target/release/rootstock-wallet export-keystore --password <PASSWORD> --output <FILENAME>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet export-keystore --password mypassword --output keystore.json
+   ./target/release/rootstock-wallet export-keystore --password mypassword --output keystore.json
    ```
 
 9. **Create Multi-Signature Wallet**:
    Deploy a multi-signature wallet contract with specified owners and required approvals.
 
    ```bash
-   ./rootstock-wallet create-multisig --owners <OWNER1> <OWNER2> ... --required <NUMBER>
+   ./target/release/rootstock-wallet create-multisig --owners <OWNER1> <OWNER2> ... --required <NUMBER>
    ```
 
    Example:
 
    ```bash
-   ./rootstock-wallet create-multisig --owners 0xOwner1 0xOwner2 0xOwner3 --required 2
+   ./target/release/rootstock-wallet create-multisig --owners 0xOwner1 0xOwner2 0xOwner3 --required 2
    ```
 
 10. **Propose Transaction**:
     Propose a transaction requiring multiple approvals.
 
     ```bash
-    ./rootstock-wallet propose-transaction --multisig <MULTISIG_ADDRESS> --to <RECIPIENT> --value <AMOUNT> --data <DATA>
+    ./target/release/rootstock-wallet propose-transaction --multisig <MULTISIG_ADDRESS> --to <RECIPIENT> --value <AMOUNT> --data <DATA>
     ```
 
     Example:
 
     ```bash
-    ./rootstock-wallet propose-transaction --multisig 0xMultisigAddress --to 0xRecipientAddress --value 0.1 --data 0x
+    ./target/release/rootstock-wallet propose-transaction --multisig 0xMultisigAddress --to 0xRecipientAddress --value 0.1 --data 0x
     ```
 
 11. **Approve Transaction**:
     Approve a proposed transaction.
 
     ```bash
-    ./rootstock-wallet approve-transaction --multisig <MULTISIG_ADDRESS> --tx-id <TRANSACTION_ID>
+    ./target/release/rootstock-wallet approve-transaction --multisig <MULTISIG_ADDRESS> --tx-id <TRANSACTION_ID>
     ```
 
     Example:
 
     ```bash
-    ./rootstock-wallet approve-transaction --multisig 0xMultisigAddress --tx-id 1
+    ./target/release/rootstock-wallet approve-transaction --multisig 0xMultisigAddress --tx-id 1
     ```
 
 12. **Network Info**:
     Display current network information (block number, gas price, chain ID).
 
     ```bash
-    ./rootstock-wallet network-info
+    ./target/release/rootstock-wallet network-info
     ```
 13. **Transfer ERC-20 Tokens**:
     Transfer tokens like RIF, DOC, SOV, or rUSDT.
 
     ```bash
-    ./rootstock-wallet transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT>
+    ./target/release/rootstock-wallet transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT>
     ```
 
     Example:
 
     ```bash
-    ./rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
+    ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
     ```
 
 ## Configuration
@@ -215,7 +215,14 @@ The application connects to the Rootstock network using the public JSON-RPC endp
 - **Mainnet**: `https://public-node.rsk.co`
 - **Testnet**: `https://public-node.testnet.rsk.co`
 
-You can modify the provider URL in the `provider.rs` file if needed.
+Additionally, the `.env` file includes the following configurations:
+
+- `CHAIN_ID="mainnet-or-testnet-id"`: Specifies the chain ID for the network (e.g., Mainnet or Testnet).
+- `API_KEY="your-api-key-here"`: Your Rootstock API key for accessing the JSON-RPC endpoint.
+
+Ensure these variables are properly set in your environment file before running the application.
+
+You can modify the provider URL in the env files file if needed.
 
 ## Contribution
 
