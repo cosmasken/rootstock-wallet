@@ -24,3 +24,4 @@ clap = { version = "4.5.36", features = ["derive"] }
 k256 = "0.13.4"
 env_logger = "0.11.8"
 log = "0.4.27"
+dotenv = "0.15.0"

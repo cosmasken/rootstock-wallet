@@ -1,6 +1,7 @@
 use crate::transactions::{TransactionService, TransferError};
-use ethers::types::transaction::eip2718::TypedTransaction;
+use bip32::DerivationPath;
 use ethers::signers::{Signer, Wallet as EthersWallet};
+use ethers::types::transaction::eip2718::TypedTransaction;
 use ethers_providers::Http;
 use ethers_providers::Provider;
 use rand::{TryRngCore, rngs::OsRng};
@@ -11,7 +12,6 @@ use std::fs;
 use std::str::FromStr;
 use zeroize::Zeroize;
 use zeroize::Zeroizing;
-use bip32::DerivationPath;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Wallet {
@@ -87,23 +87,23 @@ impl Wallet {
     pub fn from_mnemonic(mnemonic: &str) -> Result<Self, Box<dyn std::error::Error>> {
         // Parse the mnemonic phrase into a BIP-39 mnemonic
         let mnemonic = bip39::Mnemonic::parse(mnemonic)?;
-    
+
         // Generate the seed from the mnemonic
         let seed = mnemonic.to_seed("");
-    
+
         // Define the HD path for Rootstock (m/44'/137'/0'/0/0)
         let hd_path = hdpath::StandardHDPath::new(hdpath::Purpose::Pubkey, 137, 0, 0, 0);
-    
+
         // Convert the HD path to a string and parse it into a derivation path
         let derivation_path = DerivationPath::from_str(&hd_path.to_string())?;
-    
+
         // Derive the extended private key (XPrv) from the seed and derivation path
         let xprv = bip32::XPrv::derive_from_path(&seed, &derivation_path)?;
-    
+
         // Extract the raw private key bytes from the XPrv
         let secret_key = secp256k1::SecretKey::from_slice(&xprv.private_key().to_bytes())
             .map_err(|_| "Failed to convert private key")?;
-    
+
         // Create a Wallet instance from the derived secret key
         Ok(Self::from_secret_key(secret_key))
     }
@@ -135,13 +135,13 @@ impl Wallet {
     }
 
     // pub fn to_keystore(private_key: &str, password: &str) -> Result<String, Box<dyn std::error::Error>> {
-    
+
     //     // Convert the private key from hex to bytes
     //     let private_key_bytes = hex::decode(private_key)?;
-    
+
     //     // Encrypt the private key with the provided password
     //     let keystore = Keystore::new(&private_key_bytes, password)?;
-    
+
     //     // Serialize the keystore to JSON
     //     let keystore_json = serde_json::to_string_pretty(&keystore)?;
     //     Ok(keystore_json)

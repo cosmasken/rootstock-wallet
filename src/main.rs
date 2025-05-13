@@ -5,6 +5,7 @@ use rootstock_wallet::provider;
 use rootstock_wallet::qr::generate_qr_code;
 use rootstock_wallet::wallet::Wallet;
 use std::str::FromStr;
+use dotenv::dotenv;
 
 #[derive(Parser)]
 #[command(name = "Rootstock Wallet")]
@@ -79,13 +80,13 @@ enum Commands {
         tx_id: u64, // Transaction ID
     },
     TransferToken {
-    #[arg(short, long)]
-    token_address: String, // ERC-20 token contract address
-    #[arg(short, long)]
-    recipient: String, // Recipient address
-    #[arg(short, long)]
-    amount: String, // Amount to transfer
-}
+        #[arg(short, long)]
+        token_address: String, // ERC-20 token contract address
+        #[arg(short, long)]
+        recipient: String, // Recipient address
+        #[arg(short, long)]
+        amount: String, // Amount to transfer
+    },
 }
 
 async fn handle_transfer_token(
@@ -106,7 +107,8 @@ async fn handle_transfer_token(
     // Load the ERC-20 contract ABI
     let erc20_abi = include_str!("abi/ERC20.json");
     let erc20_abi: ethers::abi::Abi = serde_json::from_str(erc20_abi)?;
-    let erc20_contract = ethers::contract::Contract::new(token_address, erc20_abi, provider.clone().into());
+    let erc20_contract =
+        ethers::contract::Contract::new(token_address, erc20_abi, provider.clone().into());
 
     // Create the transfer transaction
     let tx = erc20_contract
@@ -262,25 +264,40 @@ async fn handle_transfer(
     amount: &str,
     wallet: &Wallet,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    dotenv().ok();
     let provider = provider::get_provider();
 
     let amount = ethers::utils::parse_units(amount, "ether")
         .map_err(|e| format!("Failed to parse amount: {}", e))?;
-    let recipient = recipient.parse::<Address>()
+    let recipient = recipient
+        .parse::<Address>()
         .map_err(|e| format!("Invalid recipient address: {}", e))?;
+    let chain_id: u64 = std::env::var("CHAIN_ID")
+        .expect("CHAIN_ID environment variable not set")
+        .parse()
+        .expect("Invalid CHAIN_ID value");
 
     let tx = ethers::types::TransactionRequest::new()
         .to(recipient)
         .value(amount)
         .from(wallet.address.parse::<Address>()?)
-        .chain_id(31u64)
+        .chain_id(chain_id)
         .gas(21000)
-        .gas_price(provider.get_gas_price().await.map_err(|e| format!("Failed to fetch gas price: {}", e))?);
+        .gas_price(
+            provider
+                .get_gas_price()
+                .await
+                .map_err(|e| format!("Failed to fetch gas price: {}", e))?,
+        );
 
-    let signed_tx = wallet.sign_transaction(&tx.into()).await
+    let signed_tx = wallet
+        .sign_transaction(&tx.into())
+        .await
         .map_err(|e| format!("Failed to sign transaction: {}", e))?;
 
-    let tx_hash = provider.send_raw_transaction(signed_tx).await
+    let tx_hash = provider
+        .send_raw_transaction(signed_tx)
+        .await
         .map_err(|e| format!("Failed to send transaction: {}", e))?;
     log::info!("Transaction successful with hash: {:?}", tx_hash);
 
@@ -348,7 +365,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_generate_qr(&wallet, &output).await?
         }
         Commands::EstimateGas { recipient, amount } => {
-            log::info!("Estimating gas for recipient: {}, amount: {}", recipient, amount);
+            log::info!(
+                "Estimating gas for recipient: {}, amount: {}",
+                recipient,
+                amount
+            );
             handle_estimate_gas(&recipient, &amount, &wallet).await?
         }
         Commands::ExportPrivateKey { output } => {
@@ -359,7 +380,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             log::info!("Fetching network information...");
             handle_network_info().await?
         }
-        Commands::ImportWallet { mnemonic, private_key } => {
+        Commands::ImportWallet {
+            mnemonic,
+            private_key,
+        } => {
             log::info!("Importing wallet...");
             handle_import_wallet(mnemonic, private_key, wallet_file).await?
         }
@@ -371,7 +395,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             log::info!("Creating multi-signature wallet...");
             // handle_create_multisig(owners, required, &wallet).await?
         }
-        Commands::ProposeTransaction { multisig, to, value, data } => {
+        Commands::ProposeTransaction {
+            multisig,
+            to,
+            value,
+            data,
+        } => {
             log::info!("Proposing transaction...");
             // handle_propose_transaction(&multisig, &to, &value, data, &wallet).await?
         }
@@ -388,10 +417,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             log::info!("Transferring ERC-20 tokens...");
             handle_transfer_token(&token_address, &recipient, &amount, &wallet).await?
         }
-
     }
 
     Ok(())
 }
-
-
