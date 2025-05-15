@@ -5,6 +5,7 @@ use ethers::types::{Address, TransactionRequest};
 use rootstock_wallet::contacts::{Contact, ContactsBook};
 use rootstock_wallet::provider;
 use rootstock_wallet::qr::generate_qr_code;
+use rootstock_wallet::registry::{get_network_name, load_token_registry};
 use rootstock_wallet::wallet::Wallet;
 use std::str::FromStr;
 
@@ -107,45 +108,87 @@ enum Commands {
     },
 }
 
+// async fn handle_transfer_token(
+//     token_address: &str,
+//     recipient: &str,
+//     amount: &str,
+//     wallet: &Wallet,
+// ) -> Result<(), Box<dyn std::error::Error>> {
+//     let provider = provider::get_provider();
+
+//     // Parse the token contract address and recipient address
+//     let token_address = token_address.parse::<Address>()?;
+//     let recipient = recipient.parse::<Address>()?;
+
+//     // Parse the amount (convert to the token's smallest unit)
+//     let amount: ethers::types::U256 = ethers::utils::parse_units(amount, 18)?.into(); // Adjust decimals as needed
+
+//     // Load the ERC-20 contract ABI
+//     let erc20_abi = include_str!("abi/ERC20.json");
+//     let erc20_abi: ethers::abi::Abi = serde_json::from_str(erc20_abi)?;
+//     let erc20_contract =
+//         ethers::contract::Contract::new(token_address, erc20_abi, provider.clone().into());
+
+//     // Create the transfer transaction
+//     let tx = erc20_contract
+//         .method::<(Address, ethers::types::U256), ()>("transfer", (recipient, amount))?
+//         .from(wallet.address.parse::<Address>()?);
+
+//     // Estimate gas for the transaction
+//     let gas_estimate = tx.estimate_gas().await?;
+//     println!("Estimated gas: {}", gas_estimate);
+
+//     // Sign and send the transaction
+//     let signed_tx = wallet.sign_transaction(&tx.tx).await?;
+//     let tx_hash = provider.send_raw_transaction(signed_tx).await?;
+
+//     println!("Transaction successful with hash: {:?}", tx_hash);
+
+//     Ok(())
+// }
+
 async fn handle_transfer_token(
-    token_address: &str,
+    token: &str, // symbol or address
     recipient: &str,
     amount: &str,
     wallet: &Wallet,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let provider = provider::get_provider();
+    let registry = load_token_registry();
+    let network = get_network_name();
 
-    // Parse the token contract address and recipient address
-    let token_address = token_address.parse::<Address>()?;
+    // Try to resolve symbol to address/decimals
+    let (token_address, decimals) = match network {
+        "mainnet" => registry.mainnet.get(&token.to_uppercase()),
+        "testnet" => registry.testnet.get(&token.to_uppercase()),
+        _ => None,
+    }
+    .map(|info| (info.address.parse::<Address>().unwrap(), info.decimals))
+    .unwrap_or_else(|| (token.parse::<Address>().unwrap(), 18)); // fallback: treat as address
+
     let recipient = recipient.parse::<Address>()?;
+    let amount: ethers::types::U256 = ethers::utils::parse_units(amount, decimals as usize)?.into();
 
-    // Parse the amount (convert to the token's smallest unit)
-    let amount: ethers::types::U256 = ethers::utils::parse_units(amount, 18)?.into(); // Adjust decimals as needed
-
-    // Load the ERC-20 contract ABI
     let erc20_abi = include_str!("abi/ERC20.json");
     let erc20_abi: ethers::abi::Abi = serde_json::from_str(erc20_abi)?;
     let erc20_contract =
         ethers::contract::Contract::new(token_address, erc20_abi, provider.clone().into());
 
-    // Create the transfer transaction
     let tx = erc20_contract
         .method::<(Address, ethers::types::U256), ()>("transfer", (recipient, amount))?
         .from(wallet.address.parse::<Address>()?);
 
-    // Estimate gas for the transaction
     let gas_estimate = tx.estimate_gas().await?;
     println!("Estimated gas: {}", gas_estimate);
 
-    // Sign and send the transaction
     let signed_tx = wallet.sign_transaction(&tx.tx).await?;
     let tx_hash = provider.send_raw_transaction(signed_tx).await?;
 
     println!("Transaction successful with hash: {:?}", tx_hash);
-    
+
     Ok(())
 }
-// ...existing code...
+
 async fn handle_transfer_to_contact(
     name: &str,
     amount: &str,
