@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand};
+use dotenv::dotenv;
 use ethers::providers::Middleware;
 use ethers::types::{Address, TransactionRequest};
+use rootstock_wallet::contacts::{Contact, ContactsBook};
 use rootstock_wallet::provider;
 use rootstock_wallet::qr::generate_qr_code;
 use rootstock_wallet::wallet::Wallet;
 use std::str::FromStr;
-use dotenv::dotenv;
 
 #[derive(Parser)]
 #[command(name = "Rootstock Wallet")]
@@ -18,6 +19,23 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    TransferToContact {
+        #[arg(short, long)]
+        name: String,
+        #[arg(short, long)]
+        amount: String,
+    },
+    AddContact {
+        #[arg(short, long)]
+        name: String,
+        #[arg(short, long)]
+        address: String,
+    },
+    ListContacts,
+    ShowContact {
+        #[arg(short, long)]
+        name: String,
+    },
     Transfer {
         #[arg(short, long)]
         recipient: String,
@@ -126,7 +144,63 @@ async fn handle_transfer_token(
     println!("Transaction successful with hash: {:?}", tx_hash);
     Ok(())
 }
-
+// ...existing code...
+async fn handle_transfer_to_contact(
+    name: &str,
+    amount: &str,
+    wallet: &Wallet,
+    contacts_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    log::info!(
+        "Attempting transfer to contact '{}' for amount {}",
+        name,
+        amount
+    );
+    let book = ContactsBook::load(contacts_file);
+    match book.get_contact(name) {
+        Some(contact) => {
+            log::info!("Resolved contact '{}' to address {}", name, contact.address);
+            match handle_transfer(&contact.address, amount, wallet).await {
+                Ok(_) => {
+                    log::info!(
+                        "Transfer to contact '{}' ({}) succeeded.",
+                        name,
+                        contact.address
+                    );
+                    println!(
+                        "Transfer to contact '{}' ({}) succeeded.",
+                        name, contact.address
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    log::error!(
+                        "Transfer to contact '{}' ({}) failed: {}",
+                        name,
+                        contact.address,
+                        e
+                    );
+                    println!(
+                        "Transfer to contact '{}' ({}) failed: {}",
+                        name, contact.address, e
+                    );
+                    if e.to_string().contains("nonce too low") {
+                        println!(
+                            "Hint: The transaction nonce is too low. You may have pending transactions or need to increment the nonce."
+                        );
+                    }
+                    Err(e)
+                }
+            }
+        }
+        None => {
+            log::error!("Contact '{}' not found.", name);
+            println!("Contact '{}' not found.", name);
+            Err("Contact not found".into())
+        }
+    }
+}
+// ...existing code...
 // async fn handle_approve_transaction(
 //     multisig: &str,
 //     tx_id: u64,
@@ -328,7 +402,28 @@ async fn handle_estimate_gas(
     println!("Estimated gas: {}", gas_estimate);
     Ok(())
 }
+async fn handle_add_contact(name: &str, address: &str, contacts_file: &str) {
+    let mut book = ContactsBook::load(contacts_file);
+    book.add_contact(name.to_string(), address.to_string());
+    book.save(contacts_file);
+    println!("Contact '{}' added.", name);
+}
 
+async fn handle_list_contacts(contacts_file: &str) {
+    let book = ContactsBook::load(contacts_file);
+    for contact in book.list_contacts() {
+        println!("{}: {}", contact.name, contact.address);
+    }
+}
+
+async fn handle_show_contact(name: &str, contacts_file: &str) {
+    let book = ContactsBook::load(contacts_file);
+    if let Some(contact) = book.get_contact(name) {
+        println!("{}: {}", contact.name, contact.address);
+    } else {
+        println!("Contact '{}' not found.", name);
+    }
+}
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init(); // Initialize the logger
@@ -346,8 +441,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         log::info!("New wallet generated and saved to {}", wallet_file);
         new_wallet
     });
+    let contacts_file = "contacts.json";
 
     match cli.command {
+        Commands::TransferToContact { name, amount } => {
+            log::info!("Transferring to contact: {}", name);
+            handle_transfer_to_contact(&name, &amount, &wallet, contacts_file).await?
+        }
+        Commands::AddContact { name, address } => {
+            handle_add_contact(&name, &address, contacts_file).await
+        }
+        Commands::ListContacts => handle_list_contacts(contacts_file).await,
+        Commands::ShowContact { name } => handle_show_contact(&name, contacts_file).await,
         Commands::Transfer { recipient, amount } => {
             log::info!("Executing transfer command...");
             handle_transfer(&recipient, &amount, &wallet).await?
