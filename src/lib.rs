@@ -1,4 +1,5 @@
 pub mod client;
+pub mod contacts;
 pub mod provider;
 pub mod qr;
 pub mod transactions;
