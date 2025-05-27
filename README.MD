@@ -30,10 +30,6 @@ A lightweight Rust-based CLI application for managing Rootstock wallets, transfe
 
 Clone the repository and build the project using Cargo:
 
-```bash
-git clone https://github.com/cosmasken/rootstock-wallet.git
-```
-
 [//]: # (add screenshot of clone command)
 ![Installation](screenshots/clone.png)
 
@@ -73,21 +69,17 @@ Run the CLI application:
    ./target/release/rootstock-wallet get-balance --address <ADDRESS>
    ```
 
-![Installation](screenshots/get-balance.png)
+![Get Balance](screenshots/get-balance.png)
 
    Example:
 
-   ```bash
-   ./target/release/rootstock-wallet get-balance --address 0x7be423bf55e894f05a2b2f6a692d00ce258b203d
-   ```
+![Get Balance](screenshots/get-balance.png)
 
 3. **Show Wallet**:
    Display the wallet's address and public key.
 
-   ```bash
-   ./target/release/rootstock-wallet show-wallet
-   ```
-![Installation](screenshots/show-wallet.png)
+![Show Wallet](screenshots/show-wallet.png)
+
 4. **Generate QR Code**:
    Generate a QR code for the wallet address.
 
@@ -97,9 +89,6 @@ Run the CLI application:
 
    Example:
 
-   ```bash
-   ./target/release/rootstock-wallet generate-qr --output wallet_qr.png
-   ```
 ![Installation](screenshots/generate-qr.png)
 
 5. **Estimate Gas**:
@@ -108,13 +97,8 @@ Run the CLI application:
    ```bash
    ./target/release/rootstock-wallet estimate-gas  <ADDRESS>  <AMOUNT>
    ```
-
-
    Example:
 
-   ```bash
-   ./target/release/rootstock-wallet estimate-gas  0x09aB514B6974601967E7b379478EFf4073cceD06  0.0001
-   ```
 ![EStimate Gas](screenshots/estimate-gas.png)
 
 6. **Export Private Key**:
