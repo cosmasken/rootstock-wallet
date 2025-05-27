@@ -7,6 +7,7 @@ use rootstock_wallet::provider;
 use rootstock_wallet::qr::generate_qr_code;
 use rootstock_wallet::registry::{get_network_name, load_token_registry};
 use rootstock_wallet::wallet::Wallet;
+use rootstock_wallet::history;
 use std::str::FromStr;
 
 #[derive(Parser)]
@@ -105,6 +106,12 @@ enum Commands {
         recipient: String, // Recipient address
         #[arg(short, long)]
         amount: String, // Amount to transfer
+    },
+    History {
+        #[arg(short, long, default_value = "false")]
+        testnet: bool,
+        #[arg(short, long)]
+        number: Option<String>,
     },
 }
 
@@ -382,7 +389,7 @@ async fn handle_transfer(
     amount: &str,
     wallet: &Wallet,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    dotenv().ok();
+    
     let provider = provider::get_provider();
 
     let amount = ethers::utils::parse_units(amount, "ether")
@@ -471,6 +478,7 @@ async fn handle_show_contact(name: &str, contacts_file: &str) {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init(); // Initialize the logger
+    dotenv().ok();
 
     let wallet_file = "wallet.json";
 
@@ -565,6 +573,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         } => {
             log::info!("Transferring ERC-20 tokens...");
             handle_transfer_token(&token_address, &recipient, &amount, &wallet).await?
+        }
+
+        Commands::History { testnet, number } => {
+            log::info!("Fetching transaction history...");
+            history::history_command(testnet, number, &wallet.address).await?
         }
     }
 
