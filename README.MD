@@ -91,6 +91,10 @@ Run the CLI application:
 
 ![Installation](screenshots/generate-qr.png)
 
+    This generates a QR Code image in the root of the project.
+    
+    ![Qr Code](wallet.png)
+
 5. **Estimate Gas**:
    Estimate gas costs for a transaction.
 
@@ -99,7 +103,9 @@ Run the CLI application:
    ```
    Example:
 
-![EStimate Gas](screenshots/estimate-gas.png)
+    ![Estimate Gas](screenshots/estimate-gas.png)
+
+
 
 6. **Export Private Key**:
    Export the wallet's private key to a file.
@@ -113,6 +119,11 @@ Run the CLI application:
    ```bash
    ./target/release/rootstock-wallet export-private-key --output private.key
    ```
+    ![Exported Key](screenshots/exported.png)
+
+    This will generate a file with the private key.
+
+    ![Exported Privte Key](screenshots/exported-private-key.png)
 
 7. **Import Wallet**:
    Import a wallet from a mnemonic phrase or private key.
