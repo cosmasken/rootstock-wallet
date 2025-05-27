@@ -1,6 +1,5 @@
 use colored::*;
 use serde::{Deserialize, Serialize, Deserializer};
-use std::collections::HashSet;
 use std::str::FromStr;
 
 // Custom deserialization for value field (handles both String and f64)
@@ -26,7 +25,7 @@ where
 // Structs for JSON-RPC request
 #[derive(Serialize)]
 pub struct JsonRpcRequest {
-    json_rpc: String,
+    jsonrpc: String,
     id: u32,
     method: String,
     params: Vec<AssetTransferParams>,
@@ -36,10 +35,8 @@ pub struct JsonRpcRequest {
 pub struct AssetTransferParams {
     #[serde(rename = "fromBlock")]
     from_block: String,
-    #[serde(rename = "fromAddress", skip_serializing_if = "Option::is_none")]
-    from_address: Option<String>,
-    #[serde(rename = "toAddress", skip_serializing_if = "Option::is_none")]
-    to_address: Option<String>,
+    #[serde(rename = "fromAddress")]
+    from_address: String,
     category: Vec<String>,
     #[serde(rename = "withMetadata")]
     with_metadata: bool,
@@ -100,46 +97,25 @@ pub async fn history_command(
             .blue()
     );
 
-    // Construct JSON-RPC request for both sent and received transactions
     let request = JsonRpcRequest {
-        json_rpc: "2.0".to_string(),
+        jsonrpc: "2.0".to_string(),
         id: 0,
         method: "alchemy_getAssetTransfers".to_string(),
-        params: vec![
-            // Sent transactions (from wallet)
-            AssetTransferParams {
-                from_block: "0x0".to_string(),
-                from_address: Some(wallet_address.to_string()),
-                to_address: None,
-                category: vec![
-                    "external".to_string(),
-                    "erc20".to_string(),
-                    "erc721".to_string(),
-                    "erc1155".to_string(),
-                ],
-                with_metadata: true,
-            },
-            // Received transactions (to wallet)
-            AssetTransferParams {
-                from_block: "0x0".to_string(),
-                from_address: None,
-                to_address: Some(wallet_address.to_string()),
-                category: vec![
-                    "external".to_string(),
-                    "erc20".to_string(),
-                    "erc721".to_string(),
-                    "erc1155".to_string(),
-                ],
-                with_metadata: true,
-            },
-        ],
+        params: vec![AssetTransferParams {
+            from_block: "0x0".to_string(),
+            from_address: wallet_address.to_string(),
+            category: vec![
+                "external".to_string(),
+                "erc20".to_string(),
+                "erc721".to_string(),
+                "erc1155".to_string(),
+            ],
+            with_metadata: true,
+        }],
     };
 
     let url = format!("{}{}", base_url, api_key);
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+    let client = reqwest::Client::new();
     let response = client
         .post(&url)
         .json(&request)
@@ -155,9 +131,13 @@ pub async fn history_command(
         return Ok(());
     }
 
-    let result: JsonRpcResponse = response
-        .json()
+    let raw_body = response
+        .text()
         .await
+        .map_err(|e| format!("Failed to read response body: {}", e))?;
+    println!("Raw response: {}", raw_body);
+
+    let result: JsonRpcResponse = serde_json::from_str(&raw_body)
         .map_err(|e| format!("Failed to parse response: {}", e))?;
 
     if let Some(error) = result.error {
@@ -168,19 +148,11 @@ pub async fn history_command(
     let transfers = match result.result {
         Some(result) => result.transfers,
         None => {
-            println!("{}", "⚠️ No transactions found.".green());
+            println!("{}", "⚠️ No transactions found.".yellow());
             return Ok(());
         }
     };
 
-    // Deduplicate transfers by transaction hash
-    let mut seen_hashes = HashSet::new();
-    let transfers: Vec<Transfer> = transfers
-        .into_iter()
-        .filter(|t| seen_hashes.insert(t.hash.clone()))
-        .collect();
-
-    // Limit the number of transfers if specified
     let transfers = if let Some(num) = number {
         let limit = usize::from_str(&num).map_err(|e| format!("Invalid number: {}", e))?;
         transfers.into_iter().take(limit).collect()
@@ -188,23 +160,8 @@ pub async fn history_command(
         transfers
     };
 
-    if transfers.is_empty() {
-        println!("{}", "⚠️ No transactions found.".green());
-        return Ok(());
-    }
-
-    // Display transfers with direction (Sent/Received)
     for transfer in transfers {
-        let direction = if transfer.from.eq_ignore_ascii_case(wallet_address) {
-            if transfer.to.eq_ignore_ascii_case(wallet_address) {
-                "Self"
-            } else {
-                "Sent"
-            }
-        } else {
-            "Received"
-        };
-        println!("{}", format!("✅ {} Transfer:", direction).green());
+        println!("{}", "✅ Transfer:".green());
         println!("   From: {}", transfer.from);
         println!("   To: {}", transfer.to);
         println!("   Token: {}", transfer.asset.unwrap_or("N/A".to_string()));

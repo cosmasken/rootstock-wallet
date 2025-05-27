@@ -32,6 +32,13 @@ Clone the repository and build the project using Cargo:
 
 ```bash
 git clone https://github.com/cosmasken/rootstock-wallet.git
+```
+
+[//]: # (add screenshot of clone command)
+![Installation](screenshots/clone.png)
+
+
+```bash
 cd rootstock-wallet
 cargo build --release
 ```
@@ -66,6 +73,8 @@ Run the CLI application:
    ./target/release/rootstock-wallet get-balance --address <ADDRESS>
    ```
 
+![Installation](screenshots/get-balance.png)
+
    Example:
 
    ```bash
@@ -78,7 +87,7 @@ Run the CLI application:
    ```bash
    ./target/release/rootstock-wallet show-wallet
    ```
-
+![Installation](screenshots/show-wallet.png)
 4. **Generate QR Code**:
    Generate a QR code for the wallet address.
 
@@ -91,6 +100,7 @@ Run the CLI application:
    ```bash
    ./target/release/rootstock-wallet generate-qr --output wallet_qr.png
    ```
+![Installation](screenshots/generate-qr.png)
 
 5. **Estimate Gas**:
    Estimate gas costs for a transaction.
@@ -99,11 +109,13 @@ Run the CLI application:
    ./target/release/rootstock-wallet estimate-gas  <ADDRESS>  <AMOUNT>
    ```
 
+
    Example:
 
    ```bash
    ./target/release/rootstock-wallet estimate-gas  0x09aB514B6974601967E7b379478EFf4073cceD06  0.0001
    ```
+![EStimate Gas](screenshots/estimate-gas.png)
 
 6. **Export Private Key**:
    Export the wallet's private key to a file.

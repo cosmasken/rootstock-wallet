@@ -65,11 +65,11 @@ impl TransactionService {
             .from(self.wallet.address())
             .chain_id(self.wallet.chain_id());
         // 4. Read interval and retries from env, fallback to defaults
-        let poll_interval_secs = std::env::var("TX_POLL_INTERVAL_SECS")
+        let _poll_interval_secs = std::env::var("TX_POLL_INTERVAL_SECS")
             .ok()
             .and_then(|v| v.parse::<u64>().ok())
             .unwrap_or(5);
-        let poll_retries = std::env::var("TX_POLL_RETRIES")
+        let _poll_retries = std::env::var("TX_POLL_RETRIES")
             .ok()
             .and_then(|v| v.parse::<u32>().ok())
             .unwrap_or(24);
