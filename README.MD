@@ -75,12 +75,13 @@ Run the CLI application:
 
    Example:
 
-![Get Balance](screenshots/get-balance.png)
+   ![Get Balance](screenshots/get-balance.png)
+
 
 3. **Show Wallet**:
    Display the wallet's address and public key.
 
-![Show Wallet](screenshots/show-wallet.png)
+   ![Show Wallet](screenshots/show-wallet.png)
 
 4. **Generate QR Code**:
    Generate a QR code for the wallet address.
@@ -93,9 +94,9 @@ Run the CLI application:
 
    ![Installation](screenshots/generate-qr.png)
 
-    This generates a QR Code image in the root of the project.
+   This generates a QR Code image in the root of the project.
     
-    ![Qr Code](wallet.png)
+   ![Qr Code](wallet.png)
 
 5. **Estimate Gas**:
    Estimate gas costs for a transaction.
@@ -105,7 +106,7 @@ Run the CLI application:
    ```
    Example:
 
-    ![Estimate Gas](screenshots/estimate-gas.png)
+   ![Estimate Gas](screenshots/estimate-gas.png)
 
 
 
@@ -121,11 +122,11 @@ Run the CLI application:
    ```bash
    ./target/release/rootstock-wallet export-private-key --output private.key
    ```
-    ![Exported Key](screenshots/exported.png)
+   ![Exported Key](screenshots/exported.png)
 
-    This will generate a file with the private key.
+   This will generate a file with the private key.
 
-    ![Exported Privte Key](screenshots/exported-private-key.png)
+   ![Exported Privte Key](screenshots/exported-private-key.png)
 
 7. **Import Wallet**:
    Import a wallet from a mnemonic phrase or private key.
@@ -201,9 +202,10 @@ Run the CLI application:
 9. **Network Info**:
     Display current network information (block number, gas price, chain ID).
 
-    ```bash
+   ```bash
     ./target/release/rootstock-wallet network-info
-    ```
+   ```
+
    ![Exported Key](screenshots/network-info.png)
 
 
@@ -219,6 +221,85 @@ Run the CLI application:
     ```bash
     ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
     ```
+11. **Transaction History**:
+   Retrieve the transaction history for your own address or any specified address.
+
+   ```bash
+   ./target/release/rootstock-wallet transaction-history --address <ADDRESS>
+   ```
+
+   Example:
+
+   ![Transaction History](screenshots/transaction-history.png)
+
+   This will fetch the last 10 transactions for the current wallet address on testnet.
+
+12. **Contact Management**:
+   Easily save, list, and use contacts for transactions.
+
+   - **Add a Contact**:
+
+   ```bash
+     ./target/release/rootstock-wallet add-contact --name <NAME> --address <ADDRESS>
+   ```
+
+   Example:
+
+   ![Transaction History](screenshots/add-contact.png)
+
+   - **List Contacts**:
+
+   ```bash
+   ./target/release/rootstock-wallet list-contacts
+   ```
+
+   Example:
+
+   ![List Contacts](screenshots/list-contacts.png)
+
+   - **Show Contact Details**:
+
+   ```bash
+     ./target/release/rootstock-wallet show-contact --name <NAME>
+   ```
+
+   Example:
+
+   ![Show Contact](screenshots/show-contact.png)
+
+   - **Transfer to a Contact**:
+   You can use a contact's name instead of an address in transfer commands:
+
+   ```bash
+     ./target/release/rootstock-wallet transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
+   ```
+
+   Example:
+
+   ```bash
+     ./target/release/rootstock-wallet transfer --recipient alice --amount 0.01
+   ```
+
+13. **ERC-20 Token Transfer Using Symbols**:
+   You can transfer supported ERC-20 tokens using their symbol (e.g., RIF, USDRIF, DoC) instead of the contract address.
+
+   ```bash
+   ./target/release/rootstock-wallet transfer-token --token <SYMBOL> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT>
+   ```
+
+   Example:
+
+   ```bash
+   ./target/release/rootstock-wallet transfer-token --token RIF --recipient 0xRecipientAddress --amount 10
+   ```
+
+   You can also use the contract address as before:
+
+   ```bash
+   ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
+   ```
+
+   Supported symbols include: RIF, USDRIF, DoC, and others listed in your `tokens.json` registry.
 
 ## Configuration
 
