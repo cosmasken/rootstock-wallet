@@ -232,53 +232,53 @@ Run the CLI application:
 
    ![Transaction History](screenshots/transaction-history.png)
 
+   This will fetch the last 10 transactions for the current wallet address on testnet.
+
 12. **Contact Management**:
    Easily save, list, and use contacts for transactions.
 
    - **Add a Contact**:
 
-     ```bash
+   ```bash
      ./target/release/rootstock-wallet add-contact --name <NAME> --address <ADDRESS>
-     ```
+   ```
 
-     Example:
+   Example:
 
-     ```bash
-     ./target/release/rootstock-wallet add-contact --name alice --address 0x1234abcd...
-     ```
+   ![Transaction History](screenshots/add-contact.png)
 
    - **List Contacts**:
 
-     ```bash
-     ./target/release/rootstock-wallet list-contacts
-     ```
+   ```bash
+   ./target/release/rootstock-wallet list-contacts
+   ```
 
-     Example:
+   Example:
 
-     ![List Contacts](screenshots/list-contacts.png)
+   ![List Contacts](screenshots/list-contacts.png)
 
    - **Show Contact Details**:
 
-     ```bash
+   ```bash
      ./target/release/rootstock-wallet show-contact --name <NAME>
-     ```
+   ```
 
-     Example:
+   Example:
 
-     ![Show Contact](screenshots/show-contact.png)
+   ![Show Contact](screenshots/show-contact.png)
 
    - **Transfer to a Contact**:
-     You can use a contact's name instead of an address in transfer commands:
+   You can use a contact's name instead of an address in transfer commands:
 
-     ```bash
+   ```bash
      ./target/release/rootstock-wallet transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
-     ```
+   ```
 
-     Example:
+   Example:
 
-     ```bash
+   ```bash
      ./target/release/rootstock-wallet transfer --recipient alice --amount 0.01
-     ```
+   ```
 
 13. **ERC-20 Token Transfer Using Symbols**:
    You can transfer supported ERC-20 tokens using their symbol (e.g., RIF, USDRIF, DoC) instead of the contract address.
