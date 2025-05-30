@@ -159,7 +159,7 @@ Run the CLI application:
    ./target/release/rootstock-wallet export-keystore --password mypassword --output keystore.json
    ```
 
-9. **Create Multi-Signature Wallet**:
+<!-- 9. **Create Multi-Signature Wallet**:
    Deploy a multi-signature wallet contract with specified owners and required approvals.
 
    ```bash
@@ -183,9 +183,9 @@ Run the CLI application:
 
     ```bash
     ./target/release/rootstock-wallet propose-transaction --multisig 0xMultisigAddress --to 0xRecipientAddress --value 0.1 --data 0x
-    ```
+    ``` -->
 
-11. **Approve Transaction**:
+<!-- 11. **Approve Transaction**:
     Approve a proposed transaction.
 
     ```bash
@@ -196,9 +196,9 @@ Run the CLI application:
 
     ```bash
     ./target/release/rootstock-wallet approve-transaction --multisig 0xMultisigAddress --tx-id 1
-    ```
+    ``` -->
 
-12. **Network Info**:
+9. **Network Info**:
     Display current network information (block number, gas price, chain ID).
 
     ```bash
@@ -210,7 +210,7 @@ Run the CLI application:
 
 
 
-13. **Transfer ERC-20 Tokens**:
+10. **Transfer ERC-20 Tokens**:
     Transfer tokens like RIF, DOC, SOV, or rUSDT.
 
     ```bash
