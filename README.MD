@@ -141,7 +141,7 @@ Run the CLI application:
    Example (using a private key):
 
    ```bash
-   ./target/release/rootstock-wallet import-wallet --private-key 4e944490912ef6c16fd8731beadf228c601da4ac0a6bd6b0b348a0a92f32d97f
+   ./target/release/rootstock-wallet import-wallet --private-key 6cf034d3239788ab09169dac88edc3466c5b16b30c49674505190fa4c6d872fb
    ```
 
 8. **Export Keystore**:
