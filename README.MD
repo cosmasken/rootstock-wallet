@@ -73,8 +73,6 @@ Run the CLI application:
    ./target/release/rootstock-wallet get-balance --address <ADDRESS>
    ```
 
-![Get Balance](screenshots/get-balance.png)
-
    Example:
 
 ![Get Balance](screenshots/get-balance.png)
@@ -93,7 +91,7 @@ Run the CLI application:
 
    Example:
 
-![Installation](screenshots/generate-qr.png)
+   ![Installation](screenshots/generate-qr.png)
 
     This generates a QR Code image in the root of the project.
     
