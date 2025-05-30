@@ -207,9 +207,6 @@ Run the CLI application:
    ![Exported Key](screenshots/network-info.png)
 
 
-
-
-
 10. **Transfer ERC-20 Tokens**:
     Transfer tokens like RIF, DOC, SOV, or rUSDT.
 
