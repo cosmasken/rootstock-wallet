@@ -45,7 +45,10 @@ Run the CLI application:
 
 ```bash
 ./target/release/rootstock-wallet
+![All Commands](screenshots/run-app.png)
 ```
+
+
 
 ### Commands
 
