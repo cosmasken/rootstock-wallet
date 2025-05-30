@@ -45,8 +45,9 @@ Run the CLI application:
 
 ```bash
 ./target/release/rootstock-wallet
-![All Commands](screenshots/run-app.png)
 ```
+
+![All Commands](screenshots/run-app.png)
 
 
 
@@ -205,6 +206,12 @@ Run the CLI application:
     ```bash
     ./target/release/rootstock-wallet network-info
     ```
+   ![Exported Key](screenshots/network-info.png)
+
+
+
+
+
 13. **Transfer ERC-20 Tokens**:
     Transfer tokens like RIF, DOC, SOV, or rUSDT.
 
