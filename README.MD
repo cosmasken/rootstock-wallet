@@ -301,6 +301,22 @@ Run the CLI application:
 
    Supported symbols include: RIF, USDRIF, DoC, and others listed in your `tokens.json` registry.
 
+14. **Add Token to Registry**:
+   Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
+
+   ```bash
+   ./target/release/rootstock-wallet add-token --symbol ARCAD --address 0x0c917Ccc38203734aC963152059439cd33EA57fF --decimals 18 --network testnet
+   ```
+
+   Example:
+
+   ![Add Token](screenshots/add-token-testnet.png)
+
+   This command adds a new token to the registry, allowing you to transfer it using the symbol `ARCAD`.
+
+   ![Token Added](screenshots/token-added.png)
+
+
 ## Configuration
 
 The application connects to the Rootstock network using the public JSON-RPC endpoint:
