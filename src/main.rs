@@ -358,16 +358,16 @@ async fn handle_import_wallet(
     Ok(())
 }
 
-// async fn handle_export_keystore(
-//     wallet: &Wallet,
-//     password: &str,
-//     output: &str,
-// ) -> Result<(), Box<dyn std::error::Error>> {
-//     let keystore = Wallet::to_keystore(&wallet.private_key, password)?;
-//     std::fs::write(output, keystore)?;
-//     println!("Keystore exported to {}", output);
-//     Ok(())
-// }
+async fn handle_export_keystore(
+    wallet: &Wallet,
+    password: &str,
+    output: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let keystore = Wallet::to_keystore(&wallet.private_key, password)?;
+    std::fs::write(output, keystore)?;
+    println!("Keystore exported to {}", output);
+    Ok(())
+}
 
 async fn handle_transfer(
     recipient: &str,
@@ -539,7 +539,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Commands::ExportKeystore { password, output } => {
             log::info!("Exporting keystore...");
-            // handle_export_keystore(&wallet, &password, &output).await?
+            handle_export_keystore(&wallet, &password, &output).await?
         }
         Commands::CreateMultisig { owners, required } => {
             log::info!("Creating multi-signature wallet...");

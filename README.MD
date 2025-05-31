@@ -143,9 +143,7 @@ Run the CLI application:
 
    Example (using a private key):
 
-   ```bash
-   ./target/release/rootstock-wallet import-wallet --private-key 6cf034d3239788ab09169dac88edc3466c5b16b30c49674505190fa4c6d872fb
-   ```
+   ![Import Private Key](screenshots/import-private-key.png)
 
 8. **Export Keystore**:
    Export the wallet in JSON keystore format.
@@ -221,6 +219,7 @@ Run the CLI application:
     ```bash
     ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
     ```
+    
 11. **Transaction History**:
    Retrieve the transaction history for your own address or any specified address.
 
@@ -326,8 +325,7 @@ The application connects to the Rootstock network using the public JSON-RPC endp
 
 Additionally, the `.env` file includes the following configurations:
 
-- `CHAIN_ID="mainnet-or-testnet-id"`: Specifies the chain ID for the network (e.g., Mainnet or Testnet).
-- `API_KEY="your-api-key-here"`: Your Rootstock API key for accessing the JSON-RPC endpoint.
+![Env Example](screenshots/env-example.png)
 
 Ensure these variables are properly set in your environment file before running the application.
 
