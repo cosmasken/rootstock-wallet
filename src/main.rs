@@ -9,6 +9,8 @@ use rootstock_wallet::registry::{get_network_name, load_token_registry};
 use rootstock_wallet::wallet::Wallet;
 use rootstock_wallet::history;
 use std::str::FromStr;
+use std::collections::HashMap;
+use serde_json::Value;
 
 #[derive(Parser)]
 #[command(name = "Rootstock Wallet")]
@@ -21,6 +23,16 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+     AddToken {
+        #[arg(short, long)]
+        symbol: String,
+        #[arg(short, long)]
+        address: String,
+        #[arg(short, long)]
+        decimals: u8,
+        #[arg(short, long, default_value = "testnet")]
+        network: String, // "mainnet" or "testnet"
+    },
     TransferToContact {
         #[arg(short, long)]
         name: String,
@@ -153,6 +165,40 @@ enum Commands {
 
 //     Ok(())
 // }
+
+async fn handle_add_token(
+    symbol: &str,
+    address: &str,
+    decimals: u8,
+    network: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let file_path = "tokens.json";
+    let mut data: Value = if std::path::Path::new(file_path).exists() {
+        serde_json::from_str(&std::fs::read_to_string(file_path)?)?
+    } else {
+        serde_json::json!({ "mainnet": {}, "testnet": {} })
+    };
+
+    let network_obj = data
+        .get_mut(network)
+        .and_then(|v| v.as_object_mut())
+        .ok_or("Invalid network (must be 'mainnet' or 'testnet')")?;
+
+    network_obj.insert(
+        symbol.to_uppercase(),
+        serde_json::json!({
+            "address": address,
+            "decimals": decimals
+        }),
+    );
+
+    std::fs::write(file_path, serde_json::to_string_pretty(&data)?)?;
+    println!(
+        "Token {} added to {} registry in {}.",
+        symbol, network, file_path
+    );
+    Ok(())
+}
 
 async fn handle_transfer_token(
     token: &str, // symbol or address
@@ -496,6 +542,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contacts_file = "contacts.json";
 
     match cli.command {
+        Commands::AddToken {
+            symbol,
+            address,
+            decimals,
+            network,
+        } => {
+            handle_add_token(&symbol, &address, decimals, &network).await?
+        }
         Commands::TransferToContact { name, amount } => {
             log::info!("Transferring to contact: {}", name);
             handle_transfer_to_contact(&name, &amount, &wallet, contacts_file).await?
