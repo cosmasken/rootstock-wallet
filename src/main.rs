@@ -2,8 +2,9 @@ use clap::{Parser, Subcommand};
 use dotenv::dotenv;
 use ethers::providers::Middleware;
 use ethers::types::{Address, TransactionRequest};
-use rootstock_wallet::contacts::{Contact, ContactsBook};
+use rootstock_wallet::contacts::{Contact, ContactsBook,handle_transfer_to_contact};
 use rootstock_wallet::provider;
+use rootstock_wallet::network::handle_network_info;
 use rootstock_wallet::qr::generate_qr_code;
 use rootstock_wallet::registry::{get_network_name, load_token_registry};
 use rootstock_wallet::wallet::Wallet;
@@ -124,6 +125,8 @@ enum Commands {
         testnet: bool,
         #[arg(short, long)]
         number: Option<String>,
+        // #[arg(short, long)]
+        // address: Option<String>, 
     },
 }
 
@@ -242,61 +245,7 @@ async fn handle_transfer_token(
     Ok(())
 }
 
-async fn handle_transfer_to_contact(
-    name: &str,
-    amount: &str,
-    wallet: &Wallet,
-    contacts_file: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
-    log::info!(
-        "Attempting transfer to contact '{}' for amount {}",
-        name,
-        amount
-    );
-    let book = ContactsBook::load(contacts_file);
-    match book.get_contact(name) {
-        Some(contact) => {
-            log::info!("Resolved contact '{}' to address {}", name, contact.address);
-            match handle_transfer(&contact.address, amount, wallet).await {
-                Ok(_) => {
-                    log::info!(
-                        "Transfer to contact '{}' ({}) succeeded.",
-                        name,
-                        contact.address
-                    );
-                    println!(
-                        "Transfer to contact '{}' ({}) succeeded.",
-                        name, contact.address
-                    );
-                    Ok(())
-                }
-                Err(e) => {
-                    log::error!(
-                        "Transfer to contact '{}' ({}) failed: {}",
-                        name,
-                        contact.address,
-                        e
-                    );
-                    println!(
-                        "Transfer to contact '{}' ({}) failed: {}",
-                        name, contact.address, e
-                    );
-                    if e.to_string().contains("nonce too low") {
-                        println!(
-                            "Hint: The transaction nonce is too low. You may have pending transactions or need to increment the nonce."
-                        );
-                    }
-                    Err(e)
-                }
-            }
-        }
-        None => {
-            log::error!("Contact '{}' not found.", name);
-            println!("Contact '{}' not found.", name);
-            Err("Contact not found".into())
-        }
-    }
-}
+
 // ...existing code...
 // async fn handle_approve_transaction(
 //     multisig: &str,
@@ -336,18 +285,8 @@ async fn handle_transfer_to_contact(
 //     println!("Multi-signature wallet deployed at: {:?}", tx);
 //     Ok(())
 // }
-async fn handle_network_info() -> Result<(), Box<dyn std::error::Error>> {
-    let provider = provider::get_provider();
-    let block = provider.get_block_number().await?;
-    let gas_price = provider.get_gas_price().await?;
-    let chain_id = provider.get_chainid().await?;
 
-    println!("Network Status:");
-    println!("- Chain ID: {}", chain_id);
-    println!("- Current Block: {}", block);
-    println!("- Gas Price: {} wei", gas_price);
-    Ok(())
-}
+
 
 // async fn handle_propose_transaction(
 //     multisig: &str,

@@ -45,3 +45,60 @@ impl ContactsBook {
         self.contacts.values().collect()
     }
 }
+
+
+pub async fn handle_transfer_to_contact(
+    name: &str,
+    amount: &str,
+    wallet: &Wallet,
+    contacts_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    log::info!(
+        "Attempting transfer to contact '{}' for amount {}",
+        name,
+        amount
+    );
+    let book = ContactsBook::load(contacts_file);
+    match book.get_contact(name) {
+        Some(contact) => {
+            log::info!("Resolved contact '{}' to address {}", name, contact.address);
+            match handle_transfer(&contact.address, amount, wallet).await {
+                Ok(_) => {
+                    log::info!(
+                        "Transfer to contact '{}' ({}) succeeded.",
+                        name,
+                        contact.address
+                    );
+                    println!(
+                        "Transfer to contact '{}' ({}) succeeded.",
+                        name, contact.address
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    log::error!(
+                        "Transfer to contact '{}' ({}) failed: {}",
+                        name,
+                        contact.address,
+                        e
+                    );
+                    println!(
+                        "Transfer to contact '{}' ({}) failed: {}",
+                        name, contact.address, e
+                    );
+                    if e.to_string().contains("nonce too low") {
+                        println!(
+                            "Hint: The transaction nonce is too low. You may have pending transactions or need to increment the nonce."
+                        );
+                    }
+                    Err(e)
+                }
+            }
+        }
+        None => {
+            log::error!("Contact '{}' not found.", name);
+            println!("Contact '{}' not found.", name);
+            Err("Contact not found".into())
+        }
+    }
+}
