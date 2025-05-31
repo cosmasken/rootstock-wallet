@@ -326,8 +326,7 @@ The application connects to the Rootstock network using the public JSON-RPC endp
 
 Additionally, the `.env` file includes the following configurations:
 
-- `CHAIN_ID="mainnet-or-testnet-id"`: Specifies the chain ID for the network (e.g., Mainnet or Testnet).
-- `API_KEY="your-api-key-here"`: Your Rootstock API key for accessing the JSON-RPC endpoint.
+![Env Example](screenshots/env-example.png)
 
 Ensure these variables are properly set in your environment file before running the application.
 
