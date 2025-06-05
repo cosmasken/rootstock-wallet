@@ -12,6 +12,7 @@ use std::fs;
 use std::str::FromStr;
 use zeroize::Zeroize;
 use zeroize::Zeroizing;
+use eth_keystore::encrypt_key;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Wallet {
@@ -146,6 +147,7 @@ impl Wallet {
     //     let keystore_json = serde_json::to_string_pretty(&keystore)?;
     //     Ok(keystore_json)
     // }
+ 
 }
 impl Drop for Wallet {
     fn drop(&mut self) {

@@ -25,14 +25,22 @@ A lightweight Rust-based CLI application for managing Rootstock wallets, transfe
   - Create multi-signature wallets with specified owners and required approvals.
   - Propose transactions requiring multiple approvals.
   - Approve proposed transactions.
+- **Network Configuration**:
+  - Support for both mainnet and testnet
+  - Network selection via command-line flag
+  - Automatic chain ID configuration
+- **Transaction History**:
+  - View transaction history for any address
+  - Display both RBTC and ERC-20 token transfers
+  - Limit the number of transactions shown
+- **Token Management**:
+  - Check balances for ERC-20 tokens
+  - Support for RIF, USDRIF, and custom tokens
+  - Token registry for easy symbol-to-address mapping
 
 ## Installation
 
 Clone the repository and build the project using Cargo:
-
-[//]: # (add screenshot of clone command)
-![Installation](screenshots/clone.png)
-
 
 ```bash
 cd rootstock-wallet
@@ -47,39 +55,50 @@ Run the CLI application:
 ./target/release/rootstock-wallet
 ```
 
-![All Commands](screenshots/run-app.png)
-
-
-
 ### Commands
 
 1. **Transfer RBTC**:
    Send RBTC to a recipient address.
 
    ```bash
-   ./target/release/rootstock-wallet transfer --recipient <ADDRESS> --amount <AMOUNT>
+   ./target/release/rootstock-wallet transfer --recipient <ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
+   ./target/release/rootstock-wallet transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001 --network testnet
    ```
+
+   ![Transfer Command](screenshots/transfer.png)
 
 2. **Get Balance**:
    Fetch the RBTC balance of an address.
 
    ```bash
-   ./target/release/rootstock-wallet get-balance --address <ADDRESS>
+   ./target/release/rootstock-wallet get-balance --address <ADDRESS> --network <mainnet|testnet>
    ```
 
    Example:
 
-   ![Get Balance](screenshots/get-balance.png)
+   ```bash
+   ./target/release/rootstock-wallet get-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --network testnet
+   ```
 
+   ![Get Balance](screenshots/get-balance.png)
 
 3. **Show Wallet**:
    Display the wallet's address and public key.
+
+   ```bash
+   ./target/release/rootstock-wallet show-wallet --network <mainnet|testnet>
+   ```
+
+   Example:
+
+   ```bash
+   ./target/release/rootstock-wallet show-wallet --network testnet
+   ```
 
    ![Show Wallet](screenshots/show-wallet.png)
 
@@ -87,30 +106,96 @@ Run the CLI application:
    Generate a QR code for the wallet address.
 
    ```bash
-   ./target/release/rootstock-wallet generate-qr --output <FILENAME>
+   ./target/release/rootstock-wallet generate-qr --output <FILENAME> --network <mainnet|testnet>
    ```
 
    Example:
 
-   ![Installation](screenshots/generate-qr.png)
+   ```bash
+   ./target/release/rootstock-wallet generate-qr --output wallet_qr.png --network testnet
+   ```
 
-   This generates a QR Code image in the root of the project.
-    
-   ![Qr Code](wallet.png)
+   ![QR Code](screenshots/qr-code.png)
 
-5. **Estimate Gas**:
+5. **Token Balance**:
+   Check the balance of an ERC-20 token.
+
+   ```bash
+   ./target/release/rootstock-wallet token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
+   ```
+
+   Example:
+
+   ```bash
+   ./target/release/rootstock-wallet token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
+   ```
+
+   ![Token Balance](screenshots/token-balance.png)
+
+6. **Transaction History**:
+   View transaction history for an address.
+
+   ```bash
+   ./target/release/rootstock-wallet history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
+   ```
+
+   Example:
+
+   ```bash
+   ./target/release/rootstock-wallet history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
+   ```
+
+   ![Transaction History](screenshots/transaction-history.png)
+
+7. **Contact Management**:
+   Manage contacts for easier address management.
+
+   ```bash
+   # Add a contact
+   ./target/release/rootstock-wallet contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
+
+   # List all contacts
+   ./target/release/rootstock-wallet contact --action list
+
+   # Show a specific contact
+   ./target/release/rootstock-wallet contact --action show --name alice
+
+   # Delete a contact
+   ./target/release/rootstock-wallet contact --action delete --name alice
+   ```
+
+   Example:
+
+   ```bash
+   ./target/release/rootstock-wallet contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
+   ```
+
+   ![Contact Management](screenshots/contact-management.png)
+
+8. **Network Configuration**:
+   All commands support network selection:
+
+   ```bash
+   ./target/release/rootstock-wallet <command> --network <mainnet|testnet>
+   ```
+
+   Example:
+
+   ```bash
+   ./target/release/rootstock-wallet transfer --network mainnet --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
+   ```
+
+9. **Estimate Gas**:
    Estimate gas costs for a transaction.
 
    ```bash
-   ./target/release/rootstock-wallet estimate-gas  <ADDRESS>  <AMOUNT>
+   ./target/release/rootstock-wallet estimate-gas  <ADDRESS>  <AMOUNT> --network <mainnet|testnet>
    ```
    Example:
 
    ![Estimate Gas](screenshots/estimate-gas.png)
 
-
-
-6. **Export Private Key**:
+10. **Export Private Key**:
    Export the wallet's private key to a file.
 
    ```bash
@@ -128,7 +213,7 @@ Run the CLI application:
 
    ![Exported Privte Key](screenshots/exported-private-key.png)
 
-7. **Import Wallet**:
+11. **Import Wallet**:
    Import a wallet from a mnemonic phrase or private key.
 
    ```bash
@@ -145,7 +230,7 @@ Run the CLI application:
 
    ![Import Private Key](screenshots/import-private-key.png)
 
-8. **Export Keystore**:
+12. **Export Keystore**:
    Export the wallet in JSON keystore format.
 
    ```bash
@@ -158,73 +243,57 @@ Run the CLI application:
    ./target/release/rootstock-wallet export-keystore --password mypassword --output keystore.json
    ```
 
-<!-- 9. **Create Multi-Signature Wallet**:
-   Deploy a multi-signature wallet contract with specified owners and required approvals.
+13. **View Transaction History**:
+   Display transaction history for an address.
 
    ```bash
-   ./target/release/rootstock-wallet create-multisig --owners <OWNER1> <OWNER2> ... --required <NUMBER>
+   ./target/release/rootstock-wallet history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
    ```
 
    Example:
-
    ```bash
-   ./target/release/rootstock-wallet create-multisig --owners 0xOwner1 0xOwner2 0xOwner3 --required 2
+   ./target/release/rootstock-wallet history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
    ```
 
-10. **Propose Transaction**:
-    Propose a transaction requiring multiple approvals.
+14. **Check Token Balance**:
+   View the balance of an ERC-20 token for an address.
 
-    ```bash
-    ./target/release/rootstock-wallet propose-transaction --multisig <MULTISIG_ADDRESS> --to <RECIPIENT> --value <AMOUNT> --data <DATA>
-    ```
+   ```bash
+   ./target/release/rootstock-wallet token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
+   ```
 
-    Example:
+   Example:
+   ```bash
+   ./target/release/rootstock-wallet token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
+   ```
 
-    ```bash
-    ./target/release/rootstock-wallet propose-transaction --multisig 0xMultisigAddress --to 0xRecipientAddress --value 0.1 --data 0x
-    ``` -->
-
-<!-- 11. **Approve Transaction**:
-    Approve a proposed transaction.
-
-    ```bash
-    ./target/release/rootstock-wallet approve-transaction --multisig <MULTISIG_ADDRESS> --tx-id <TRANSACTION_ID>
-    ```
-
-    Example:
-
-    ```bash
-    ./target/release/rootstock-wallet approve-transaction --multisig 0xMultisigAddress --tx-id 1
-    ``` -->
-
-9. **Network Info**:
+15. **Network Info**:
     Display current network information (block number, gas price, chain ID).
 
    ```bash
-    ./target/release/rootstock-wallet network-info
+    ./target/release/rootstock-wallet network-info --network <mainnet|testnet>
    ```
 
    ![Exported Key](screenshots/network-info.png)
 
-
-10. **Transfer ERC-20 Tokens**:
+16. **Transfer ERC-20 Tokens**:
     Transfer tokens like RIF, DOC, SOV, or rUSDT.
 
     ```bash
-    ./target/release/rootstock-wallet transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT>
+    ./target/release/rootstock-wallet transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
     ```
 
     Example:
 
     ```bash
-    ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
+    ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
     ```
     
-11. **Transaction History**:
+17. **Transaction History**:
    Retrieve the transaction history for your own address or any specified address.
 
    ```bash
-   ./target/release/rootstock-wallet transaction-history --address <ADDRESS>
+   ./target/release/rootstock-wallet transaction-history --address <ADDRESS> --network <mainnet|testnet>
    ```
 
    Example:
@@ -233,7 +302,7 @@ Run the CLI application:
 
    This will fetch the last 10 transactions for the current wallet address on testnet.
 
-12. **Contact Management**:
+18. **Contact Management**:
    Easily save, list, and use contacts for transactions.
 
    - **Add a Contact**:
@@ -279,28 +348,28 @@ Run the CLI application:
      ./target/release/rootstock-wallet transfer --recipient alice --amount 0.01
    ```
 
-13. **ERC-20 Token Transfer Using Symbols**:
+19. **ERC-20 Token Transfer Using Symbols**:
    You can transfer supported ERC-20 tokens using their symbol (e.g., RIF, USDRIF, DoC) instead of the contract address.
 
    ```bash
-   ./target/release/rootstock-wallet transfer-token --token <SYMBOL> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT>
+   ./target/release/rootstock-wallet transfer-token --token <SYMBOL> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet transfer-token --token RIF --recipient 0xRecipientAddress --amount 10
+   ./target/release/rootstock-wallet transfer-token --token RIF --recipient 0xRecipientAddress --amount 10 --network testnet
    ```
 
    You can also use the contract address as before:
 
    ```bash
-   ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10
+   ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
    ```
 
    Supported symbols include: RIF, USDRIF, DoC, and others listed in your `tokens.json` registry.
 
-14. **Add Token to Registry**:
+20. **Add Token to Registry**:
    Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
 
    ```bash
@@ -314,7 +383,6 @@ Run the CLI application:
    This command adds a new token to the registry, allowing you to transfer it using the symbol `ARCAD`.
 
    ![Token Added](screenshots/token-added.png)
-
 
 ## Configuration
 

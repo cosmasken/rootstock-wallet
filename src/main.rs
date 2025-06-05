@@ -2,9 +2,8 @@ use clap::{Parser, Subcommand};
 use dotenv::dotenv;
 use ethers::providers::Middleware;
 use ethers::types::{Address, TransactionRequest};
-use rootstock_wallet::contacts::{Contact, ContactsBook,handle_transfer_to_contact};
+use rootstock_wallet::contacts::{Contact, ContactsBook};
 use rootstock_wallet::provider;
-use rootstock_wallet::network::handle_network_info;
 use rootstock_wallet::qr::generate_qr_code;
 use rootstock_wallet::registry::{get_network_name, load_token_registry};
 use rootstock_wallet::wallet::Wallet;
@@ -12,6 +11,37 @@ use rootstock_wallet::history;
 use std::str::FromStr;
 use std::collections::HashMap;
 use serde_json::Value;
+use std::fs::{File, OpenOptions};
+use std::io::{BufReader, BufWriter};
+use serde::{Serialize, Deserialize};
+use colored::*;
+use colored::Colorize;
+use log::{info, error};
+use reqwest;
+use serde_json::json;
+
+// Define JsonRpcRequest and JsonRpcResponse structs
+#[derive(Debug, Serialize, Deserialize)]
+struct JsonRpcRequest {
+    json_rpc: String,
+    id: u64,
+    method: String,
+    params: Vec<serde_json::Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct JsonRpcResponse {
+    json_rpc: String,
+    id: u64,
+    result: Option<String>,
+    error: Option<JsonRpcError>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct JsonRpcError {
+    code: i64,
+    message: String,
+}
 
 #[derive(Parser)]
 #[command(name = "Rootstock Wallet")]
@@ -20,6 +50,10 @@ use serde_json::Value;
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+    
+    /// Network to use (mainnet or testnet)
+    #[arg(short, long, default_value = "testnet")]
+    network: String,
 }
 
 #[derive(Subcommand)]
@@ -121,53 +155,108 @@ enum Commands {
         amount: String, // Amount to transfer
     },
     History {
-        #[arg(short, long, default_value = "false")]
-        testnet: bool,
+        /// Address to fetch history for
         #[arg(short, long)]
-        number: Option<String>,
-        // #[arg(short, long)]
-        // address: Option<String>, 
+        address: String,
+        
+        /// Number of transactions to show
+        #[arg(short, long, default_value = "10")]
+        limit: u32,
+    },
+    TokenBalance {
+        /// Address to check balance for
+        #[arg(short, long)]
+        address: String,
+        
+        /// Token symbol (e.g. RIF, USDRIF)
+        #[arg(short, long)]
+        token: String,
+    },
+    Contact {
+        /// Action to perform (add, list, show, delete)
+        #[arg(short, long)]
+        action: String,
+        
+        /// Name of the contact
+        #[arg(short, long)]
+        name: Option<String>,
+        
+        /// Address of the contact
+        #[arg(short, long)]
+        address: Option<String>,
     },
 }
 
-// async fn handle_transfer_token(
-//     token_address: &str,
-//     recipient: &str,
-//     amount: &str,
-//     wallet: &Wallet,
-// ) -> Result<(), Box<dyn std::error::Error>> {
-//     let provider = provider::get_provider();
 
-//     // Parse the token contract address and recipient address
-//     let token_address = token_address.parse::<Address>()?;
-//     let recipient = recipient.parse::<Address>()?;
 
-//     // Parse the amount (convert to the token's smallest unit)
-//     let amount: ethers::types::U256 = ethers::utils::parse_units(amount, 18)?.into(); // Adjust decimals as needed
+fn handle_contacts_file(contacts_file: &str, action: &str, name: Option<&str>, address: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+    let mut contacts: Vec<Contact> = match File::open(contacts_file) {
+        Ok(file) => serde_json::from_reader(BufReader::new(file))?,
+        Err(_) => Vec::new(), // Create new if file doesn't exist
+    };
 
-//     // Load the ERC-20 contract ABI
-//     let erc20_abi = include_str!("abi/ERC20.json");
-//     let erc20_abi: ethers::abi::Abi = serde_json::from_str(erc20_abi)?;
-//     let erc20_contract =
-//         ethers::contract::Contract::new(token_address, erc20_abi, provider.clone().into());
+    match action {
+        "add" => {
+            if let (Some(name), Some(address)) = (name, address) {
+                contacts.push(Contact {
+                    name: name.to_string(),
+                    address: address.to_string(),
+                });
+                
+                let file = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .open(contacts_file)?;
+                serde_json::to_writer_pretty(&mut BufWriter::new(file), &contacts)?;
+                println!("Contact '{}' added successfully!", name);
+            } else {
+                return Err("Both name and address are required to add a contact".into());
+            }
+        }
+        "list" => {
+            if contacts.is_empty() {
+                println!("No contacts found.");
+            } else {
+                println!("{}", "Contacts".bold());
+                println!("{}", "-".repeat(50).blue());
+                for contact in &contacts {
+                    println!("Name: {}", contact.name);
+                    println!("Address: {}", contact.address);
+                    println!("{}", "-".repeat(50).blue());
+                }
+            }
+        }
+        "show" => {
+            if let Some(name) = name {
+                if let Some(contact) = contacts.iter().find(|c| c.name == name) {
+                    println!("{}", format!("Contact: {}", name).bold());
+                    println!("Address: {}", contact.address);
+                    println!("{}", "-".repeat(50).blue());
+                } else {
+                    println!("Contact '{}' not found", name);
+                }
+            } else {
+                return Err("Name is required to show a contact".into());
+            }
+        }
+        "delete" => {
+            if let Some(name) = name {
+                contacts.retain(|c| c.name != name);
+                let file = OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .open(contacts_file)?;
+                serde_json::to_writer_pretty(&mut BufWriter::new(file), &contacts)?;
+                println!("Contact '{}' deleted successfully!", name);
+            } else {
+                return Err("Name is required to delete a contact".into());
+            }
+        }
+        _ => return Err(format!("Unknown action: {}", action).into()),
+    }
 
-//     // Create the transfer transaction
-//     let tx = erc20_contract
-//         .method::<(Address, ethers::types::U256), ()>("transfer", (recipient, amount))?
-//         .from(wallet.address.parse::<Address>()?);
-
-//     // Estimate gas for the transaction
-//     let gas_estimate = tx.estimate_gas().await?;
-//     println!("Estimated gas: {}", gas_estimate);
-
-//     // Sign and send the transaction
-//     let signed_tx = wallet.sign_transaction(&tx.tx).await?;
-//     let tx_hash = provider.send_raw_transaction(signed_tx).await?;
-
-//     println!("Transaction successful with hash: {:?}", tx_hash);
-
-//     Ok(())
-// }
+    Ok(())
+}
 
 async fn handle_add_token(
     symbol: &str,
@@ -245,70 +334,18 @@ async fn handle_transfer_token(
     Ok(())
 }
 
+async fn handle_network_info() -> Result<(), Box<dyn std::error::Error>> {
+    let provider = provider::get_provider();
+    let block = provider.get_block_number().await?;
+    let gas_price = provider.get_gas_price().await?;
+    let chain_id = provider.get_chainid().await?;
 
-// ...existing code...
-// async fn handle_approve_transaction(
-//     multisig: &str,
-//     tx_id: u64,
-//     wallet: &Wallet,
-// ) -> Result<(), Box<dyn std::error::Error>> {
-//     let provider = provider::get_provider();
-//     let multisig_abi = include_str!("../abi/MultisigWallet.json");
-//     let multisig_address = multisig.parse::<Address>()?;
-//     let multisig_contract = ethers::contract::Contract::new(multisig_address, multisig_abi.parse()?, provider);
-
-//     let tx = multisig_contract
-//         .method::<_, ()>("confirmTransaction", tx_id)?
-//         .from(wallet.address.parse::<Address>()?)
-//         .send()
-//         .await?;
-
-//     println!("Transaction approved with hash: {:?}", tx);
-//     Ok(())
-// }
-// async fn handle_create_multisig(
-//     owners: Vec<String>,
-//     required: u64,
-//     wallet: &Wallet,
-// ) -> Result<(), Box<dyn std::error::Error>> {
-//     let provider = provider::get_provider();
-//     let factory_abi = include_str!("../abi/MultisigFactory.json");
-//     let factory_address = "0xYourFactoryAddressHere".parse::<Address>()?;
-//     let factory = ethers::contract::Contract::new(factory_address, factory_abi.parse()?, provider);
-
-//     let tx = factory
-//         .method::<_, Address>("createMultisig", (owners, required))?
-//         .from(wallet.address.parse::<Address>()?)
-//         .send()
-//         .await?;
-
-//     println!("Multi-signature wallet deployed at: {:?}", tx);
-//     Ok(())
-// }
-
-
-
-// async fn handle_propose_transaction(
-//     multisig: &str,
-//     to: &str,
-//     value: &str,
-//     data: Option<String>,
-//     wallet: &Wallet,
-// ) -> Result<(), Box<dyn std::error::Error>> {
-//     let provider = provider::get_provider();
-//     let multisig_abi = include_str!("../abi/MultisigWallet.json");
-//     let multisig_address = multisig.parse::<Address>()?;
-//     let multisig_contract = ethers::contract::Contract::new(multisig_address, multisig_abi.parse()?, provider);
-
-//     let tx = multisig_contract
-//         .method::<_, ()>("submitTransaction", (to.parse::<Address>()?, value.parse::<U256>()?, data.unwrap_or_default()))?
-//         .from(wallet.address.parse::<Address>()?)
-//         .send()
-//         .await?;
-
-//     println!("Transaction proposed with hash: {:?}", tx);
-//     Ok(())
-// }
+    println!("Network Status:");
+    println!("- Chain ID: {}", chain_id);
+    println!("- Current Block: {}", block);
+    println!("- Gas Price: {} wei", gas_price);
+    Ok(())
+}
 
 async fn handle_export_key(
     wallet: &Wallet,
@@ -356,6 +393,62 @@ async fn handle_import_wallet(
     wallet.save_to_file(wallet_file)?;
     println!("Wallet imported and saved to {}", wallet_file);
     Ok(())
+}
+
+ async fn handle_transfer_to_contact(
+    name: &str,
+    amount: &str,
+    wallet: &Wallet,
+    contacts_file: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    log::info!(
+        "Attempting transfer to contact '{}' for amount {}",
+        name,
+        amount
+    );
+    let book = ContactsBook::load(contacts_file);
+    match book.get_contact(name) {
+        Some(contact) => {
+            log::info!("Resolved contact '{}' to address {}", name, contact.address);
+            match handle_transfer(&contact.address, amount, wallet).await {
+                Ok(_) => {
+                    log::info!(
+                        "Transfer to contact '{}' ({}) succeeded.",
+                        name,
+                        contact.address
+                    );
+                    println!(
+                        "Transfer to contact '{}' ({}) succeeded.",
+                        name, contact.address
+                    );
+                    Ok(())
+                }
+                Err(e) => {
+                    log::error!(
+                        "Transfer to contact '{}' ({}) failed: {}",
+                        name,
+                        contact.address,
+                        e
+                    );
+                    println!(
+                        "Transfer to contact '{}' ({}) failed: {}",
+                        name, contact.address, e
+                    );
+                    if e.to_string().contains("nonce too low") {
+                        println!(
+                            "Hint: The transaction nonce is too low. You may have pending transactions or need to increment the nonce."
+                        );
+                    }
+                    Err(e)
+                }
+            }
+        }
+        None => {
+            log::error!("Contact '{}' not found.", name);
+            println!("Contact '{}' not found.", name);
+            Err("Contact not found".into())
+        }
+    }
 }
 
 async fn handle_export_keystore(
@@ -438,6 +531,79 @@ async fn handle_estimate_gas(
     println!("Estimated gas: {}", gas_estimate);
     Ok(())
 }
+
+async fn handle_token_balance(
+    address: &str,
+    token: &str,
+    wallet: &Wallet,
+) -> Result<(), Box<dyn std::error::Error>> {
+    dotenv::dotenv().ok();
+    let api_key = std::env::var("ALCHEMY_API_KEY")
+        .map_err(|_| "ALCHEMY_API_KEY environment variable not set")?;
+    let base_url = std::env::var("ALCHEMY_RPC_URL")
+        .map_err(|_| "ALCHEMY_RPC_URL environment not set")?;
+
+    // Get token registry
+    let token_registry = load_token_registry().await?;
+    let token_address = token_registry
+        .get(token)
+        .ok_or_else(|| format!("Token {} not found in registry", token))?;
+
+    // Create JSON-RPC request
+    let client = reqwest::Client::new();
+    let request = JsonRpcRequest {
+        json_rpc: "2.0".to_string(),
+        id: 1,
+        method: "eth_call".to_string(),
+        params: vec![
+            json!({
+                "to": token_address,
+                "data": format!(
+                    "0x70a08231000000000000000000000000{}",
+                    address[2..].to_lowercase()
+                )
+            }),
+            "latest".to_string()
+        ],
+    };
+
+    // Send request
+    let response = client
+        .post(&base_url)
+        .json(&request)
+        .send()
+        .await?
+        .json::<JsonRpcResponse>()
+        .await?;
+
+    if let Some(error) = response.error {
+        return Err(error.message.into());
+    }
+
+    if let Some(result) = response.result {
+        let balance = result
+            .as_str()
+            .ok_or_else(|| "Invalid response format".to_string())?;
+        
+        // Convert hex balance to decimal
+        let balance = i128::from_str_radix(&balance[2..], 16)?;
+        
+        // Get token decimals from registry
+        let decimals = token_registry
+            .get_decimals(token)
+            .ok_or_else(|| format!("Token {} decimals not found", token))?;
+        
+        // Format balance with decimals
+        let formatted_balance = format!("{}", balance as f64 / 10f64.powi(decimals as i32));
+        
+        println!("{}", format!("Balance for {}:", token).bold());
+        println!("{} {}", formatted_balance, token);
+        println!("{}", "-".repeat(50).blue());
+    }
+
+    Ok(())
+}
+
 async fn handle_add_contact(name: &str, address: &str, contacts_file: &str) {
     let mut book = ContactsBook::load(contacts_file);
     book.add_contact(name.to_string(), address.to_string());
@@ -460,6 +626,7 @@ async fn handle_show_contact(name: &str, contacts_file: &str) {
         println!("Contact '{}' not found.", name);
     }
 }
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init(); // Initialize the logger
@@ -568,9 +735,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             handle_transfer_token(&token_address, &recipient, &amount, &wallet).await?
         }
 
-        Commands::History { testnet, number } => {
+        Commands::History { address, limit } => {
             log::info!("Fetching transaction history...");
-            history::history_command(testnet, number, &wallet.address).await?
+            history::history_command(false, Some(&address), Some(limit), &wallet.address).await?
+        }
+        Commands::TokenBalance { address, token } => {
+            log::info!("Fetching token balance...");
+            handle_token_balance(&address, &token, &wallet).await?
+        }
+        Commands::Contact { action, name, address } => {
+            handle_contacts_file("contacts.json", &action, name.as_deref(), address.as_deref())?
         }
     }
 
