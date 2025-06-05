@@ -81,7 +81,8 @@ pub struct TransferMetadata {
 
 pub async fn history_command(
     testnet: bool,
-    number: Option<String>,
+    address: &str,
+    limit: Option<u32>,
     wallet_address: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
@@ -90,127 +91,78 @@ pub async fn history_command(
     let base_url = std::env::var("ALCHEMY_RPC_URL")
         .map_err(|_| "ALCHEMY_RPC_URL environment variable not set")?;
 
-    println!(
-        "{}",
-        format!(
-            "🔍 Fetching transaction history on Rootstock {} for {} ...",
-            if testnet { "Testnet" } else { "Mainnet" },
-            wallet_address
-        )
-            .blue()
+    let url = format!(
+        "{}{}",
+        base_url,
+        if testnet { "/testnet" } else { "" }
     );
 
-    // Construct JSON-RPC request for both sent and received transactions
-    let request = JsonRpcRequest {
-        json_rpc: "2.0".to_string(),
-        id: 0,
-        method: "alchemy_getAssetTransfers".to_string(),
-        params: vec![
-            // Sent transactions (from wallet)
-            AssetTransferParams {
-                from_block: "0x0".to_string(),
-                from_address: Some(wallet_address.to_string()),
-                to_address: None,
-                category: vec![
-                    "external".to_string(),
-                    "erc20".to_string(),
-                    "erc721".to_string(),
-                    "erc1155".to_string(),
-                ],
-                with_metadata: true,
-            },
-            // Received transactions (to wallet)
-            AssetTransferParams {
-                from_block: "0x0".to_string(),
-                from_address: None,
-                to_address: Some(wallet_address.to_string()),
-                category: vec![
-                    "external".to_string(),
-                    "erc20".to_string(),
-                    "erc721".to_string(),
-                    "erc1155".to_string(),
-                ],
-                with_metadata: true,
-            },
-        ],
+    let client = reqwest::Client::new();
+    let params = AssetTransferParams {
+        from_block: "0x0".to_string(),
+        from_address: Some(address.to_string()),
+        to_address: None,
+        category: vec!["external".to_string(), "erc20".to_string()],
+        with_metadata: true,
     };
 
-    let url = format!("{}{}", base_url, api_key);
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+    let request = JsonRpcRequest {
+        json_rpc: "2.0".to_string(),
+        id: 1,
+        method: "alchemy_getAssetTransfers".to_string(),
+        params: vec![params],
+    };
+
     let response = client
         .post(&url)
         .json(&request)
         .send()
-        .await
-        .map_err(|e| format!("API request failed: {}", e))?;
+        .await?
+        .json::<JsonRpcResponse>()
+        .await?;
 
-    if !response.status().is_success() {
-        println!(
-            "{}",
-            format!("❌ API request failed with status: {}", response.status()).red()
-        );
-        return Ok(());
+    if let Some(error) = response.error {
+        return Err(error.message.into());
     }
 
-    let result: JsonRpcResponse = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse response: {}", e))?;
+    if let Some(result) = response.result {
+        let transfers = result.transfers;
+        let limit = limit.unwrap_or(10);
+        let transfers = &transfers[0..transfers.len().min(limit as usize)];
 
-    if let Some(error) = result.error {
-        println!("{}", format!("❌ Error from Alchemy: {}", error.message).red());
-        return Ok(());
-    }
+        println!("{}", "Transaction History".bold().underline());
+        println!("{}", "-".repeat(50).blue());
 
-    let transfers = match result.result {
-        Some(result) => result.transfers,
-        None => {
-            println!("{}", "⚠️ No transactions found.".green());
-            return Ok(());
-        }
-    };
-
-    // Deduplicate transfers by transaction hash
-    let mut seen_hashes = HashSet::new();
-    let transfers: Vec<Transfer> = transfers
-        .into_iter()
-        .filter(|t| seen_hashes.insert(t.hash.clone()))
-        .collect();
-
-    // Limit the number of transfers if specified
-    let transfers = if let Some(num) = number {
-        let limit = usize::from_str(&num).map_err(|e| format!("Invalid number: {}", e))?;
-        transfers.into_iter().take(limit).collect()
-    } else {
-        transfers
-    };
-
-    if transfers.is_empty() {
-        println!("{}", "⚠️ No transactions found.".green());
-        return Ok(());
-    }
-
-    // Display transfers with direction (Sent/Received)
-    for transfer in transfers {
-        let direction = if transfer.from.eq_ignore_ascii_case(wallet_address) {
-            if transfer.to.eq_ignore_ascii_case(wallet_address) {
-                "Self"
+        for transfer in transfers {
+            let direction = if transfer.from == wallet_address {
+                "OUT".red()
             } else {
-                "Sent"
-            }
-        } else {
-            "Received"
-        };
-        println!("{}", format!("✅ {} Transfer:", direction).green());
-        println!("   From: {}", transfer.from);
-        println!("   To: {}", transfer.to);
-        println!("   Token: {}", transfer.asset.unwrap_or("N/A".to_string()));
-        println!("   Value: {}", transfer.value.unwrap_or("N/A".to_string()));
-        println!("   Tx Hash: {}", transfer.hash);
-        println!("   Time: {}", transfer.metadata.block_timestamp);
+                "IN".green()
+            };
+
+            let asset = transfer.asset.as_ref().unwrap_or(&"RBTC".to_string()).clone();
+            let value = match transfer.value {
+                Some(ref v) => v,
+                None => "0",
+            };
+
+            let timestamp = transfer.metadata.block_timestamp.clone();
+
+            println!("{}", format!("Direction: {}", direction).bold());
+            println!("From: {}", transfer.from);
+            println!("To: {}", transfer.to);
+            println!("Asset: {}", asset);
+            println!("Value: {} {}", value, asset);
+            println!("Timestamp: {}", timestamp);
+            println!("Hash: {}", transfer.hash);
+            println!("{}", "-".repeat(50).blue());
+        }
+
+        if transfers.len() < limit as usize {
+            println!("{}", "No more transactions to show".yellow());
+        }
+    } else {
+        println!("{}", "No transactions found".yellow());
     }
 
     Ok(())

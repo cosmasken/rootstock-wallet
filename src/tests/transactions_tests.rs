@@ -2,6 +2,8 @@ use rootstock_wallet::transactions::{TransactionService, TransferError};
 use rootstock_wallet::provider;
 use ethers::types::{Address, U256};
 use std::str::FromStr;
+use rootstock_wallet::wallet::Wallet;
+use dotenv::dotenv;
 
 #[tokio::test]
 async fn test_transaction_service_initialization() {
@@ -77,4 +79,97 @@ async fn test_transaction_invalid_address() {
         "Transaction should fail with InvalidAddress error"
     );
     println!("Transaction invalid address test passed.");
+}
+
+#[tokio::test]
+async fn test_token_balance() {
+    dotenv::dotenv().ok();
+    let wallet = Wallet::new();
+    
+    // Test with valid token
+    let result = handle_token_balance(
+        &wallet.address,
+        "RIF",
+        &wallet,
+    ).await;
+    assert!(result.is_ok());
+    
+    // Test with invalid token
+    let result = handle_token_balance(
+        &wallet.address,
+        "INVALID_TOKEN",
+        &wallet,
+    ).await;
+    assert!(result.is_err());
+    
+    // Test with invalid address
+    let result = handle_token_balance(
+        "invalid_address",
+        "RIF",
+        &wallet,
+    ).await;
+    assert!(result.is_err());
+}
+
+#[tokio::test]
+async fn test_transaction_history() {
+    dotenv::dotenv().ok();
+    let wallet = Wallet::new();
+    
+    // Test with valid address and limit
+    let result = history_command(
+        false,  // testnet
+        &wallet.address,
+        Some(5),
+        &wallet.address,
+    ).await;
+    assert!(result.is_ok());
+    
+    // Test with invalid address
+    let result = history_command(
+        false,
+        "invalid_address",
+        Some(5),
+        &wallet.address,
+    ).await;
+    assert!(result.is_err());
+    
+    // Test with large limit
+    let result = history_command(
+        false,
+        &wallet.address,
+        Some(1000),
+        &wallet.address,
+    ).await;
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_network_selection() {
+    dotenv::dotenv().ok();
+    let wallet = Wallet::new();
+    
+    // Test mainnet
+    let result = handle_token_balance(
+        &wallet.address,
+        "RIF",
+        &wallet,
+    ).await;
+    assert!(result.is_ok());
+    
+    // Test testnet
+    let result = handle_token_balance(
+        &wallet.address,
+        "RIF",
+        &wallet,
+    ).await;
+    assert!(result.is_ok());
+    
+    // Test invalid network
+    let result = handle_token_balance(
+        &wallet.address,
+        "RIF",
+        &wallet,
+    ).await;
+    assert!(result.is_err());
 }
