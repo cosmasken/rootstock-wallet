@@ -21,10 +21,10 @@ pub fn load_token_registry() -> TokenRegistry {
     })
 }
 
-pub fn get_network_name() -> &'static str {
-    match std::env::var("CHAIN_ID").as_deref() {
-        Ok("30") => "mainnet",
-        Ok("31") => "testnet",
-        _ => "testnet", // default
-    }
-}
+// pub fn get_network_name() -> &'static str {
+//     match std::env::var("CHAIN_ID").as_deref() {
+//         Ok("30") => "mainnet",
+//         Ok("31") => "testnet",
+//         _ => "testnet", // default
+//     }
+// }

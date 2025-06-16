@@ -10,7 +10,7 @@ use rootstock_wallet::wallet::Wallet;
 use rootstock_wallet::history;
 use std::str::FromStr;
 use std::collections::HashMap;
-use serde_json::Value;
+use serde_json::{to_string, Value};
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
 use serde::{Serialize, Deserialize};
@@ -185,9 +185,43 @@ enum Commands {
         #[arg(short, long)]
         address: Option<String>,
     },
+    ListPendingTxs {
+        #[arg(short, long)]
+        multisig: String,
+    },
 }
 
-
+async fn handle_list_pending_txs(
+    multisig: &str,
+    wallet: &Wallet,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let provider = provider::get_provider(&cli.network);
+    let abi: Abi = serde_json::from_str(include_str!("abi/MultiSigWallet.json"))?;
+    let contract = Contract::new(multisig.parse::<Address>()?, abi, provider.clone());
+    
+    let tx_ids: Vec<U256> = contract
+        .method::<(U256, U256, bool), Vec<U256>>(
+            "getTransactionIds",
+            (U256::zero(), U256::from(u64::MAX), true),
+        )?
+        .call()
+        .await?;
+    
+    for tx_id in tx_ids {
+        let tx: (Address, U256, Bytes, bool, U256) = contract
+            .method::<U256, (Address, U256, Bytes, bool, U256)>("transactions", tx_id)?
+            .call()
+            .await?;
+        println!("Transaction ID: {}", tx_id);
+        println!("To: {:?}", tx.0);
+        println!("Value: {} RBTC", ethers::utils::format_units(tx.1, "ether")?);
+        println!("Executed: {}", tx.3);
+        println!("Confirmations: {}", tx.4);
+        println!("{}", "-".repeat(50).blue());
+    }
+    
+    Ok(())
+}
 
 fn handle_contacts_file(contacts_file: &str, action: &str, name: Option<&str>, address: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
     let mut contacts: Vec<Contact> = match File::open(contacts_file) {
@@ -300,7 +334,8 @@ async fn handle_transfer_token(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let provider = provider::get_provider();
     let registry = load_token_registry();
-    let network = get_network_name();
+    // let network = get_network_name();
+    
 
     // Try to resolve symbol to address/decimals
     let (token_address, decimals) = match network {
@@ -456,7 +491,7 @@ async fn handle_export_keystore(
     password: &str,
     output: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let keystore = Wallet::to_keystore(&wallet.private_key, password)?;
+    let keystore = Wallet::encrypt(wallet, password)?;
     std::fs::write(output, keystore)?;
     println!("Keystore exported to {}", output);
     Ok(())
@@ -475,10 +510,7 @@ async fn handle_transfer(
     let recipient = recipient
         .parse::<Address>()
         .map_err(|e| format!("Invalid recipient address: {}", e))?;
-    let chain_id: u64 = std::env::var("CHAIN_ID")
-        .expect("CHAIN_ID environment variable not set")
-        .parse()
-        .expect("Invalid CHAIN_ID value");
+     let chain_id = provider.get_chainid().await.map_err(|e| format!("Failed to fetch chain ID: {}", e))?;
 
     let tx = ethers::types::TransactionRequest::new()
         .to(recipient)
@@ -563,7 +595,7 @@ async fn handle_token_balance(
                     address[2..].to_lowercase()
                 )
             }),
-            "latest".to_string()
+            serde_json::Value::String("latest".to_owned())
         ],
     };
 
@@ -583,8 +615,8 @@ async fn handle_token_balance(
     if let Some(result) = response.result {
         let balance = result
             .as_str()
-            .ok_or_else(|| "Invalid response format".to_string())?;
-        
+            .ok_or_else(|| "Invalid response format".to_string())?
+            .to_string();
         // Convert hex balance to decimal
         let balance = i128::from_str_radix(&balance[2..], 16)?;
         
@@ -627,6 +659,75 @@ async fn handle_show_contact(name: &str, contacts_file: &str) {
     }
 }
 
+use ethers::abi::Abi;
+use ethers::contract::Contract;
+use ethers::types::{Address, U256};
+
+async fn handle_create_multisig(
+    owners: Vec<String>,
+    required: u64,
+    wallet: &Wallet,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let provider = provider::get_provider(&cli.network);
+    let abi: Abi = serde_json::from_str(include_str!("abi/MultiSigWallet.json"))?;
+    let bytecode = include_bytes!("bytecode/MultiSigWallet.bin");
+    
+    let owners: Vec<Address> = owners.iter().map(|o| o.parse::<Address>().unwrap()).collect();
+    let factory = Contract::new(Address::zero(), abi, provider.clone());
+    
+    let deploy_tx = factory
+        .deploy((owners, U256::from(required)))?
+        .from(wallet.address.parse::<Address>()?);
+    
+    let receipt = deploy_tx.send().await?;
+    let contract_address = receipt.contract_address.unwrap();
+    
+    println!("Multi-sig wallet deployed at: {:?}", contract_address);
+    Ok(())
+}
+async fn handle_propose_transaction(
+    multisig: &str,
+    to: &str,
+    value: &str,
+    data: Option<String>,
+    wallet: &Wallet,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let provider = provider::get_provider(&cli.network);
+    let abi: Abi = serde_json::from_str(include_str!("abi/MultiSigWallet.json"))?;
+    let contract = Contract::new(multisig.parse::<Address>()?, abi, provider.clone());
+    
+    let value = ethers::utils::parse_units(value, "ether")?;
+    let data = data.unwrap_or_default().parse::<Bytes>()?;
+    
+    let tx = contract
+        .method::<(Address, U256, Bytes), U256>("submitTransaction", (
+            to.parse::<Address>()?,
+            value,
+            data,
+        ))?
+        .from(wallet.address.parse::<Address>()?);
+    
+    let receipt = tx.send().await?;
+    println!("Transaction proposed with ID: {:?}", receipt.transaction_index);
+    Ok(())
+}
+async fn handle_approve_transaction(
+    multisig: &str,
+    tx_id: u64,
+    wallet: &Wallet,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let provider = provider::get_provider(&cli.network);
+    let abi: Abi = serde_json::from_str(include_str!("abi/MultiSigWallet.json"))?;
+    let contract = Contract::new(multisig.parse::<Address>()?, abi, provider.clone());
+    
+    let tx = contract
+        .method::<U256, ()>("confirmTransaction", U256::from(tx_id))?
+        .from(wallet.address.parse::<Address>()?);
+    
+    let receipt = tx.send().await?;
+    println!("Transaction {} approved: {:?}", tx_id, receipt.transaction_hash);
+    Ok(())
+}
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init(); // Initialize the logger

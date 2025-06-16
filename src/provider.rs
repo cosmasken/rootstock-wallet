@@ -6,7 +6,7 @@ use std::env;
 pub fn get_provider(network: &str) -> Provider<Http> {
     dotenv().ok();
     let rpc_url = env::var("RPC_URL").expect("RPC_URL environment variable not set");
-    let api_key = env::var("API_KEY").expect("API_KEY environment variable not set");
+    let api_key = env::var("RPC_API_KEY").expect("API_KEY environment variable not set");
     
     // Determine the correct network suffix
     let network_suffix = match network.to_lowercase().as_str() {
