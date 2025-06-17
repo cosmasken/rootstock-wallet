@@ -1,7 +1,7 @@
 // use serde::{Deserialize, Serialize};
 // use std::collections::HashMap;
 // use std::fs;
-// use std::path::Path;
+// use std::path::Pa
 
 // #[derive(Serialize, Deserialize, Debug, Clone)]
 // pub struct Contact {
@@ -45,7 +45,6 @@
 //         self.contacts.values().collect()
 //     }
 // }
-
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -108,7 +107,7 @@ mod tests {
     fn test_contacts_book() {
         let file = NamedTempFile::new().unwrap();
         let path = file.path().to_str().unwrap();
-        
+
         let mut book = ContactsBook::load(path);
         assert_eq!(book.list_contacts().len(), 0);
 

@@ -1,12 +1,12 @@
 {
   "contacts": {
-    "alice": {
-      "name": "alice",
-      "address": "0x09aB514B6974601967E7b379478EFf4073cceD06"
-    },
     "bob": {
       "name": "bob",
       "address": "0x09aB514B6974801967E7b379478EFf4073cceD06"
+    },
+    "alice": {
+      "name": "alice",
+      "address": "0x09aB514B6974601967E7b379478EFf4073cceD06"
     }
   }
 }

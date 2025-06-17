@@ -1,0 +1,34 @@
+use colored::Colorize;
+use prettytable::{Cell, Row, Table};
+
+pub struct TableBuilder {
+    table: Table,
+}
+
+impl TableBuilder {
+    pub fn new() -> Self {
+        Self {
+            table: Table::new(),
+        }
+    }
+
+    pub fn add_header(&mut self, headers: &[&str]) -> &mut Self {
+        let row = Row::new(headers.iter().map(|h| Cell::new(h)).collect());
+        self.table.set_titles(row);
+        self
+    }
+
+    pub fn add_row(&mut self, cells: &[&str]) -> &mut Self {
+        let row = Row::new(cells.iter().map(|c| Cell::new(c)).collect());
+        self.table.add_row(row);
+        self
+    }
+
+    pub fn print(&self) {
+        self.table.printstd();
+    }
+
+    pub fn print_error(&self, error: &str) {
+        eprintln!("{}: {}", "Error".red().bold(), error);
+    }
+}

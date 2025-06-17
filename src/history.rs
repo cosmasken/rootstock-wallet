@@ -5,7 +5,6 @@
 // use ethers_providers::Middleware;
 // use serde::{Deserialize, Serialize, Deserializer};
 
-
 // // Custom deserialization for value field
 // fn deserialize_value<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 // where
@@ -89,7 +88,7 @@
 // ) -> Result<(), Box<dyn std::error::Error>> {
 //     dotenv().ok();
 //     let limit = limit.unwrap_or(10);
-    
+
 //     // Try Alchemy API first
 //     match fetch_history_alchemy(network, address, limit, direction, wallet_address).await {
 //         Ok(transfers) => display_transfers(&transfers, wallet_address, network, limit).await,
@@ -256,9 +255,9 @@
 use crate::provider::get_provider;
 use colored::*;
 use dotenv::dotenv;
-use ethers::types::{Address, BlockNumber, Filter, H256, U256};
-use serde::{Deserialize, Serialize, Deserializer};
 use ethers::middleware::Middleware;
+use ethers::types::{Address, BlockNumber, Filter, H256, U256};
+use serde::{Deserialize, Deserializer, Serialize};
 
 // Custom deserialization for value field
 fn deserialize_value<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
@@ -343,13 +342,17 @@ pub async fn history_command(
 ) -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
     let limit = limit.unwrap_or(10);
-    
+
     // Try Alchemy API first
     match fetch_history_alchemy(network, address, limit, direction, wallet_address).await {
         Ok(transfers) => display_transfers(&transfers, wallet_address, network, limit).await,
         Err(e) => {
-            log::warn!("Alchemy API failed: {}. Falling back to ethers provider.", e);
-            let transfers = fetch_history_fallback(address.unwrap_or(wallet_address), limit, network).await?;
+            log::warn!(
+                "Alchemy API failed: {}. Falling back to ethers provider.",
+                e
+            );
+            let transfers =
+                fetch_history_fallback(address.unwrap_or(wallet_address), limit, network).await?;
             display_transfers(&transfers, wallet_address, network, limit).await
         }
     }
@@ -362,10 +365,8 @@ async fn fetch_history_alchemy(
     direction: &str,
     wallet_address: &str,
 ) -> Result<Vec<Transfer>, Box<dyn std::error::Error>> {
-    let api_key = std::env::var("ALCHEMY_API_KEY")
-        .map_err(|_| "ALCHEMY_API_KEY not set")?;
-    let base_url = std::env::var("ALCHEMY_RPC_URL")
-        .map_err(|_| "ALCHEMY_RPC_URL not set")?;
+    let api_key = std::env::var("ALCHEMY_API_KEY").map_err(|_| "ALCHEMY_API_KEY not set")?;
+    let base_url = std::env::var("ALCHEMY_RPC_URL").map_err(|_| "ALCHEMY_RPC_URL not set")?;
 
     let url = format!(
         "{}{}/{}",
@@ -479,7 +480,11 @@ async fn display_transfers(
             "IN".green()
         };
 
-        let asset = transfer.asset.as_ref().unwrap_or(&"RBTC".to_string()).clone();
+        let asset = transfer
+            .asset
+            .as_ref()
+            .unwrap_or(&"RBTC".to_string())
+            .clone();
         let value = match transfer.value {
             Some(ref v) => v,
             None => "0",
