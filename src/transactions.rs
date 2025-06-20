@@ -1,87 +1,128 @@
-use ethers::{
-    core::types::{TransactionRequest, U256},
-    prelude::*,
-    providers::{Middleware, ProviderError},
-    signers::WalletError,
-};
-use thiserror::Error;
-use zeroize::Zeroizing;
+// use crate::provider::get_provider;
+// use crate::wallet::Wallet;
+// use ethers::abi::Abi;
+// use ethers::contract::Contract;
+// use ethers::providers::Middleware;
+// use ethers::types::transaction::eip2718::TypedTransaction;
+// use ethers::types::{Address, TransactionRequest, U256};
+// use indicatif::ProgressBar;
+// use log::{error, info};
 
-#[derive(Error, Debug)]
-pub enum TransferError {
-    #[error("Provider error: {0}")]
-    Provider(#[from] ProviderError),
-    #[error("Wallet error: {0}")]
-    Wallet(#[from] WalletError),
-    #[error("Insufficient balance")]
-    InsufficientBalance,
-    #[error("Invalid recipient address")]
-    InvalidAddress,
-    #[error("Transaction timeout")]
-    Timeout,
-}
+// pub async fn send_transaction(
+//     wallet: &Wallet,
+//     recipient: &str,
+//     amount: &str,
+//     network: &str,
+//     custom_rpc: Option<&str>,
+//     nonce: Option<u64>,
+// ) -> Result<String, Box<dyn std::error::Error>> {
+//     let pb = ProgressBar::new_spinner();
+//     pb.set_message("Sending transaction...");
 
-pub struct TransactionService {
-    provider: Provider<Http>,
-    wallet: LocalWallet,
-}
+//     let provider = get_provider(network, custom_rpc);
+//     let recipient = recipient.parse::<Address>()?;
+//     let amount = ethers::utils::parse_units(amount, "ether")?;
+//     let chain_id = provider.get_chainid().await?;
+//     let nonce = match nonce {
+//         Some(n) => U256::from(n),
+//         None => {
+//             provider
+//                 .get_transaction_count(wallet.address.parse::<Address>()?, None)
+//                 .await?
+//         }
+//     };
 
-impl TransactionService {
-    pub fn new(
-        provider: Provider<Http>,
-        private_key: Zeroizing<String>,
-    ) -> Result<Self, TransferError> {
-        let chain_id: u64 = std::env::var("CHAIN_ID")
-            .expect("CHAIN_ID environment variable not set")
-            .parse()
-            .expect("Invalid CHAIN_ID value");
-        let wallet = private_key.parse::<LocalWallet>()?.with_chain_id(chain_id); // Chain ID 31 for Rootstock Testnet
-        Ok(Self { provider, wallet })
-    }
+//     let tx = TransactionRequest::new()
+//         .to(recipient)
+//         .value(amount)
+//         .from(wallet.address.parse::<Address>()?)
+//         .chain_id(chain_id.as_u64())
+//         .nonce(nonce)
+//         .gas(21000)
+//         .gas_price(provider.get_gas_price().await?);
 
-    pub async fn send_rbtc(
-        &self,
-        to: Address,
-        amount: U256,
-    ) -> Result<TransactionReceipt, TransferError> {
-        // 1. Validate recipient address
-        if to == Address::zero() {
-            return Err(TransferError::InvalidAddress);
-        }
+//     let typed_tx: TypedTransaction = tx.into();
+//     let signed_tx = wallet.sign_transaction(&typed_tx).await?;
+//     let pending_tx = provider
+//         .send_raw_transaction(signed_tx)
+//         .await
+//         .map_err(|e| {
+//             error!("Failed to send transaction: {}", e);
+//             Box::new(e) as Box<dyn std::error::Error>
+//         })?;
 
-        // 2. Check balance
-        let balance = self
-            .provider
-            .get_balance(self.wallet.address(), None)
-            .await?;
-        if balance < amount {
-            return Err(TransferError::InsufficientBalance);
-        }
+//     let tx_hash = format!("{:?}", pending_tx);
+//     pb.finish_with_message("Transaction sent!");
+//     info!("Transaction sent with hash: {}", tx_hash);
+//     Ok(tx_hash)
+// }
 
-        // 3. Build transaction (EIP-1559)
-        let tx = TransactionRequest::new()
-            .to(to)
-            .value(amount)
-            .from(self.wallet.address())
-            .chain_id(self.wallet.chain_id());
-        // 4. Read interval and retries from env, fallback to defaults
-        let _poll_interval_secs = std::env::var("TX_POLL_INTERVAL_SECS")
-            .ok()
-            .and_then(|v| v.parse::<u64>().ok())
-            .unwrap_or(5);
-        let _poll_retries = std::env::var("TX_POLL_RETRIES")
-            .ok()
-            .and_then(|v| v.parse::<u32>().ok())
-            .unwrap_or(24);
+// pub async fn estimate_gas(
+//     wallet: &Wallet,
+//     recipient: &str,
+//     amount: &str,
+//     network: &str,
+//     custom_rpc: Option<&str>,
+// ) -> Result<U256, Box<dyn std::error::Error>> {
+//     let provider = get_provider(network, custom_rpc);
+//     let recipient = recipient.parse::<Address>()?;
+//     let amount = ethers::utils::parse_units(amount, "ether")?;
 
-        // 4. Send and await receipt (timeout after 5 blocks)
-        let pending_tx = self
-            .provider
-            .send_transaction(tx, None)
-            .await?
-            .interval(std::time::Duration::from_secs(5))
-            .retries(24);
+//     let tx = TransactionRequest::new()
+//         .to(recipient)
+//         .value(amount)
+//         .from(wallet.address.parse::<Address>()?);
 
-        pending_tx.await?.ok_or(TransferError::Timeout)
-    }
-}
+//     let gas_estimate = provider.estimate_gas(&tx.into(), None).await.map_err(|e| {
+//         error!("Failed to estimate gas: {}", e);
+//         Box::new(e) as Box<dyn std::error::Error>
+//     })?;
+
+//     Ok(gas_estimate)
+// }
+
+// pub async fn send_token_transfer(
+//     wallet: &Wallet,
+//     token_address: &str,
+//     recipient: &str,
+//     amount: &str,
+//     decimals: u8,
+//     network: &str,
+//     custom_rpc: Option<&str>,
+// ) -> Result<String, Box<dyn std::error::Error>> {
+//     let pb = ProgressBar::new_spinner();
+//     pb.set_message("Processing token transfer...");
+
+//     let provider = get_provider(network, custom_rpc);
+//     let token_address = token_address.parse::<Address>()?;
+//     let recipient = recipient.parse::<Address>()?;
+//     let amount: U256 = ethers::utils::parse_units(amount, decimals as usize)?.into();
+
+//     let erc20_abi: Abi = serde_json::from_str(include_str!("abi/ERC20.json"))?;
+//     let erc20_contract = Contract::new(token_address, erc20_abi, provider.clone().into());
+
+//     let tx = erc20_contract
+//         .method::<(Address, U256), bool>("transfer", (recipient, amount))?
+//         .from(wallet.address.parse::<Address>()?);
+
+//     let gas_estimate = tx.estimate_gas().await.map_err(|e| {
+//         error!("Failed to estimate gas for token transfer: {}", e);
+//         Box::new(e) as Box<dyn std::error::Error>
+//     })?;
+
+//     info!("Estimated gas for token transfer: {}", gas_estimate);
+
+//     let signed_tx = wallet.sign_transaction(&tx.tx).await?;
+//     let pending_tx = provider
+//         .send_raw_transaction(signed_tx)
+//         .await
+//         .map_err(|e| {
+//             error!("Failed to send token transfer: {}", e);
+//             Box::new(e) as Box<dyn std::error::Error>
+//         })?;
+
+//     let tx_hash = format!("{:?}", pending_tx);
+//     pb.finish_with_message("Token transfer sent!");
+//     info!("Token transfer sent with hash: {}", tx_hash);
+//     Ok(tx_hash)
+// }
