@@ -7,3 +7,11 @@ wallet_qr.png
 contacts.json
 exported.key 
 wallet_address.png
+
+wallet*.json
+wallet*.png
+*.key
+*copy*
+*Copy*
+*copied*
+*Copied*
