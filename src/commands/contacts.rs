@@ -40,13 +40,16 @@ pub enum ContactsAction {
         /// Contact name or address
         identifier: String,
         /// New name
-        #[arg(short, long)]
+        #[arg(long)]
         name: Option<String>,
+        /// New address
+        #[arg(long)]
+        address: Option<String>,
         /// New notes
-        #[arg(short, long)]
+        #[arg(long)]
         notes: Option<String>,
         /// New tags
-        #[arg(short, long)]
+        #[arg(long)]
         tags: Option<Vec<String>>,
     },
     /// Get contact details
@@ -88,10 +91,11 @@ impl ContactsCommand {
             ContactsAction::Update {
                 identifier,
                 name,
+                address,
                 notes,
                 tags,
             } => {
-                self.update_contact(identifier, name.clone(), notes.clone(), tags.clone())
+                self.update_contact(identifier, name.clone(),address.clone(), notes.clone(), tags.clone())
                     .await?
             }
             ContactsAction::Get { identifier } => self.get_contact(identifier).await?,
@@ -176,6 +180,7 @@ impl ContactsCommand {
         &self,
         identifier: &str,
         name: Option<String>,
+        address: Option<String>,
         notes: Option<String>,
         tags: Option<Vec<String>>,
     ) -> Result<()> {
@@ -188,6 +193,9 @@ impl ContactsCommand {
 
         if let Some(name) = name {
             contact.name = name;
+        }
+        if let Some(address) = address {
+            contact.address = address.parse()?; 
         }
         if let Some(notes) = notes {
             contact.notes = Some(notes);
@@ -289,62 +297,62 @@ impl ContactsCommand {
     //     Ok(())
     // }
     pub fn save_contacts(&self, contacts: &[Contact]) -> Result<()> {
-    let contacts_dir = dirs::data_local_dir()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get data directory"))?
-        .join("rootstock-wallet");
-    
-    std::fs::create_dir_all(&contacts_dir)?;
-    
-    let contacts_path = contacts_dir.join("contacts.json");
-    let content = serde_json::to_string_pretty(contacts)?;
-    std::fs::write(contacts_path, content)?;
-    Ok(())
-}
+        let contacts_dir = dirs::data_local_dir()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get data directory"))?
+            .join("rootstock-wallet");
+
+        std::fs::create_dir_all(&contacts_dir)?;
+
+        let contacts_path = contacts_dir.join("contacts.json");
+        let content = serde_json::to_string_pretty(contacts)?;
+        std::fs::write(contacts_path, content)?;
+        Ok(())
+    }
 
     pub async fn save_contacts_to_file(&self, file: &Option<String>) -> Result<()> {
-    let contacts = self.load_contacts()?;
-    
-    let file_path = match file {
-        Some(path) => std::path::PathBuf::from(path),
-        None => {
-            // Default to contacts.json in current directory
-            std::env::current_dir()?.join("contacts.json")
-        }
-    };
+        let contacts = self.load_contacts()?;
 
-    let content = serde_json::to_string_pretty(&contacts)?;
-    std::fs::write(&file_path, content)?;
+        let file_path = match file {
+            Some(path) => std::path::PathBuf::from(path),
+            None => {
+                // Default to contacts.json in current directory
+                std::env::current_dir()?.join("contacts.json")
+            }
+        };
 
-    println!(
-        "{}: Contacts saved to {}",
-        "Success".green().bold(),
-        file_path.display()
-    );
-    Ok(())
-}
+        let content = serde_json::to_string_pretty(&contacts)?;
+        std::fs::write(&file_path, content)?;
 
-pub async fn load_contacts_from_file(&self, file: &Option<String>) -> Result<()> {
-    let file_path = match file {
-        Some(path) => std::path::PathBuf::from(path),
-        None => {
-            // Default to contacts.json in current directory
-            std::env::current_dir()?.join("contacts.json")
-        }
-    };
+        println!(
+            "{}: Contacts saved to {}",
+            "Success".green().bold(),
+            file_path.display()
+        );
+        Ok(())
+    }
 
-    let content = std::fs::read_to_string(&file_path)?;
-    let contacts: Vec<Contact> = serde_json::from_str(&content)?;
+    pub async fn load_contacts_from_file(&self, file: &Option<String>) -> Result<()> {
+        let file_path = match file {
+            Some(path) => std::path::PathBuf::from(path),
+            None => {
+                // Default to contacts.json in current directory
+                std::env::current_dir()?.join("contacts.json")
+            }
+        };
 
-    // Merge with existing contacts (optional - you might want to replace instead)
-    let mut existing_contacts = self.load_contacts().unwrap_or_default();
-    existing_contacts.extend(contacts);
-    self.save_contacts(&existing_contacts)?;
+        let content = std::fs::read_to_string(&file_path)?;
+        let contacts: Vec<Contact> = serde_json::from_str(&content)?;
 
-    println!(
-        "{}: Contacts loaded from {}",
-        "Success".green().bold(),
-        file_path.display()
-    );
-    Ok(())
-}
+        // Merge with existing contacts (optional - you might want to replace instead)
+        let mut existing_contacts = self.load_contacts().unwrap_or_default();
+        existing_contacts.extend(contacts);
+        self.save_contacts(&existing_contacts)?;
+
+        println!(
+            "{}: Contacts loaded from {}",
+            "Success".green().bold(),
+            file_path.display()
+        );
+        Ok(())
+    }
 }

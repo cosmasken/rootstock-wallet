@@ -28,7 +28,7 @@ impl TableBuilder {
         self.table.printstd();
     }
 
-    pub fn print_error(&self, error: &str) {
+    pub fn _print_error(&self, error: &str) {
         eprintln!("{}: {}", "Error".red().bold(), error);
     }
 }

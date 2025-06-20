@@ -13,4 +13,40 @@
     "tags": [],
     "created_at": "2025-06-17T09:59:51.106470297+03:00"
   }
+  ,
+    {
+      "name": "alice",
+      "address": "0x1234567890abcdef1234567890abcdef12345678",
+      "notes": "Friend from work",
+      "tags": ["work", "friend"],
+      "created_at": "2025-06-17T10:05:00.000000000+03:00"
+    },
+    {
+      "name": "bob",
+      "address": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+      "notes": "Gym buddy",
+      "tags": ["gym"],
+      "created_at": "2025-06-17T10:10:00.000000000+03:00"
+    },
+    {
+      "name": "eve",
+      "address": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "notes": "Security expert",
+      "tags": ["security"],
+      "created_at": "2025-06-17T10:15:00.000000000+03:00"
+    },
+    {
+      "name": "mallory",
+      "address": "0xbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef",
+      "notes": "Met at conference",
+      "tags": ["conference"],
+      "created_at": "2025-06-17T10:20:00.000000000+03:00"
+    },
+    {
+      "name": "trent",
+      "address": "0xcafebabecafebabecafebabecafebabecafebabe",
+      "notes": "Trusted contact",
+      "tags": ["trusted"],
+      "created_at": "2025-06-17T10:25:00.000000000+03:00"
+    }
 ]
