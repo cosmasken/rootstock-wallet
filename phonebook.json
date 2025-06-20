@@ -1,0 +1,52 @@
+[
+  {
+    "name": "cosmas",
+    "address": "0x09ab514b6974801967e7b379478eff4073cced05",
+    "notes": null,
+    "tags": [],
+    "created_at": "2025-06-17T09:41:02.116754023+03:00"
+  },
+  {
+    "name": "cody",
+    "address": "0x6fef3e84f67dac6c930f4319397115be31173e6d",
+    "notes": null,
+    "tags": [],
+    "created_at": "2025-06-17T09:59:51.106470297+03:00"
+  }
+  ,
+    {
+      "name": "alice",
+      "address": "0x1234567890abcdef1234567890abcdef12345678",
+      "notes": "Friend from work",
+      "tags": ["work", "friend"],
+      "created_at": "2025-06-17T10:05:00.000000000+03:00"
+    },
+    {
+      "name": "bob",
+      "address": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+      "notes": "Gym buddy",
+      "tags": ["gym"],
+      "created_at": "2025-06-17T10:10:00.000000000+03:00"
+    },
+    {
+      "name": "eve",
+      "address": "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "notes": "Security expert",
+      "tags": ["security"],
+      "created_at": "2025-06-17T10:15:00.000000000+03:00"
+    },
+    {
+      "name": "mallory",
+      "address": "0xbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef",
+      "notes": "Met at conference",
+      "tags": ["conference"],
+      "created_at": "2025-06-17T10:20:00.000000000+03:00"
+    },
+    {
+      "name": "trent",
+      "address": "0xcafebabecafebabecafebabecafebabecafebabe",
+      "notes": "Trusted contact",
+      "tags": ["trusted"],
+      "created_at": "2025-06-17T10:25:00.000000000+03:00"
+    }
+]

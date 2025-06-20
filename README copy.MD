@@ -14,13 +14,13 @@ A lightweight Rust-based CLI application for managing Rootstock wallets, transfe
   - Send RBTC to any Rootstock address.
   - Locally sign transactions for enhanced security.
 - **Balance Retrieval**:
-  - ✔️ Fetch and display the RBTC balance of any address.
+  - Fetch and display the RBTC balance of any address.
 - **Gas Estimation**:
   - Estimate gas costs for transactions.
 - **Network Information**:
   - Retrieve current block number, gas price, and chain ID.
 - **QR Code Generation**:
-  - ✔️ Generate QR codes for wallet addresses.
+  - Generate QR codes for wallet addresses.
 - **Multi-Signature Wallet Support**:
   - Create multi-signature wallets with specified owners and required approvals.
   - Propose transactions requiring multiple approvals.
@@ -28,7 +28,7 @@ A lightweight Rust-based CLI application for managing Rootstock wallets, transfe
 - **Network Configuration**:
   - Support for both mainnet and testnet
   - Network selection via command-line flag
-  - ✔️ Automatic chain ID configuration
+  - Automatic chain ID configuration
 - **Transaction History**:
   - View transaction history for any address
   - Display both RBTC and ERC-20 token transfers

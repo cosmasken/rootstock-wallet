@@ -1,0 +1,10 @@
+{
+  "wallets": {
+    "0x6fef3e84f67dac6c930f4319397115be31173e6d": {
+      "address": "0x6fef3e84f67dac6c930f4319397115be31173e6d",
+      "public_key": "35f83fd90e1b1017c56cbdadcd11ae20795f2d6dd063c8f459bc9499a931556bc890715f7c4cc4cd762584b3cfa1160c7a853745345e8b77f4d27a4f06e5fd78",
+      "private_key": "a264aa04a5fd981e20a887a5603990b8257cbe8793585649eba3e7c76cf68f05"
+    }
+  },
+  "current_wallet": "0x6fef3e84f67dac6c930f4319397115be31173e6d"
+}
