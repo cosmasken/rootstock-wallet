@@ -1,5 +1,7 @@
+#![allow(warnings)]
 use crate::commands::balance::BalanceCommand;
 use crate::commands::history::HistoryCommand;
+use crate::commands::transfer::TransferCommand;
 use anyhow::Result;
 use clap::Parser;
 use dotenv::dotenv;
@@ -32,13 +34,16 @@ async fn main() -> Result<()> {
             status,
             incoming,
             outgoing,
+            api_key,
+            network,
         } => {
             let cmd = HistoryCommand {
                 address,
                 contact: None,
                 limit: limit as u32,
                 token,
-                // network: String::from("mainnet"),
+                network,
+                api_key,
                 detailed: false,
                 status,
                 from: None,
@@ -49,16 +54,35 @@ async fn main() -> Result<()> {
                 outgoing,
             };
             cmd.execute().await?
-        },
-        commands::Commands::Balance { address, network, tokens } => {
-            let cmd = BalanceCommand { address, network, tokens };
-            cmd.execute().await?
-        },
-        commands::Commands::Transfer { to, amount, token, wallet } =>{
-            todo!()
         }
-         commands::Commands::Wallet(cmd) => cmd.execute().await?,
-       
+        commands::Commands::Balance {
+            address,
+            network,
+            token,
+        } => {
+            let cmd = BalanceCommand {
+                address,
+                network,
+                token,
+            };
+            cmd.execute().await?
+        }
+        commands::Commands::Transfer {
+            address,
+            value,
+            token,
+            network,
+        } => {
+            let cmd = TransferCommand {
+                address,
+                value,
+                token,
+                network,
+            };
+            cmd.execute().await?
+        }
+        commands::Commands::Wallet(cmd) => cmd.execute().await?,
+        commands::Commands::SetApiKey(cmd) => cmd.execute().await?,
     }
     Ok(())
 }

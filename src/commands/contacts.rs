@@ -95,8 +95,14 @@ impl ContactsCommand {
                 notes,
                 tags,
             } => {
-                self.update_contact(identifier, name.clone(),address.clone(), notes.clone(), tags.clone())
-                    .await?
+                self.update_contact(
+                    identifier,
+                    name.clone(),
+                    address.clone(),
+                    notes.clone(),
+                    tags.clone(),
+                )
+                .await?
             }
             ContactsAction::Get { identifier } => self.get_contact(identifier).await?,
             ContactsAction::Search { query } => self.search_contacts(query).await?,
@@ -195,7 +201,7 @@ impl ContactsCommand {
             contact.name = name;
         }
         if let Some(address) = address {
-            contact.address = address.parse()?; 
+            contact.address = address.parse()?;
         }
         if let Some(notes) = notes {
             contact.notes = Some(notes);

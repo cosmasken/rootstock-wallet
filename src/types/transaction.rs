@@ -1,7 +1,7 @@
-use ethers::types::{H256, U256, Transaction, TxHash};
+use ethers::types::Address;
+use ethers::types::{H256, Transaction, TxHash, U256};
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
-use ethers::types::Address;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RskTransaction {
