@@ -22,29 +22,34 @@ pub enum Commands {
         incoming: bool,
         #[arg(short, long)]
         outgoing: bool,
+        /// Alchemy API key (optional, saved in wallet after first use)
+        #[arg(long)]
+        api_key: Option<String>,
+        #[arg(long, default_value = "mainnet")]
+        network: String,
     },
     /// Check balance of an address
     Balance {
-        /// Address to check balance for
-        #[arg(short, long)]
-        address: String,
         /// Network to use (mainnet/testnet)
-        #[arg(short, long, default_value = "mainnet")]
+        #[arg(long, default_value = "mainnet")]
         network: String,
-        /// Show token balances
-        #[arg(short, long)]
-        tokens: Option<bool>,
+        /// Token symbol to check balance for (e.g., RBTC, RIF, DoC)
+        #[arg(long)]
+        token: Option<String>,
+        /// Address to check balance for (optional if using default wallet)
+        #[arg(long)]
+        address: Option<String>,
     },
-      /// Transfer RBTC or tokens
+    /// Transfer RBTC or tokens
     Transfer {
         /// Address to send to
-        #[arg( long, required = true)]
+        #[arg(long, required = true)]
         to: String,
         /// Amount to send (in RBTC or token units)
         #[arg(short, long, required = true)]
         amount: f64,
         /// Token address (for ERC20 transfers)
-        #[arg( long)]
+        #[arg(long)]
         token: Option<String>,
         #[arg(short, long, default_value = "default")]
         wallet: String,

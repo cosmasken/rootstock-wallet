@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::commands::balance::BalanceCommand;
 use crate::commands::history::HistoryCommand;
 use anyhow::Result;
@@ -32,13 +33,16 @@ async fn main() -> Result<()> {
             status,
             incoming,
             outgoing,
+            api_key,
+            network,
         } => {
             let cmd = HistoryCommand {
                 address,
                 contact: None,
                 limit: limit as u32,
                 token,
-                // network: String::from("mainnet"),
+                network,
+                api_key,
                 detailed: false,
                 status,
                 from: None,
@@ -49,16 +53,28 @@ async fn main() -> Result<()> {
                 outgoing,
             };
             cmd.execute().await?
-        },
-        commands::Commands::Balance { address, network, tokens } => {
-            let cmd = BalanceCommand { address, network, tokens };
+        }
+        commands::Commands::Balance {
+            address,
+            network,
+            token,
+        } => {
+            let cmd = BalanceCommand {
+                address,
+                network,
+                token,
+            };
             cmd.execute().await?
-        },
-        commands::Commands::Transfer { to, amount, token, wallet } =>{
+        }
+        commands::Commands::Transfer {
+            to,
+            amount,
+            token,
+            wallet,
+        } => {
             todo!()
         }
-         commands::Commands::Wallet(cmd) => cmd.execute().await?,
-       
+        commands::Commands::Wallet(cmd) => cmd.execute().await?,
     }
     Ok(())
 }
