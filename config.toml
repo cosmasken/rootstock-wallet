@@ -2,8 +2,10 @@
 
 # The default provider URL for the Rootstock network.
 # Use the mainnet or testnet public node as needed.
-# provider_url = "https://public-node.rsk.co"
-provider_url = "https://public-node.testnet.rsk.co"
+[network]
+name = "Testnet"
+rpc_url = "https://public-node.testnet.rsk.co"
+explorer_url = "https://explorer.testnet.rsk.co"
 
 # Optionally, you can add other configuration options here.
 # For example, a default wallet address or data directory:

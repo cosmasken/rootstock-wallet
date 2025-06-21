@@ -14,19 +14,11 @@ impl Helper {
     /// Initialize the Ethereum client with the specified network       
     pub async fn init_eth_client(network: &str) -> Result<(Config, EthClient)> {
         let mut config = Config::load()?;
-
         // Update network config based on command line argument
-        let network = match network.to_lowercase().as_str() {
-            "mainnet" => Network::Mainnet,
-            "testnet" => Network::Testnet,
-            _ => {
-                return Err(anyhow::anyhow!(
-                    "Invalid network specified. Use 'mainnet' or 'testnet'"
-                ));
-            }
-        };
-        config.network.rpc_url = network.get_config().rpc_url;
-
+        let network_enum = Network::from_str(network).unwrap_or(Network::Mainnet);
+        let net_cfg = network_enum.get_config();
+        config.network = net_cfg.clone();
+        println!("[rootstock-wallet] Connected to {} at {}", config.network.name, config.network.rpc_url);
         let eth_client = EthClient::new(&config).await?;
         Ok((config, eth_client))
     }
@@ -36,7 +28,7 @@ impl Helper {
         Address::from_str(address)
             .map_err(|_| anyhow::anyhow!("Invalid address format. Expected 0x-prefixed hex string"))
     }
-     /// Format a network name with colored output
+    /// Format a network name with colored output
     pub fn format_network(network: &str) -> String {
         match network.to_lowercase().as_str() {
             "mainnet" => format!("{}", "Mainnet".yellow().bold()),
@@ -52,7 +44,10 @@ impl Helper {
     /// Format a balance in either wei or tokens
     pub fn format_balance(balance: u128, as_tokens: bool) -> Result<String> {
         if as_tokens {
-            Ok(format!("{} RBTC", ethers::utils::format_units(balance, 18)?))
+            Ok(format!(
+                "{} RBTC",
+                ethers::utils::format_units(balance, 18)?
+            ))
         } else {
             Ok(format!("{} wei", balance))
         }
