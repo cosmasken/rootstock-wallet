@@ -1,0 +1,55 @@
+{
+  "current_wallet": "0x6fef3e84f67dac6c930f4319397115be31173e6d",
+  "wallets": {
+    "0xc72cd1acbefdcf7f361523db9394ab549814e794": {
+      "address": "0xc72cd1acbefdcf7f361523db9394ab549814e794",
+      "balance": "0x0",
+      "network": "",
+      "name": "Bob",
+      "encrypted_private_key": "CU1RTgMgodVKuVco3nXCBfRKOvdtz7rTnZDPG28U65iud39lZN91ooe3H8vNrz5b",
+      "salt": "ILf/soYXz2nBi4xw+A0+Pg==",
+      "iv": "eaNBuViwKivw4nZz3BgkPQ==",
+      "created_at": "2025-06-20T12:03:49.067583688+00:00"
+    },
+    "0x6fef3e84f67dac6c930f4319397115be31173e6d": {
+      "address": "0x6fef3e84f67dac6c930f4319397115be31173e6d",
+      "balance": "0x0",
+      "network": "",
+      "name": "Cody",
+      "encrypted_private_key": "pJQMqkaqBQK3Hie1El3WY/qOJFxmKGCSH9n9t1dB6SNuK7tIe/mLIod+dj/f+cJN",
+      "salt": "wlLO3q5q/+8hGalbqyxb7g==",
+      "iv": "Zh31MknXA2wVfHDB0rxhyQ==",
+      "created_at": "2025-06-20T15:06:17.162064430+00:00"
+    },
+    "0xf6b5ac362d56fcbe7e28039abffcd615bb99ad99": {
+      "address": "0xf6b5ac362d56fcbe7e28039abffcd615bb99ad99",
+      "balance": "0x0",
+      "network": "",
+      "name": "Jon",
+      "encrypted_private_key": "lG0W8dUcTw/f3LoFnQSBfDzsSJgX0xvprkX9McMsZZN9mnTXxhuK+YkLX7uJAOEO",
+      "salt": "NMgfFPGNu8Y9T1SVu6Ihdw==",
+      "iv": "B8b0KDRT0fSQkErUvyh4kw==",
+      "created_at": "2025-06-20T12:26:29.604394675+00:00"
+    },
+    "0x09ab514b6974601967e7b379478eff4073cced06": {
+      "address": "0x09ab514b6974601967e7b379478eff4073cced06",
+      "balance": "0x0",
+      "network": "",
+      "name": "Dom",
+      "encrypted_private_key": "luX9/2X2UBU4u8w9mri3xJMNkOo2DasX6ygX9t7XAlm+ljCU1RnMZlIG+Vm4pBFf",
+      "salt": "5LzRIJJLpkTvQMKbDuLlYw==",
+      "iv": "smXGbp2+WasZQwOhBKaZ0g==",
+      "created_at": "2025-06-20T13:10:43.267241512+00:00"
+    },
+    "0x2e0002d66e9c1eebcff60a8be9eb46d50b7ba7da": {
+      "address": "0x2e0002d66e9c1eebcff60a8be9eb46d50b7ba7da",
+      "balance": "0x0",
+      "network": "",
+      "name": "Alice",
+      "encrypted_private_key": "V5hBvxquhy+zcHvVtup3qBAuL1u/0Qu0m7wJ16VaIuZwFUIPS5AOxkYq2qClduN0",
+      "salt": "Ry1Nn8aas5buGjDcV0/5gQ==",
+      "iv": "Ji2H7nno8ztxeios6scqhA==",
+      "created_at": "2025-06-20T12:16:57.582456094+00:00"
+    }
+  }
+}

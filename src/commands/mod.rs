@@ -1,3 +1,4 @@
+pub mod api;
 pub mod balance;
 pub mod contacts;
 pub mod history;
