@@ -2,7 +2,7 @@ use crate::types::contacts::Contact;
 use crate::types::network::Network;
 use crate::types::transaction::{RskTransaction, TransactionStatus};
 use crate::types::wallet::WalletData;
-use crate::utils::{config::Config, constants, eth::EthClient, table::TableBuilder};
+use crate::utils::{constants, eth::EthClient, helper::Config, table::TableBuilder};
 use anyhow::Result;
 use chrono::TimeZone;
 use clap::Parser;
@@ -77,7 +77,8 @@ impl HistoryCommand {
         // 1. Resolve RPC endpoint (Alchemy URL)
         // ---------------------------------------------------------
         // Use Helper to initialize client and config for the selected network
-        let (mut config, eth_client) = crate::utils::helper::Helper::init_eth_client(&self.network).await?;
+        let (mut config, eth_client) =
+            crate::utils::helper::Helper::init_eth_client(&self.network).await?;
 
         // Highest priority: CLI flag  >  wallet.json  >  ENV var
         let wallet_file = constants::wallet_file_path();
@@ -125,7 +126,7 @@ impl HistoryCommand {
         config.network.rpc_url = rpc_url;
         // ---------------------------------------------------------
 
-        let eth_client = EthClient::new(&config).await?;
+        let eth_client = EthClient::new(&config, None).await?;
 
         // ---------------------------------------------------------
         // 2. Determine address (CLI or current wallet)
@@ -190,7 +191,14 @@ impl HistoryCommand {
         let mut table = TableBuilder::new();
         if self.detailed {
             table.add_header(&[
-                "TX Hash", "From", "To", "Value", "Status", "Timestamp", "Gas Used", "Token",
+                "TX Hash",
+                "From",
+                "To",
+                "Value",
+                "Status",
+                "Timestamp",
+                "Gas Used",
+                "Token",
             ]);
         } else {
             table.add_header(&["TX Hash", "From", "To", "Value", "Status", "Timestamp"]);

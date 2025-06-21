@@ -1,6 +1,7 @@
 #![allow(warnings)]
 use crate::commands::balance::BalanceCommand;
 use crate::commands::history::HistoryCommand;
+use crate::commands::transfer::TransferCommand;
 use anyhow::Result;
 use clap::Parser;
 use dotenv::dotenv;
@@ -67,14 +68,21 @@ async fn main() -> Result<()> {
             cmd.execute().await?
         }
         commands::Commands::Transfer {
-            to,
-            amount,
+            address,
+            value,
             token,
-            wallet,
+            network,
         } => {
-            todo!()
+            let cmd = TransferCommand {
+                address,
+                value,
+                token,
+                network,
+            };
+            cmd.execute().await?
         }
         commands::Commands::Wallet(cmd) => cmd.execute().await?,
+        commands::Commands::SetApiKey(cmd) => cmd.execute().await?,
     }
     Ok(())
 }

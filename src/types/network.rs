@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-
 // #[derive(Debug, Clone, Serialize, Deserialize)]
 // pub struct NetworkConfig {
 //     pub name: String,
@@ -62,7 +61,7 @@ impl Network {
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "mainnet" => Some(Network::Mainnet),
-            "testnet" => Some(Network::Testnet),    
+            "testnet" => Some(Network::Testnet),
             "alchemy-mainnet" => Some(Network::AlchemyMainnet),
             "alchemy-testnet" => Some(Network::AlchemyTestnet),
             "rootstock-mainnet" => Some(Network::RootStockMainnet),

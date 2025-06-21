@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub fn wallet_file_path() -> PathBuf {
-    let mut path = std::env::current_dir().expect("Failed to get current directory");
-    path.push("rootstock-wallet.json");
-    path
+    dirs::data_local_dir()
+        .expect("Failed to get data directory")
+        .join("rootstock-wallet")
+        .join("rootstock-wallet.json")
 }
 
 pub const METHOD_TYPES: &str = "read";

@@ -1,3 +1,4 @@
+use crate::commands::api::SetApiKeyCommand;
 use crate::commands::contacts::ContactsCommand;
 use crate::commands::wallet::WalletCommand;
 use clap::Parser;
@@ -44,14 +45,16 @@ pub enum Commands {
     Transfer {
         /// Address to send to
         #[arg(long, required = true)]
-        to: String,
+        address: String,
         /// Amount to send (in RBTC or token units)
-        #[arg(short, long, required = true)]
-        amount: f64,
+        #[arg(long, required = true)]
+        value: f64,
         /// Token address (for ERC20 transfers)
         #[arg(long)]
         token: Option<String>,
-        #[arg(short, long, default_value = "default")]
-        wallet: String,
+        #[arg(short, long, default_value = "mainnet")]
+        network: String,
     },
+
+    SetApiKey(SetApiKeyCommand),
 }
