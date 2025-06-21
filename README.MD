@@ -52,7 +52,7 @@ cargo build --release
 Run the CLI application:
 
 ```bash
-./target/release/rootstock-wallet
+cargo run
 ```
 
 ### Commands
@@ -61,65 +61,65 @@ Run the CLI application:
    Send RBTC to a recipient address.
 
    ```bash
-   ./target/release/rootstock-wallet transfer --recipient <ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
+   cargo run transfer --recipient <ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001 --network testnet
+   cargo run transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001 --network testnet
    ```
 
 2. **Get Balance**:
    Fetch the RBTC balance of an address.
 
    ```bash
-   ./target/release/rootstock-wallet get-balance --address <ADDRESS> --network <mainnet|testnet>
+   cargo run get-balance --address <ADDRESS> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet get-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --network testnet
+   cargo run get-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --network testnet
    ```
 
 3. **Show Wallet**:
    Display the wallet's address and public key.
 
    ```bash
-   ./target/release/rootstock-wallet show-wallet --network <mainnet|testnet>
+   cargo run show-wallet --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet show-wallet --network testnet
+   cargo run show-wallet --network testnet
    ```
 
 4. **Token Balance**:
    Check the balance of an ERC-20 token.
 
    ```bash
-   ./target/release/rootstock-wallet token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
+   cargo run token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
+   cargo run token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
    ```
 
 5. **Transaction History**:
    View transaction history for an address.
 
    ```bash
-   ./target/release/rootstock-wallet history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
+   cargo run history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
+   cargo run history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
    ```
 
 6. **Contact Management**:
@@ -127,22 +127,22 @@ Run the CLI application:
 
    ```bash
    # Add a contact
-   ./target/release/rootstock-wallet contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
+   cargo run contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
 
    # List all contacts
-   ./target/release/rootstock-wallet contact --action list
+   cargo run contact --action list
 
    # Show a specific contact
-   ./target/release/rootstock-wallet contact --action show --name alice
+   cargo run contact --action show --name alice
 
    # Delete a contact
-   ./target/release/rootstock-wallet contact --action delete --name alice
+   cargo run contact --action delete --name alice
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
+   cargo run contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
    ```
 
    ![Contact Management](screenshots/contact-management.png)
@@ -151,20 +151,20 @@ Run the CLI application:
    All commands support network selection:
 
    ```bash
-   ./target/release/rootstock-wallet <command> --network <mainnet|testnet>
+   cargo run <command> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet transfer --network mainnet --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
+   cargo run transfer --network mainnet --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
    ```
 
 9. **Estimate Gas**:
    Estimate gas costs for a transaction.
 
    ```bash
-   ./target/release/rootstock-wallet estimate-gas  <ADDRESS>  <AMOUNT> --network <mainnet|testnet>
+   cargo run estimate-gas  <ADDRESS>  <AMOUNT> --network <mainnet|testnet>
    ```
    Example:
 
@@ -174,13 +174,13 @@ Run the CLI application:
    Export the wallet's private key to a file.
 
    ```bash
-   ./target/release/rootstock-wallet export-private-key --output <FILENAME>
+   cargo run export-private-key --output <FILENAME>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet export-private-key --output private.key
+   cargo run export-private-key --output private.key
    ```
    ![Exported Key](screenshots/exported.png)
 
@@ -192,13 +192,13 @@ Run the CLI application:
    Import a wallet from a mnemonic phrase or private key.
 
    ```bash
-   ./target/release/rootstock-wallet import-wallet --mnemonic <MNEMONIC> --private-key <PRIVATE_KEY>
+   cargo run import-wallet --mnemonic <MNEMONIC> --private-key <PRIVATE_KEY>
    ```
 
    Example (using a mnemonic):
 
    ```bash
-   ./target/release/rootstock-wallet import-wallet --mnemonic "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+   cargo run import-wallet --mnemonic "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
    ```
 
    Example (using a private key):
@@ -209,44 +209,44 @@ Run the CLI application:
    Export the wallet in JSON keystore format.
 
    ```bash
-   ./target/release/rootstock-wallet export-keystore --password <PASSWORD> --output <FILENAME>
+   cargo run export-keystore --password <PASSWORD> --output <FILENAME>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet export-keystore --password mypassword --output keystore.json
+   cargo run export-keystore --password mypassword --output keystore.json
    ```
 
 13. **View Transaction History**:
    Display transaction history for an address.
 
    ```bash
-   ./target/release/rootstock-wallet history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
+   cargo run history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
    ```
 
    Example:
    ```bash
-   ./target/release/rootstock-wallet history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
+   cargo run history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
    ```
 
 14. **Check Token Balance**:
    View the balance of an ERC-20 token for an address.
 
    ```bash
-   ./target/release/rootstock-wallet token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
+   cargo run token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
    ```
 
    Example:
    ```bash
-   ./target/release/rootstock-wallet token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
+   cargo run token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
    ```
 
 15. **Network Info**:
     Display current network information (block number, gas price, chain ID).
 
    ```bash
-    ./target/release/rootstock-wallet network-info --network <mainnet|testnet>
+    cargo run network-info --network <mainnet|testnet>
    ```
 
    ![Exported Key](screenshots/network-info.png)
@@ -255,20 +255,20 @@ Run the CLI application:
     Transfer tokens like RIF, DOC, SOV, or rUSDT.
 
     ```bash
-    ./target/release/rootstock-wallet transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
+    cargo run transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
     ```
 
     Example:
 
     ```bash
-    ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
+    cargo run transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
     ```
     
 17. **Transaction History**:
    Retrieve the transaction history for your own address or any specified address.
 
    ```bash
-   ./target/release/rootstock-wallet transaction-history --address <ADDRESS> --network <mainnet|testnet>
+   cargo run transaction-history --address <ADDRESS> --network <mainnet|testnet>
    ```
 
    Example:
@@ -283,7 +283,7 @@ Run the CLI application:
    - **Add a Contact**:
 
    ```bash
-     ./target/release/rootstock-wallet add-contact --name <NAME> --address <ADDRESS>
+     cargo run add-contact --name <NAME> --address <ADDRESS>
    ```
 
    Example:
@@ -293,7 +293,7 @@ Run the CLI application:
    - **List Contacts**:
 
    ```bash
-   ./target/release/rootstock-wallet list-contacts
+   cargo run list-contacts
    ```
 
    Example:
@@ -303,7 +303,7 @@ Run the CLI application:
    - **Show Contact Details**:
 
    ```bash
-     ./target/release/rootstock-wallet show-contact --name <NAME>
+     cargo run show-contact --name <NAME>
    ```
 
    Example:
@@ -314,32 +314,32 @@ Run the CLI application:
    You can use a contact's name instead of an address in transfer commands:
 
    ```bash
-     ./target/release/rootstock-wallet transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
+     cargo run transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
    ```
 
    Example:
 
    ```bash
-     ./target/release/rootstock-wallet transfer --recipient alice --amount 0.01
+     cargo run transfer --recipient alice --amount 0.01
    ```
 
 19. **ERC-20 Token Transfer Using Symbols**:
    You can transfer supported ERC-20 tokens using their symbol (e.g., RIF, USDRIF, DoC) instead of the contract address.
 
    ```bash
-   ./target/release/rootstock-wallet transfer-token --token <SYMBOL> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
+   cargo run transfer-token --token <SYMBOL> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
    ```
 
    Example:
 
    ```bash
-   ./target/release/rootstock-wallet transfer-token --token RIF --recipient 0xRecipientAddress --amount 10 --network testnet
+   cargo run transfer-token --token RIF --recipient 0xRecipientAddress --amount 10 --network testnet
    ```
 
    You can also use the contract address as before:
 
    ```bash
-   ./target/release/rootstock-wallet transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
+   cargo run transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
    ```
 
    Supported symbols include: RIF, USDRIF, DoC, and others listed in your `tokens.json` registry.
@@ -348,7 +348,7 @@ Run the CLI application:
    Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
 
    ```bash
-   ./target/release/rootstock-wallet add-token --symbol ARCAD --address 0x0c917Ccc38203734aC963152059439cd33EA57fF --decimals 18 --network testnet
+   cargo run add-token --symbol ARCAD --address 0x0c917Ccc38203734aC963152059439cd33EA57fF --decimals 18 --network testnet
    ```
 
    Example:
