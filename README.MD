@@ -70,8 +70,6 @@ Run the CLI application:
    ./target/release/rootstock-wallet transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001 --network testnet
    ```
 
-   ![Transfer Command](screenshots/transfer.png)
-
 2. **Get Balance**:
    Fetch the RBTC balance of an address.
 
@@ -84,8 +82,6 @@ Run the CLI application:
    ```bash
    ./target/release/rootstock-wallet get-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --network testnet
    ```
-
-   ![Get Balance](screenshots/get-balance.png)
 
 3. **Show Wallet**:
    Display the wallet's address and public key.
@@ -100,24 +96,7 @@ Run the CLI application:
    ./target/release/rootstock-wallet show-wallet --network testnet
    ```
 
-   ![Show Wallet](screenshots/show-wallet.png)
-
-4. **Generate QR Code**:
-   Generate a QR code for the wallet address.
-
-   ```bash
-   ./target/release/rootstock-wallet generate-qr --output <FILENAME> --network <mainnet|testnet>
-   ```
-
-   Example:
-
-   ```bash
-   ./target/release/rootstock-wallet generate-qr --output wallet_qr.png --network testnet
-   ```
-
-   ![QR Code](screenshots/qr-code.png)
-
-5. **Token Balance**:
+4. **Token Balance**:
    Check the balance of an ERC-20 token.
 
    ```bash
@@ -130,9 +109,7 @@ Run the CLI application:
    ./target/release/rootstock-wallet token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
    ```
 
-   ![Token Balance](screenshots/token-balance.png)
-
-6. **Transaction History**:
+5. **Transaction History**:
    View transaction history for an address.
 
    ```bash
@@ -145,9 +122,7 @@ Run the CLI application:
    ./target/release/rootstock-wallet history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
    ```
 
-   ![Transaction History](screenshots/transaction-history.png)
-
-7. **Contact Management**:
+6. **Contact Management**:
    Manage contacts for easier address management.
 
    ```bash
