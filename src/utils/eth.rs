@@ -38,6 +38,20 @@ pub struct EthClient {
 }
 
 impl EthClient {
+    // Helper to get the correct Alchemy URL
+    fn alchemy_url(&self) -> String {
+        let api_key = self.api_key.as_ref().expect("Alchemy API key not set");
+        // if self.network.is_testnet() {
+        //     format!("https://rootstock-testnet.g.alchemy.com/v2/{}", api_key)
+        // } else {
+        //     format!("https://rootstock-mainnet.g.alchemy.com/v2/{}", api_key)
+        // }
+        format!(
+            "https://rootstock-{}.g.alchemy.com/v2/{}",
+            self.network.name, api_key
+        )
+    }
+
     pub async fn new(config: &Config, cli_api_key: Option<String>) -> Result<Self, anyhow::Error> {
         // Load or update API key
         let wallet_file = constants::wallet_file_path();
@@ -238,19 +252,9 @@ impl EthClient {
         }
     }
 
-    pub async fn get_transaction_history(
-        &self,
-        address: &Address,
-        limit: u32,
-        status: Option<&str>,
-        token: Option<&str>,
-        from_date: Option<&str>,
-        to_date: Option<&str>,
-    ) -> Result<Vec<RskTransaction>, anyhow::Error> {
-        let mut transactions = Vec::new();
-
-        // Try Alchemy API first
-        let params = serde_json::json!([{
+    // Helper to build the JSON-RPC params for asset transfers
+    fn build_asset_transfers_params(&self, address: &Address, limit: u32) -> serde_json::Value {
+        serde_json::json!([{
             "fromBlock": "0x0",
             "toBlock": "latest",
             "fromAddress": format!("{:#x}", address),
@@ -259,321 +263,7 @@ impl EthClient {
             "withMetadata": true,
             "excludeZeroValue": false,
             "maxCount": format!("0x{:x}", limit),
-        }]);
-        if let Ok(response) = self
-            .provider
-            .request::<_, Value>("alchemy_getAssetTransfers", params)
-            .await
-        {
-            if let Some(transfers) = response
-                .get("result")
-                .and_then(|r| r.get("transfers"))
-                .and_then(|t| t.as_array())
-            {
-                for tr in transfers {
-                    let tx_hash = H256::from_str(tr["hash"].as_str().unwrap_or_default())?;
-                    let receipt = self.provider.get_transaction_receipt(tx_hash).await?;
-                    let tx_status = receipt
-                        .as_ref()
-                        .map(|r| {
-                            if r.status.map_or(false, |s| s.as_u64() == 1) {
-                                TransactionStatus::Success
-                            } else {
-                                TransactionStatus::Failed
-                            }
-                        })
-                        .unwrap_or(TransactionStatus::Pending);
-
-                    // Apply status filter
-                    if let Some(status_filter) = status {
-                        let status_str = match tx_status {
-                            TransactionStatus::Success => "success",
-                            TransactionStatus::Failed => "failed",
-                            TransactionStatus::Pending => "pending",
-                            _ => "unknown",
-                        };
-                        if status_str != status_filter.to_lowercase() {
-                            continue;
-                        }
-                    }
-
-                    let token_addr_opt = tr["rawContract"]["address"].as_str();
-                    // Apply token filter
-                    if let Some(token_filter) = token {
-                        if token_addr_opt.map_or(true, |addr| {
-                            addr.to_lowercase() != token_filter.to_lowercase()
-                        }) {
-                            continue;
-                        }
-                    }
-
-                    let block_num = u64::from_str_radix(
-                        tr["blockNum"]
-                            .as_str()
-                            .unwrap_or("0x0")
-                            .trim_start_matches("0x"),
-                        16,
-                    )?;
-                    let block = self.provider.get_block(block_num).await?;
-                    let timestamp_secs = block.as_ref().map(|b| b.timestamp.as_u64()).unwrap_or(0);
-                    let timestamp = SystemTime::UNIX_EPOCH + Duration::from_secs(timestamp_secs);
-
-                    // Apply date filters
-                    if let Some(from) = from_date {
-                        let from_time = chrono::DateTime::parse_from_rfc3339(from)
-                            .map_err(|e| anyhow!("Invalid from_date: {}", e))?;
-                        if timestamp
-                            < SystemTime::UNIX_EPOCH
-                                + Duration::from_secs(from_time.timestamp() as u64)
-                        {
-                            continue;
-                        }
-                    }
-                    if let Some(to) = to_date {
-                        let to_time = chrono::DateTime::parse_from_rfc3339(to)
-                            .map_err(|e| anyhow!("Invalid to_date: {}", e))?;
-                        if timestamp
-                            > SystemTime::UNIX_EPOCH
-                                + Duration::from_secs(to_time.timestamp() as u64)
-                        {
-                            continue;
-                        }
-                    }
-
-                    transactions.push(RskTransaction {
-                        hash: tx_hash,
-                        from: Address::from_str(tr["from"].as_str().unwrap_or_default())?,
-                        to: tr["to"].as_str().and_then(|s| Address::from_str(s).ok()),
-                        value: U256::from_str_radix(
-                            tr["rawContract"]["value"]
-                                .as_str()
-                                .unwrap_or("0")
-                                .trim_start_matches("0x"),
-                            16,
-                        )?,
-                        gas_price: receipt
-                            .as_ref()
-                            .and_then(|r| r.effective_gas_price)
-                            .unwrap_or(U256::zero()),
-                        gas: receipt
-                            .as_ref()
-                            .and_then(|r| r.gas_used)
-                            .unwrap_or(U256::zero()),
-                        nonce: receipt
-                            .as_ref()
-                            .map(|r| U256::from(r.transaction_index.as_u64()))
-                            .unwrap_or(U256::zero()),
-                        timestamp,
-                        status: tx_status,
-                        token_address: token_addr_opt.and_then(|s| Address::from_str(s).ok()),
-                    });
-                }
-            }
-        }
-
-        // Fallback to eth_getLogs if Alchemy fails or returns no results
-        if transactions.is_empty() {
-            let latest_block = self.provider.get_block_number().await?;
-            let scan_range: u64 = 100_000;
-            let from_block_num = latest_block.as_u64().saturating_sub(scan_range);
-            let mut logs = Vec::new();
-            let mut start = from_block_num;
-            let end = latest_block.as_u64();
-            let chunk_size = 500;
-            let total_chunks = ((end - start) / chunk_size + 1) as u64;
-            let pb = ProgressBar::new(total_chunks);
-            while start <= end {
-                let chunk_end = std::cmp::min(start + chunk_size - 1, end);
-                pb.set_message(format!("Fetching blocks {}–{}", start, chunk_end));
-                let filter = Filter::new()
-                    .address(*address)
-                    .from_block(BlockNumber::Number(start.into()))
-                    .to_block(BlockNumber::Number(chunk_end.into()))
-                    .event("Transfer(address,address,uint256)");
-                let mut chunk_logs = self.provider.get_logs(&filter).await?;
-                logs.append(&mut chunk_logs);
-                pb.inc(1);
-                start = chunk_end + 1;
-                pb.finish_with_message("Done fetching logs.");
-            }
-
-            for log in logs.into_iter().take(limit as usize) {
-                if log.topics.len() >= 3 {
-                    let tx_hash = log.transaction_hash.unwrap();
-                    let receipt = self.provider.get_transaction_receipt(tx_hash).await?;
-                    let tx_status = receipt
-                        .as_ref()
-                        .map(|r| {
-                            if r.status.map_or(false, |s| s.as_u64() == 1) {
-                                TransactionStatus::Success
-                            } else {
-                                TransactionStatus::Failed
-                            }
-                        })
-                        .unwrap_or(TransactionStatus::Pending);
-
-                    // Apply status filter
-                    if let Some(status_filter) = status {
-                        let status_str = match tx_status {
-                            TransactionStatus::Success => "success",
-                            TransactionStatus::Failed => "failed",
-                            TransactionStatus::Pending => "pending",
-                            _ => "unknown",
-                        };
-                        if status_str != status_filter.to_lowercase() {
-                            continue;
-                        }
-                    }
-
-                    // Apply token filter
-                    if let Some(token_filter) = token {
-                        if log.address.to_string().to_lowercase() != token_filter.to_lowercase() {
-                            continue;
-                        }
-                    }
-
-                    let block = self.provider.get_block(log.block_number.unwrap()).await?;
-                    let timestamp = block
-                        .ok_or_else(|| anyhow!("Block not found"))?
-                        .timestamp
-                        .as_u64();
-                    let timestamp = SystemTime::UNIX_EPOCH + Duration::from_secs(timestamp);
-
-                    // Apply date filters
-                    if let Some(from) = from_date {
-                        let from_time = chrono::DateTime::parse_from_rfc3339(from)
-                            .map_err(|e| anyhow!("Invalid from_date: {}", e))?;
-                        if timestamp
-                            < SystemTime::UNIX_EPOCH
-                                + Duration::from_secs(from_time.timestamp() as u64)
-                        {
-                            continue;
-                        }
-                    }
-                    if let Some(to) = to_date {
-                        let to_time = chrono::DateTime::parse_from_rfc3339(to)
-                            .map_err(|e| anyhow!("Invalid to_date: {}", e))?;
-                        if timestamp
-                            > SystemTime::UNIX_EPOCH
-                                + Duration::from_secs(to_time.timestamp() as u64)
-                        {
-                            continue;
-                        }
-                    }
-
-                    transactions.push(RskTransaction {
-                        hash: tx_hash,
-                        from: Address::from_slice(&log.topics[1][12..32]),
-                        to: Some(Address::from_slice(&log.topics[2][12..32])),
-                        value: U256::from_big_endian(&log.data),
-                        gas_price: receipt
-                            .as_ref()
-                            .and_then(|r| r.effective_gas_price)
-                            .unwrap_or(U256::zero()),
-                        gas: receipt
-                            .as_ref()
-                            .and_then(|r| r.gas_used)
-                            .unwrap_or(U256::zero()),
-                        nonce: receipt
-                            .as_ref()
-                            .map(|r| U256::from(r.transaction_index.as_u64()))
-                            .unwrap_or(U256::zero()),
-                        timestamp,
-                        status: tx_status,
-                        token_address: Some(log.address),
-                    });
-                }
-            }
-
-            // Fetch RBTC transactions via eth_getBlockByNumber
-            let mut block_num = from_block_num;
-            while block_num <= latest_block.as_u64() && transactions.len() < limit as usize {
-                let block = self.provider.get_block_with_txs(block_num).await?;
-                if let Some(block) = block {
-                    for tx in block.transactions {
-                        if tx.from == *address || tx.to == Some(*address) {
-                            let receipt = self.provider.get_transaction_receipt(tx.hash).await?;
-                            let tx_status = receipt
-                                .as_ref()
-                                .map(|r| {
-                                    if r.status.map_or(false, |s| s.as_u64() == 1) {
-                                        TransactionStatus::Success
-                                    } else {
-                                        TransactionStatus::Failed
-                                    }
-                                })
-                                .unwrap_or(TransactionStatus::Pending);
-
-                            // Apply status filter
-                            if let Some(status_filter) = status {
-                                let status_str = match tx_status {
-                                    TransactionStatus::Success => "success",
-                                    TransactionStatus::Failed => "failed",
-                                    TransactionStatus::Pending => "pending",
-                                    _ => "unknown",
-                                };
-                                if status_str != status_filter.to_lowercase() {
-                                    continue;
-                                }
-                            }
-
-                            // Apply token filter (skip for RBTC)
-                            if token.is_some() {
-                                continue;
-                            }
-
-                            let timestamp = block.timestamp.as_u64();
-                            let timestamp = SystemTime::UNIX_EPOCH + Duration::from_secs(timestamp);
-
-                            // Apply date filters
-                            if let Some(from) = from_date {
-                                let from_time = chrono::DateTime::parse_from_rfc3339(from)
-                                    .map_err(|e| anyhow!("Invalid from_date: {}", e))?;
-                                if timestamp
-                                    < SystemTime::UNIX_EPOCH
-                                        + Duration::from_secs(from_time.timestamp() as u64)
-                                {
-                                    continue;
-                                }
-                            }
-                            if let Some(to) = to_date {
-                                let to_time = chrono::DateTime::parse_from_rfc3339(to)
-                                    .map_err(|e| anyhow!("Invalid to_date: {}", e))?;
-                                if timestamp
-                                    > SystemTime::UNIX_EPOCH
-                                        + Duration::from_secs(to_time.timestamp() as u64)
-                                {
-                                    continue;
-                                }
-                            }
-
-                            transactions.push(RskTransaction {
-                                hash: tx.hash,
-                                from: tx.from,
-                                to: tx.to,
-                                value: tx.value,
-                                gas_price: tx.gas_price.unwrap_or(U256::zero()),
-                                gas: tx.gas,
-                                nonce: tx.nonce,
-                                timestamp,
-                                status: tx_status,
-                                token_address: None,
-                            });
-                        }
-                    }
-                }
-                block_num += 1;
-            }
-        }
-
-        // Deduplicate transactions by hash
-        let mut seen_hashes = HashSet::new();
-        transactions.retain(|tx| seen_hashes.insert(tx.hash));
-
-        // Sort by timestamp (newest first) and limit
-        transactions.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-        transactions.truncate(limit as usize);
-
-        Ok(transactions)
+        }])
     }
+
 }
