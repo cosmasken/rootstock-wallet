@@ -83,6 +83,21 @@ async fn main() -> Result<()> {
         }
         commands::Commands::Wallet(cmd) => cmd.execute().await?,
         commands::Commands::SetApiKey(cmd) => cmd.execute().await?,
+        commands::Commands::TokenAdd(cmd) => {
+            if let Err(e) = commands::tokens::add_token(&cmd.network, &cmd.symbol, &cmd.address, cmd.decimals) {
+                eprintln!("Error adding token: {}", e);
+            }
+        }
+        commands::Commands::TokenRemove(cmd) => {
+            if let Err(e) = commands::tokens::remove_token(&cmd.network, &cmd.symbol) {
+                eprintln!("Error removing token: {}", e);
+            }
+        }
+        commands::Commands::TokenList(cmd) => {
+            if let Err(e) = commands::tokens::list_tokens(cmd.network.as_deref()) {
+                eprintln!("Error listing tokens: {}", e);
+            }
+        }
     }
     Ok(())
 }
