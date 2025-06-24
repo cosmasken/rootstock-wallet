@@ -323,28 +323,7 @@ cargo run
      cargo run transfer --recipient alice --amount 0.01
    ```
 
-19. **ERC-20 Token Transfer Using Symbols**:
-   You can transfer supported ERC-20 tokens using their symbol (e.g., RIF, USDRIF, DoC) instead of the contract address.
-
-   ```bash
-   cargo run transfer-token --token <SYMBOL> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
-   ```
-
-   Example:
-
-   ```bash
-   cargo run transfer-token --token RIF --recipient 0xRecipientAddress --amount 10 --network testnet
-   ```
-
-   You can also use the contract address as before:
-
-   ```bash
-   cargo run transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
-   ```
-
-   Supported symbols include: RIF, USDRIF, DoC, and others listed in your `tokens.json` registry.
-
-20. **Add Token to Registry**:
+19. **Add Token to Registry**:
    Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
 
    ```bash
