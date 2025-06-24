@@ -1,5 +1,6 @@
 use crate::commands::api::SetApiKeyCommand;
 use crate::commands::contacts::ContactsCommand;
+use crate::commands::tokens::{TokenAddCommand, TokenListCommand, TokenRemoveCommand};
 use crate::commands::wallet::WalletCommand;
 use clap::Parser;
 
@@ -57,4 +58,13 @@ pub enum Commands {
     },
 
     SetApiKey(SetApiKeyCommand),
+    
+    /// Add a new token to the registry
+    TokenAdd(TokenAddCommand),
+    
+    /// Remove a token from the registry
+    TokenRemove(TokenRemoveCommand),
+    
+    /// List tokens in the registry
+    TokenList(TokenListCommand),
 }
