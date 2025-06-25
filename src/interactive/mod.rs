@@ -4,6 +4,8 @@ mod wallet;
 mod balance;
 mod transfer;
 mod tokens;
+mod history;
+mod contacts;
 
 use anyhow::Result;
 use console::style;
@@ -13,6 +15,8 @@ pub use self::{
     balance::show_balance,
     transfer::send_funds,
     tokens::token_menu,
+    history::show_history,
+    contacts::manage_contacts,
 };
 
 /// Starts the interactive CLI interface
@@ -24,8 +28,10 @@ pub async fn start() -> Result<()> {
         let options = vec![
             String::from("💰 Check Balance"),
             String::from("💸 Send Funds"),
+            String::from("📜 Transaction History"),
             String::from("🔑 Wallet Management"),
             String::from("🪙 Token Management"),
+            String::from("📇 Contact Management"),
             String::from("❌ Exit"),
         ];
 
@@ -36,8 +42,10 @@ pub async fn start() -> Result<()> {
         match selection.as_str() {
             "💰 Check Balance" => show_balance().await?,
             "💸 Send Funds" => send_funds().await?,
+            "📜 Transaction History" => show_history().await?,
             "🔑 Wallet Management" => wallet_menu().await?,
             "🪙 Token Management" => token_menu().await?,
+            "📇 Contact Management" => manage_contacts().await?,
             "❌ Exit" => {
                 println!("\n👋 Goodbye!");
                 break;

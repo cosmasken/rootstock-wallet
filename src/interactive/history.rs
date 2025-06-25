@@ -1,6 +1,7 @@
 use crate::commands::history::HistoryCommand;
 use crate::commands::tokens::{TokenRegistry, list_tokens};
 use anyhow::Result;
+use std::error::Error;
 use console::style;
 use inquire::{Select, Text, validator::Validation};
 
@@ -92,11 +93,17 @@ pub async fn show_history() -> Result<()> {
                 if network != command.network {
                     command.network = network.to_string();
                     // Reload tokens for the new network
-                    let tokens = list_tokens(Some(&command.network))
-                        .map_err(|e| anyhow::anyhow!("Failed to load tokens: {}", e))?;
-                    token_options = std::iter::once("RBTC (Native)".to_string())
-                        .chain(tokens.into_iter().map(|(symbol, _info)| symbol))
-                        .collect();
+                    match list_tokens(Some(&command.network)) {
+                        Ok(tokens) => {
+                            token_options = std::iter::once("RBTC (Native)".to_string())
+                                .chain(tokens.into_iter().map(|(symbol, _info)| symbol))
+                                .collect();
+                        }
+                        Err(e) => {
+                            eprintln!("Warning: Failed to load tokens: {}. Using default token options.", e);
+                            token_options = vec!["RBTC (Native)".to_string()];
+                        }
+                    }
                 }
             }
             "Change token" => {
