@@ -46,3 +46,8 @@ cbc = "0.1.2"
 cipher = "0.4.4"
 typenum = "1.18.0"
 generic-array = "0.14.7"
+dialoguer = { version = "0.11", features = ["fuzzy-select"] }
+console = "0.15"
+tabled = { version = "0.11", features = ["derive"] }
+rustyline = { version = "11.0", features = ["with-file-history"] }
+inquire = "0.7.5"

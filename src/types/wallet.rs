@@ -72,7 +72,7 @@ impl Wallet {
         let pos = buffer.len();
         let pad_len = 16 - (pos % 16);
         buffer.extend(std::iter::repeat(pad_len as u8).take(pad_len));
-        let mut encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
+        let  encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
         let _ = encryptor.encrypt_padded_mut::<Pkcs7>(&mut buffer, pos);
         Ok((buffer, iv.to_vec(), salt.to_vec()))
     }
