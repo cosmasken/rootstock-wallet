@@ -15,7 +15,6 @@ use scrypt::{Params, scrypt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
-use typenum::{U16, U32};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Wallet {

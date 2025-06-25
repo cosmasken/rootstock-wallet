@@ -1,6 +1,8 @@
 use anyhow::Result;
 use console::style;
 use crate::commands::balance::BalanceCommand;
+use crate::commands::tokens::TokenRegistry;
+use inquire::Select;
 
 /// Displays the balance checking interface
 pub async fn show_balance() -> Result<()> {
@@ -15,18 +17,50 @@ pub async fn show_balance() -> Result<()> {
     .prompt()?
     .to_string();
     
-    // Ask if user wants to check token balance
-    let check_token = inquire::Confirm::new("Do you want to check token balance?")
+    // Ask if user wants to check token balance instead of RBTC
+    let check_token = inquire::Confirm::new("Check token balance? (No for RBTC balance)")
         .with_default(false)
         .prompt()?;
     
     let token = if check_token {
-        // In a real implementation, you would list the user's tokens here
-        let token_address = inquire::Text::new("Enter token contract address (0x...):")
-            .with_help_message("Leave empty to check RBTC balance")
-            .prompt_skippable()?;
+        let registry = TokenRegistry::load()
+            .map_err(|e| {
+                eprintln!("⚠️  Warning: Could not load token registry: {}", e);
+                e
+            })
+            .unwrap_or_default();
             
-        token_address.filter(|s| !s.trim().is_empty())
+        let mut tokens = registry.list_tokens(Some(&network));
+        
+        // Add RBTC as default option
+        tokens.insert(0, ("RBTC".to_string(), 
+            crate::commands::tokens::TokenInfo {
+                address: "0x0000000000000000000000000000000000000000".to_string(),
+                decimals: 18,
+            })
+        );
+        
+        // Create a vector of (symbol, address) pairs and get symbols for selection
+        let token_choices: Vec<(String, String)> = tokens.into_iter()
+            .map(|(symbol, info)| (symbol, info.address))
+            .collect();
+            
+        // Get the selected token
+        let selected_symbol = {
+            // Create a vector of just the symbols for the selection menu
+            let token_symbols: Vec<String> = token_choices.iter()
+                .map(|(symbol, _)| symbol.clone())
+                .collect();
+                
+            Select::new("Select token:", token_symbols)
+                .prompt_skippable()?
+                .ok_or_else(|| anyhow::anyhow!("No token selected"))?
+        };
+            
+        // Find the selected token info by matching the symbol
+        token_choices.into_iter()
+            .find(|(symbol, _)| symbol == &selected_symbol)
+            .map(|(_, address)| address)
     } else {
         None
     };

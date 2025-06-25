@@ -1,13 +1,13 @@
 use anyhow::{Result, anyhow};
 use ethers::{
     providers::{Http, Provider},
-    types::{Address, Block, Bytes, H256, TransactionReceipt as EthersReceipt, U256, U64},
+    types::{Address, Bytes, H256, U256, U64},
 };
 use ethers_providers::Middleware;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::str::FromStr;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::SystemTime;
 use crate::utils::alchemy::AlchemyClient;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

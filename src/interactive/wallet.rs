@@ -46,7 +46,7 @@ async fn create_wallet() -> Result<()> {
         .with_help_message("Enter a name for your new wallet")
         .prompt()?;
         
-    let password = inquire::Password::new("Enter password:")
+    let _password = inquire::Password::new("Enter password:")
         .with_display_toggle_enabled()
         .with_display_mode(inquire::PasswordDisplayMode::Masked)
         .with_custom_confirmation_error_message("The passwords don't match.")

@@ -48,7 +48,7 @@ pub struct TokenInfo {
     pub decimals: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct TokenRegistry {
     pub mainnet: HashMap<String, TokenInfo>,
     pub testnet: HashMap<String, TokenInfo>,
