@@ -238,14 +238,6 @@ Add new tokens to the registry by adding them to the `tokens.json` file in the `
    cargo run add-token --symbol ARCAD --address 0x0c917Ccc38203734aC963152059439cd33EA57fF --decimals 18 --network testnet
    ```
 
-   Example:
-
-   ![Add Token](screenshots/add-token-testnet.png)
-
-   This command adds a new token to the registry, allowing you to transfer it using the symbol `ARCAD`.
-
-   ![Token Added](screenshots/token-added.png)
-
 ## Configuration
 
 The application connects to the Rootstock network using the public JSON-RPC endpoint:
@@ -253,9 +245,7 @@ The application connects to the Rootstock network using the public JSON-RPC endp
 - **Mainnet**: `https://public-node.rsk.co`
 - **Testnet**: `https://public-node.testnet.rsk.co`
 
-Additionally, the `.env` file includes the following configurations:
 
-![Env Example](screenshots/env-example.png)
 
 Ensure these variables are properly set in your environment file before running the application.
 
