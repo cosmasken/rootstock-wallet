@@ -189,32 +189,6 @@ cargo run -- --no-interactive <command> [args...]
    cargo run -- history --address 0x1234... --limit 5
    ```
 
-## Image Sizing
-
-To ensure consistent image sizes in your documentation:
-   ```
-   Example:
-
-   ![Estimate Gas](screenshots/estimate-gas.png)
-
-10. **Export Private Key**:
-   Export the wallet's private key to a file.
-
-   ```bash
-   cargo run export-private-key --output <FILENAME>
-   ```
-
-   Example:
-
-   ```bash
-   cargo run export-private-key --output private.key
-   ```
-   ![Exported Key](screenshots/exported.png)
-
-   This will generate a file with the private key.
-
-   ![Exported Privte Key](screenshots/exported-private-key.png)
-
 ## Troubleshooting
 
 ### Common Issues
@@ -233,24 +207,10 @@ To ensure consistent image sizes in your documentation:
    - Make sure you've created a wallet first
    - Check that you're using the correct wallet address
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgements
-
-- [Rootstock](https://rootstock.io/)
-- [Ethers-rs](https://github.com/gakonst/ethers-rs)
-- [Clap](https://github.com/clap-rs/clap)
-
-   Example:
-
-   ![List Contacts](screenshots/list-contacts.png)
-
    - **Show Contact Details**:
 
    ```bash
-     cargo run show-contact --name <NAME>
+   cargo run show-contact --name <NAME>
    ```
 
    Example:
@@ -261,19 +221,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
    You can use a contact's name instead of an address in transfer commands:
 
    ```bash
-     cargo run transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
+   cargo run transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
    ```
 
    Example:
 
    ```bash
-     cargo run transfer --recipient alice --amount 0.01
+   cargo run transfer --recipient alice --amount 0.01
    ```
 
-19. **Add Token to Registry**:
-   Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
+## Adding Tokens
 
-   ```bash
+Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
+
+```bash
    cargo run add-token --symbol ARCAD --address 0x0c917Ccc38203734aC963152059439cd33EA57fF --decimals 18 --network testnet
    ```
 
