@@ -7,10 +7,24 @@ use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;
 use ethers::signers::LocalWallet;
-use ethers::types::{Address, U256};
+use ethers::types::{Address, H256, U256, U64};
 use rpassword::prompt_password;
 use std::fs;
 use std::str::FromStr;
+
+/// Result of a transfer operation
+#[derive(Debug)]
+pub struct TransferResult {
+    pub tx_hash: H256,
+    pub from: Address,
+    pub to: Address,
+    pub value: U256,
+    pub gas_used: U256,
+    pub gas_price: U256,
+    pub status: U64,
+    pub token_address: Option<Address>,
+    pub token_symbol: Option<String>,
+}
 
 #[derive(Parser, Debug)]
 pub struct TransferCommand {
@@ -32,7 +46,8 @@ pub struct TransferCommand {
 }
 
 impl TransferCommand {
-    pub async fn execute(&self) -> Result<()> {
+    /// Execute the transfer command and return the transfer result
+    pub async fn execute(&self) -> Result<TransferResult> {
         // Load wallet file and get current wallet
         let wallet_file = constants::wallet_file_path();
         if !wallet_file.exists() {
@@ -95,14 +110,30 @@ impl TransferCommand {
         let tx_hash = eth_client
             .send_transaction(to, amount.into(), token_address)
             .await?;
+    
         println!(
             "{}: Transaction sent: 0x{:x} for {} {}",
             "Success".green().bold(),
             tx_hash,
             self.value,
-            token_symbol.unwrap_or("RBTC".to_string())
+            token_symbol.clone().unwrap_or("RBTC".to_string())
         );
 
-        Ok(())
+        // Wait for transaction receipt
+        let receipt = eth_client
+            .get_transaction_receipt(tx_hash)
+            .await?;
+
+        Ok(TransferResult {
+            tx_hash,
+            from: default_wallet.address(),
+            to,
+            value: amount.into(),
+            gas_used: receipt.gas_used.unwrap_or_default(),
+            gas_price: receipt.effective_gas_price.unwrap_or_default(),
+            status: receipt.status.unwrap_or_else(|| U64::from(0)),
+            token_address,
+            token_symbol,
+        })
     }
 }
