@@ -18,7 +18,7 @@ pub struct WalletCommand {
 }
 
 #[derive(Parser, Debug)]
-enum WalletAction {
+pub enum WalletAction {
     Create { name: String },
     Import { private_key: String, name: String },
     List,
@@ -47,7 +47,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    async fn create_wallet(&self, config: &Config, name: &str) -> Result<()> {
+    async fn create_wallet(&self, _config: &Config, name: &str) -> Result<()> {
         let password = prompt_password("Enter password to encrypt wallet: ")?;
         let confirm_password = prompt_password("Confirm password: ")?;
         if password != confirm_password {
@@ -77,7 +77,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    async fn import_wallet(&self, config: &Config, private_key: &str, name: &str) -> Result<()> {
+    async fn import_wallet(&self, _config: &Config, private_key: &str, name: &str) -> Result<()> {
         let password = prompt_password("Enter password to encrypt wallet: ")?;
         let confirm_password = prompt_password("Confirm password: ")?;
         if password != confirm_password {
@@ -99,7 +99,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    fn list_wallets(&self, config: &Config) -> Result<()> {
+    fn list_wallets(&self, _config: &Config) -> Result<()> {
         let wallet_file = constants::wallet_file_path();
         if !wallet_file.exists() {
             println!("No wallets found");
@@ -142,7 +142,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    fn rename_wallet(&self, config: &Config, old_name: &str, new_name: &str) -> Result<()> {
+    fn rename_wallet(&self, _config: &Config, old_name: &str, new_name: &str) -> Result<()> {
         let wallet_file = constants::wallet_file_path();
         if !wallet_file.exists() {
             return Err(anyhow!("No wallets found"));
@@ -173,7 +173,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    fn backup_wallet(&self, config: &Config, name: &str, path: &PathBuf) -> Result<()> {
+    fn backup_wallet(&self, _config: &Config, name: &str, path: &PathBuf) -> Result<()> {
         let wallet_file = constants::wallet_file_path();
         if !wallet_file.exists() {
             return Err(anyhow!("No wallets found"));
@@ -206,7 +206,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    fn delete_wallet(&self, config: &Config, name: &str) -> Result<()> {
+    fn delete_wallet(&self, _config: &Config, name: &str) -> Result<()> {
         let wallet_file = constants::wallet_file_path();
         let data = fs::read_to_string(&wallet_file)?;
         let mut wallet_data = serde_json::from_str::<WalletData>(&data)?;

@@ -3,7 +3,6 @@ use crate::utils::eth::EthClient;
 use anyhow::Result;
 use colored::Colorize;
 use ethers::types::Address;
-use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct Config {

@@ -1,5 +1,5 @@
 use colored::Colorize;
-use prettytable::{Cell, Row, Table};
+use prettytable::{format, Cell, Row, Table};
 
 pub struct TableBuilder {
     table: Table,
@@ -25,7 +25,11 @@ impl TableBuilder {
     }
 
     pub fn print(&self) {
-        self.table.printstd();
+        let mut buf = Vec::new();
+        self.table.print(&mut buf).expect("Failed to print table");
+        if let Ok(output) = String::from_utf8(buf) {
+            println!("\n{}", output);
+        }
     }
 
     pub fn _print_error(&self, error: &str) {

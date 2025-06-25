@@ -1,8 +1,7 @@
 use crate::types::network::NetworkConfig;
-use crate::types::transaction::{RskTransaction, TransactionStatus};
 use crate::types::wallet::WalletData;
 use crate::utils::constants;
-use crate::utils::helper::{Config, WalletConfig};
+use crate::utils::helper::Config;
 use anyhow::anyhow;
 use ethers::types::{H256, U256};
 use ethers::{
@@ -10,15 +9,10 @@ use ethers::{
     prelude::*,
     providers::Provider,
     signers::LocalWallet,
-    types::{BlockNumber, TransactionReceipt, transaction::eip2718::TypedTransaction},
+    types::transaction::eip2718::TypedTransaction,
 };
-use indicatif::ProgressBar;
-use serde_json::Value;
-use std::collections::HashSet;
 use std::fs;
-use std::str::FromStr;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
 
 abigen!(
     IERC20,
@@ -216,6 +210,20 @@ impl EthClient {
                 Ok(pending_tx.tx_hash())
             }
         }
+    }
+
+    /// Get transaction receipt by hash
+    pub async fn get_transaction_receipt(
+        &self,
+        tx_hash: H256,
+    ) -> Result<TransactionReceipt, anyhow::Error> {
+        self.provider
+            .get_transaction_receipt(tx_hash)
+            .await
+            .map_err(|e| anyhow!("Failed to get transaction receipt: {}", e))
+            .and_then(|receipt| {
+                receipt.ok_or_else(|| anyhow!("Transaction receipt not found"))
+            })
     }
 
     pub async fn get_token_info(

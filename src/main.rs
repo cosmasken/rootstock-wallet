@@ -1,22 +1,26 @@
 #![allow(warnings)]
-use crate::commands::balance::BalanceCommand;
-use crate::commands::history::HistoryCommand;
-use crate::commands::transfer::TransferCommand;
 use anyhow::Result;
 use clap::Parser;
+use clap::CommandFactory;
 use dotenv::dotenv;
-// use colored::Colorize;
-// use std::process;
+use crate::commands::history::HistoryCommand;
+use crate::commands::balance::BalanceCommand;
+use crate::commands::transfer::TransferCommand;
 
 mod commands;
+mod interactive;
 mod types;
 mod utils;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
+    /// Run in non-interactive mode (use --no-interactive)
+    #[arg(short = 'n', long = "no-interactive", default_value_t = false)]
+    interactive: bool,
+    
     #[command(subcommand)]
-    command: commands::Commands,
+    command: Option<commands::Commands>,
 }
 
 #[tokio::main]
@@ -25,7 +29,15 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     let cli = Cli::parse();
-    match cli.command {
+    
+    // If no command is provided, start interactive mode
+    if cli.command.is_none() {
+        return interactive::start().await;
+    }
+    
+    // If --no-interactive flag is used, execute the provided command
+    if !cli.interactive {
+        match cli.command.unwrap() {
         commands::Commands::Contacts(cmd) => cmd.execute().await?,
         commands::Commands::History {
             limit,
@@ -65,7 +77,7 @@ async fn main() -> Result<()> {
                 network,
                 token,
             };
-            cmd.execute().await?
+            cmd.execute().await?;
         }
         commands::Commands::Transfer {
             address,
@@ -79,7 +91,7 @@ async fn main() -> Result<()> {
                 token,
                 network,
             };
-            cmd.execute().await?
+            cmd.execute().await?;
         }
         commands::Commands::Wallet(cmd) => cmd.execute().await?,
         commands::Commands::SetApiKey(cmd) => cmd.execute().await?,
@@ -93,11 +105,15 @@ async fn main() -> Result<()> {
                 eprintln!("Error removing token: {}", e);
             }
         }
-        commands::Commands::TokenList(cmd) => {
-            if let Err(e) = commands::tokens::list_tokens(cmd.network.as_deref()) {
-                eprintln!("Error listing tokens: {}", e);
+            commands::Commands::TokenList(cmd) => {
+                if let Err(e) = commands::tokens::list_tokens(cmd.network.as_deref()) {
+                    eprintln!("Error listing tokens: {}", e);
+                }
             }
         }
     }
-    Ok(())
+    
+    // If we get here, we're in interactive mode with a command
+    // This is a fallback in case the command doesn't handle interactive mode itself
+    interactive::start().await
 }

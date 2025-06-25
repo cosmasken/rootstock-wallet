@@ -48,7 +48,7 @@ pub struct TokenInfo {
     pub decimals: u8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct TokenRegistry {
     pub mainnet: HashMap<String, TokenInfo>,
     pub testnet: HashMap<String, TokenInfo>,
@@ -187,7 +187,7 @@ pub fn remove_token(network: &str, symbol: &str) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-pub fn list_tokens(network: Option<&str>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn list_tokens(network: Option<&str>) -> Result<Vec<(String, TokenInfo)>, Box<dyn std::error::Error>> {
     let registry = TokenRegistry::load()?;
     let tokens = registry.list_tokens(network);
     
@@ -196,16 +196,7 @@ pub fn list_tokens(network: Option<&str>) -> Result<(), Box<dyn std::error::Erro
             Some(net) => println!("No tokens found in {} network", net),
             None => println!("No tokens found in registry"),
         }
-        return Ok(());
-    }
-
-    println!("\nToken Registry:");
-    println!("{:<15} {:<42} {}", "SYMBOL", "ADDRESS", "DECIMALS");
-    println!("{}", "-".repeat(70));
-    
-    for (symbol, info) in tokens {
-        println!("{:<15} {:<42} {}", symbol, info.address, info.decimals);
     }
     
-    Ok(())
+    Ok(tokens)
 }
