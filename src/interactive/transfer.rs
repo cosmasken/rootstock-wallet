@@ -1,7 +1,9 @@
 use crate::commands::transfer::TransferCommand;
+use crate::commands::tokens::TokenRegistry;
 use anyhow::Result;
 use console::style;
 use inquire::validator::Validation;
+use inquire::Select;
 
 /// Displays the fund transfer interface
 pub async fn send_funds() -> Result<()> {
@@ -34,19 +36,47 @@ pub async fn send_funds() -> Result<()> {
         .prompt()?;
     
     let (amount, token) = if is_token {
-        // For tokens, we need the token contract address
-        let token_address = inquire::Text::new("Token contract address (0x...):")
-            .with_validator(|input: &str| {
-                if input.starts_with("0x") && input.len() == 42 {
-                    Ok(Validation::Valid)
-                } else {
-                    Ok(Validation::Invalid("Please enter a valid token contract address (0x...)".into()))
-                }
+        let registry = TokenRegistry::load()
+            .map_err(|e| {
+                eprintln!("⚠️  Warning: Could not load token registry: {}", e);
+                e
             })
-            .prompt()?;
+            .unwrap_or_default();
+            
+        let tokens = registry.list_tokens(Some(&network));
+        
+        if tokens.is_empty() {
+            return Err(anyhow::anyhow!(
+                "No tokens found. Please add tokens first using the token management menu (option 3)."
+            ));
+        }
+        
+        // Create a vector of (symbol, token_info) pairs
+        let token_choices: Vec<(String, crate::commands::tokens::TokenInfo)> = tokens.into_iter()
+            .map(|(symbol, info)| (symbol, info))
+            .collect();
+            
+        // Create a parallel vector of just the symbols for the selection menu
+        let token_symbols: Vec<&str> = token_choices.iter()
+            .map(|(symbol, _)| symbol.as_str())
+            .collect();
+            
+        // Get the selected symbol index
+        let selection_idx = Select::new("Select token to send:", token_symbols)
+            .prompt_skippable()?
+            .and_then(|selected| {
+                token_choices.iter()
+                    .position(|(symbol, _)| symbol == selected)
+            })
+            .ok_or_else(|| anyhow::anyhow!("No token selected"))?;
+            
+        // Get the selected token info by index
+        let (symbol, token_info) = &token_choices[selection_idx];
+        let token_info = token_info.clone();
+
             
         let amount = inquire::Text::new("Amount to send:")
-            .with_help_message("Enter the amount of tokens to send")
+            .with_help_message(&format!("Enter the amount of {} to send", symbol))
             .with_validator(|input: &str| {
                 match input.parse::<f64>() {
                     Ok(_) => Ok(Validation::Valid),
@@ -56,7 +86,7 @@ pub async fn send_funds() -> Result<()> {
             .prompt()?
             .parse::<f64>()?;
             
-        (amount, Some(token_address))
+        (amount, Some(token_info.address.clone()))
     } else {
         // For RBTC
         let amount = inquire::Text::new("Amount to send (in RBTC):")

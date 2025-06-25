@@ -51,7 +51,7 @@ impl TransferCommand {
         // Prompt for password and decrypt private key
         let password = prompt_password("Enter password for the default wallet: ")?;
         let private_key = default_wallet.decrypt_private_key(&password)?;
-        let local_wallet = LocalWallet::from_str(&private_key)
+        let _local_wallet = LocalWallet::from_str(&private_key)
             .map_err(|e| anyhow!("Failed to create LocalWallet: {}", e))?;
 
         // Inject the private key into the config for EthClient

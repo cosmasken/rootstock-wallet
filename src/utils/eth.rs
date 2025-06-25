@@ -1,8 +1,7 @@
 use crate::types::network::NetworkConfig;
-use crate::types::transaction::{RskTransaction, TransactionStatus};
 use crate::types::wallet::WalletData;
 use crate::utils::constants;
-use crate::utils::helper::{Config, WalletConfig};
+use crate::utils::helper::Config;
 use anyhow::anyhow;
 use ethers::types::{H256, U256};
 use ethers::{
@@ -10,15 +9,10 @@ use ethers::{
     prelude::*,
     providers::Provider,
     signers::LocalWallet,
-    types::{BlockNumber, TransactionReceipt, transaction::eip2718::TypedTransaction},
+    types::transaction::eip2718::TypedTransaction,
 };
-use indicatif::ProgressBar;
-use serde_json::Value;
-use std::collections::HashSet;
 use std::fs;
-use std::str::FromStr;
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
 
 abigen!(
     IERC20,

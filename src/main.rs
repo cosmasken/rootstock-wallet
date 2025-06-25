@@ -15,8 +15,8 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
-    /// Run in interactive mode
-    #[arg(short, long)]
+    /// Run in non-interactive mode (use --no-interactive)
+    #[arg(short = 'n', long = "no-interactive", default_value_t = false)]
     interactive: bool,
     
     #[command(subcommand)]
@@ -30,20 +30,14 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
     
-    // If no command is provided and not in interactive mode, show help
-    if cli.command.is_none() && !cli.interactive {
-        let _ = Cli::command().print_help();
-        println!("\nRun with --interactive for interactive mode");
-        return Ok(());
-    }
-    
-    // Start interactive mode if requested
-    if cli.interactive {
+    // If no command is provided, start interactive mode
+    if cli.command.is_none() {
         return interactive::start().await;
     }
     
-    // Otherwise, execute the provided command
-    match cli.command.unwrap() {
+    // If --no-interactive flag is used, execute the provided command
+    if !cli.interactive {
+        match cli.command.unwrap() {
         commands::Commands::Contacts(cmd) => cmd.execute().await?,
         commands::Commands::History {
             limit,
@@ -111,11 +105,15 @@ async fn main() -> Result<()> {
                 eprintln!("Error removing token: {}", e);
             }
         }
-        commands::Commands::TokenList(cmd) => {
-            if let Err(e) = commands::tokens::list_tokens(cmd.network.as_deref()) {
-                eprintln!("Error listing tokens: {}", e);
+            commands::Commands::TokenList(cmd) => {
+                if let Err(e) = commands::tokens::list_tokens(cmd.network.as_deref()) {
+                    eprintln!("Error listing tokens: {}", e);
+                }
             }
         }
     }
-    Ok(())
+    
+    // If we get here, we're in interactive mode with a command
+    // This is a fallback in case the command doesn't handle interactive mode itself
+    interactive::start().await
 }
