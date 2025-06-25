@@ -212,6 +212,20 @@ impl EthClient {
         }
     }
 
+    /// Get transaction receipt by hash
+    pub async fn get_transaction_receipt(
+        &self,
+        tx_hash: H256,
+    ) -> Result<TransactionReceipt, anyhow::Error> {
+        self.provider
+            .get_transaction_receipt(tx_hash)
+            .await
+            .map_err(|e| anyhow!("Failed to get transaction receipt: {}", e))
+            .and_then(|receipt| {
+                receipt.ok_or_else(|| anyhow!("Transaction receipt not found"))
+            })
+    }
+
     pub async fn get_token_info(
         &self,
         token_address: Address,

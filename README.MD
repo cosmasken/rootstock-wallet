@@ -1,42 +1,36 @@
 # Rootstock Wallet CLI
 
-A lightweight Rust-based CLI application for managing Rootstock wallets, transferring RBTC, estimating gas, and interacting with the Rootstock blockchain. Designed for developers building on the Rootstock ecosystem.
+A lightweight Rust-based CLI application for managing Rootstock wallets, transferring RBTC and tokens, and interacting with the Rootstock blockchain. Designed for developers building on the Rootstock ecosystem.
 
 ## Features
 
 - **Wallet Management**:
-  - Generate new wallets.
-  - Load and save wallets securely.
-  - Import wallets from mnemonic phrases or private keys.
-  - Export private keys.
-  - Export wallets in JSON keystore format.
-- **RBTC Transfers**:
-  - Send RBTC to any Rootstock address.
-  - Locally sign transactions for enhanced security.
-- **Balance Retrieval**:
-  - ✔️ Fetch and display the RBTC balance of any address.
-- **Gas Estimation**:
-  - Estimate gas costs for transactions.
-- **Network Information**:
-  - Retrieve current block number, gas price, and chain ID.
-- **QR Code Generation**:
-  - ✔️ Generate QR codes for wallet addresses.
-- **Multi-Signature Wallet Support**:
-  - Create multi-signature wallets with specified owners and required approvals.
-  - Propose transactions requiring multiple approvals.
-  - Approve proposed transactions.
-- **Network Configuration**:
-  - Support for both mainnet and testnet
-  - Network selection via command-line flag
-  - ✔️ Automatic chain ID configuration
-- **Transaction History**:
-  - View transaction history for any address
-  - Display both RBTC and ERC-20 token transfers
-  - Limit the number of transactions shown
+  - Generate new wallets
+  - Import/export wallets
+  - Manage multiple wallets
+  - Switch between wallets
+
+- **Transactions**:
+  - Send RBTC to any address
+  - Transfer ERC-20 tokens
+  - View transaction history
+  - Check balances (RBTC and tokens)
+
 - **Token Management**:
-  - Check balances for ERC-20 tokens
-  - Support for RIF, USDRIF, and custom tokens
-  - Token registry for easy symbol-to-address mapping
+  - Add custom tokens
+  - List supported tokens
+  - Remove tokens
+  - View token balances
+
+- **Contacts**:
+  - Save frequently used addresses with names
+  - List all saved contacts
+  - Remove contacts
+
+- **Network**:
+  - Automatic network detection from RPC URL
+  - Support for both mainnet and testnet
+  - Set custom RPC API key
 
 ## Installation
 
@@ -49,122 +43,155 @@ cargo build --release
 
 ## Usage
 
-Run the CLI application:
+### Interactive Mode (Default)
+
+By default, the wallet runs in interactive mode with a text-based interface. Simply run:
 
 ```bash
 cargo run
 ```
 
-### Commands
+You'll see a menu like this:
+```
+Rootstock Wallet CLI
 
-1. **Transfer RBTC**:
-   Send RBTC to a recipient address.
+1. Wallet Management
+2. Transfer RBTC/Tokens
+3. Check Balance
+4. View Transaction History
+5. Manage Tokens
+6. Manage Contacts
+7. Network Settings
+8. Exit
 
+Select an option:
+```
+
+### Non-Interactive Mode
+
+For scripting or automation, you can use the following commands directly:
+
+#### Wallet Management
+
+```bash
+# Create a new wallet
+cargo run -- wallet new
+
+# List all wallets
+cargo run -- wallet list
+
+# Switch to a different wallet
+cargo run -- wallet switch <WALLET_ADDRESS>
+
+# Remove a wallet
+cargo run -- wallet remove <WALLET_ADDRESS>
+```
+
+#### Balance and Transactions
+
+```bash
+# Check RBTC balance
+cargo run -- balance --address <ADDRESS>
+
+# Transfer RBTC
+cargo run -- transfer --recipient <ADDRESS> --amount <AMOUNT>
+
+# Transfer tokens (RIF, USDRIF, etc.)
+cargo run -- transfer --recipient <ADDRESS> --amount <AMOUNT> --token <TOKEN_SYMBOL>
+
+# View transaction history
+cargo run -- history --address <ADDRESS> --limit <NUMBER>
+```
+
+#### Token Management
+
+```bash
+# Add a new token
+cargo run -- token-add --symbol <SYMBOL> --address <ADDRESS> --decimals <DECIMALS>
+
+# List all tokens
+cargo run -- token-list
+
+# Remove a token
+cargo run -- token-remove --symbol <SYMBOL>
+```
+
+#### Contact Management
+
+```bash
+# Add a contact
+cargo run -- contacts add --name <NAME> --address <ADDRESS>
+
+# List all contacts
+cargo run -- contacts list
+
+# Remove a contact
+cargo run -- contacts remove --name <NAME>
+```
+
+#### Network Configuration
+
+```bash
+# Set RPC API key
+cargo run -- set-api-key <API_KEY>
+
+# Force non-interactive mode (useful for scripts)
+cargo run -- --no-interactive <command> [args...]
+```
+
+### Examples
+
+1. **Interactive Mode** (default):
    ```bash
-   cargo run transfer --recipient <ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
+   cargo run
+   # Then follow the on-screen menus
    ```
 
-   Example:
-
+2. **Quick Balance Check** (non-interactive):
    ```bash
-   cargo run transfer --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001 --network testnet
+   cargo run -- balance --address 0x1234...
    ```
 
-2. **Get Balance**:
-   Fetch the RBTC balance of an address.
-
+3. **Send RBTC** (non-interactive):
    ```bash
-   cargo run get-balance --address <ADDRESS> --network <mainnet|testnet>
+   cargo run -- transfer --recipient 0x1234... --amount 0.1
    ```
 
-   Example:
-
+4. **Send Tokens** (non-interactive):
    ```bash
-   cargo run get-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --network testnet
+   cargo run -- transfer --recipient 0x1234... --amount 10 --token RIF
    ```
 
-3. **Show Wallet**:
-   Display the wallet's address and public key.
+## Examples
 
+1. **Create a new wallet**:
    ```bash
-   cargo run show-wallet --network <mainnet|testnet>
+   cargo run -- wallet new
    ```
 
-   Example:
-
+2. **Check RBTC balance**:
    ```bash
-   cargo run show-wallet --network testnet
+   cargo run -- balance --address 0x1234...
    ```
 
-4. **Token Balance**:
-   Check the balance of an ERC-20 token.
-
+3. **Send 0.1 RBTC**:
    ```bash
-   cargo run token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
+   cargo run -- transfer --recipient 0x1234... --amount 0.1
    ```
 
-   Example:
-
+4. **Send 10 RIF tokens**:
    ```bash
-   cargo run token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
+   cargo run -- transfer --recipient 0x1234... --amount 10 --token RIF
    ```
 
-5. **Transaction History**:
-   View transaction history for an address.
-
+5. **View last 5 transactions**:
    ```bash
-   cargo run history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
+   cargo run -- history --address 0x1234... --limit 5
    ```
 
-   Example:
+## Image Sizing
 
-   ```bash
-   cargo run history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
-   ```
-
-6. **Contact Management**:
-   Manage contacts for easier address management.
-
-   ```bash
-   # Add a contact
-   cargo run contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
-
-   # List all contacts
-   cargo run contact --action list
-
-   # Show a specific contact
-   cargo run contact --action show --name alice
-
-   # Delete a contact
-   cargo run contact --action delete --name alice
-   ```
-
-   Example:
-
-   ```bash
-   cargo run contact --action add --name alice --address 0x09aB514B6974601967E7b379478EFf4073cceD06
-   ```
-
-   ![Contact Management](screenshots/contact-management.png)
-
-8. **Network Configuration**:
-   All commands support network selection:
-
-   ```bash
-   cargo run <command> --network <mainnet|testnet>
-   ```
-
-   Example:
-
-   ```bash
-   cargo run transfer --network mainnet --recipient 0x09aB514B6974601967E7b379478EFf4073cceD06 --amount 0.0001
-   ```
-
-9. **Estimate Gas**:
-   Estimate gas costs for a transaction.
-
-   ```bash
-   cargo run estimate-gas  <ADDRESS>  <AMOUNT> --network <mainnet|testnet>
+To ensure consistent image sizes in your documentation:
    ```
    Example:
 
@@ -188,113 +215,33 @@ cargo run
 
    ![Exported Privte Key](screenshots/exported-private-key.png)
 
-11. **Import Wallet**:
-   Import a wallet from a mnemonic phrase or private key.
+## Troubleshooting
 
-   ```bash
-   cargo run import-wallet --mnemonic <MNEMONIC> --private-key <PRIVATE_KEY>
-   ```
+### Common Issues
 
-   Example (using a mnemonic):
+1. **Transaction Failures**:
+   - Ensure you have enough RBTC for gas fees
+   - Check that the recipient address is valid
+   - Verify you're on the correct network (mainnet/testnet)
 
-   ```bash
-   cargo run import-wallet --mnemonic "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
-   ```
+2. **Connection Issues**:
+   - Check your internet connection
+   - Verify your RPC API key is set correctly
+   - Ensure the RPC endpoint is accessible
 
-   Example (using a private key):
+3. **Wallet Not Found**:
+   - Make sure you've created a wallet first
+   - Check that you're using the correct wallet address
 
-   ![Import Private Key](screenshots/import-private-key.png)
+## License
 
-12. **Export Keystore**:
-   Export the wallet in JSON keystore format.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-   ```bash
-   cargo run export-keystore --password <PASSWORD> --output <FILENAME>
-   ```
+## Acknowledgements
 
-   Example:
-
-   ```bash
-   cargo run export-keystore --password mypassword --output keystore.json
-   ```
-
-13. **View Transaction History**:
-   Display transaction history for an address.
-
-   ```bash
-   cargo run history --address <ADDRESS> --limit <NUMBER> --network <mainnet|testnet>
-   ```
-
-   Example:
-   ```bash
-   cargo run history --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --limit 5 --network testnet
-   ```
-
-14. **Check Token Balance**:
-   View the balance of an ERC-20 token for an address.
-
-   ```bash
-   cargo run token-balance --address <ADDRESS> --token <TOKEN_SYMBOL> --network <mainnet|testnet>
-   ```
-
-   Example:
-   ```bash
-   cargo run token-balance --address 0x09aB514B6974601967E7b379478EFf4073cceD06 --token RIF --network testnet
-   ```
-
-15. **Network Info**:
-    Display current network information (block number, gas price, chain ID).
-
-   ```bash
-    cargo run network-info --network <mainnet|testnet>
-   ```
-
-   ![Exported Key](screenshots/network-info.png)
-
-16. **Transfer ERC-20 Tokens**:
-    Transfer tokens like RIF, DOC, SOV, or rUSDT.
-
-    ```bash
-    cargo run transfer-token --token-address <TOKEN_ADDRESS> --recipient <RECIPIENT_ADDRESS> --amount <AMOUNT> --network <mainnet|testnet>
-    ```
-
-    Example:
-
-    ```bash
-    cargo run transfer-token --token-address 0xTokenContractAddress --recipient 0xRecipientAddress --amount 10 --network testnet
-    ```
-    
-17. **Transaction History**:
-   Retrieve the transaction history for your own address or any specified address.
-
-   ```bash
-   cargo run transaction-history --address <ADDRESS> --network <mainnet|testnet>
-   ```
-
-   Example:
-
-   ![Transaction History](screenshots/transaction-history.png)
-
-   This will fetch the last 10 transactions for the current wallet address on testnet.
-
-18. **Contact Management**:
-   Easily save, list, and use contacts for transactions.
-
-   - **Add a Contact**:
-
-   ```bash
-     cargo run add-contact --name <NAME> --address <ADDRESS>
-   ```
-
-   Example:
-
-   ![Transaction History](screenshots/add-contact.png)
-
-   - **List Contacts**:
-
-   ```bash
-   cargo run list-contacts
-   ```
+- [Rootstock](https://rootstock.io/)
+- [Ethers-rs](https://github.com/gakonst/ethers-rs)
+- [Clap](https://github.com/clap-rs/clap)
 
    Example:
 

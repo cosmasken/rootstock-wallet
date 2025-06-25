@@ -77,7 +77,7 @@ async fn main() -> Result<()> {
                 network,
                 token,
             };
-            cmd.execute().await?
+            cmd.execute().await?;
         }
         commands::Commands::Transfer {
             address,
@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
                 token,
                 network,
             };
-            cmd.execute().await?
+            cmd.execute().await?;
         }
         commands::Commands::Wallet(cmd) => cmd.execute().await?,
         commands::Commands::SetApiKey(cmd) => cmd.execute().await?,
