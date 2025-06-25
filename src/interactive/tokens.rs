@@ -133,11 +133,25 @@ async fn list_tokens() -> Result<()> {
     let network_filter = if network == "all" { None } else { Some(network.as_str()) };
     
     // List tokens
-    if let Err(e) = tokens::list_tokens(network_filter) {
-        eprintln!("\n{} {}", 
-            style("❌ Failed to list tokens:").red(), 
-            style(e).bold()
-        );
+    match tokens::list_tokens(network_filter) {
+        Ok(tokens) => {
+            if tokens.is_empty() {
+                println!("\nNo tokens found");
+            } else {
+                println!("\n{:<15} {:<42} {}", "SYMBOL", "ADDRESS", "DECIMALS");
+                println!("{}", "-".repeat(70));
+                
+                for (symbol, info) in tokens {
+                    println!("{:<15} {:<42} {}", symbol, info.address, info.decimals);
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("\n{} {}", 
+                style("❌ Failed to list tokens:").red(), 
+                style(e).bold()
+            );
+        }
     }
     
     Ok(())
