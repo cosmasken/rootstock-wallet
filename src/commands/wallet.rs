@@ -18,7 +18,7 @@ pub struct WalletCommand {
 }
 
 #[derive(Parser, Debug)]
-enum WalletAction {
+pub enum WalletAction {
     Create { name: String },
     Import { private_key: String, name: String },
     List,

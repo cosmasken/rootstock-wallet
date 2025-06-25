@@ -1,22 +1,26 @@
 #![allow(warnings)]
-use crate::commands::balance::BalanceCommand;
-use crate::commands::history::HistoryCommand;
-use crate::commands::transfer::TransferCommand;
 use anyhow::Result;
 use clap::Parser;
+use clap::CommandFactory;
 use dotenv::dotenv;
-// use colored::Colorize;
-// use std::process;
+use crate::commands::history::HistoryCommand;
+use crate::commands::balance::BalanceCommand;
+use crate::commands::transfer::TransferCommand;
 
 mod commands;
+mod interactive;
 mod types;
 mod utils;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
+    /// Run in interactive mode
+    #[arg(short, long)]
+    interactive: bool,
+    
     #[command(subcommand)]
-    command: commands::Commands,
+    command: Option<commands::Commands>,
 }
 
 #[tokio::main]
@@ -25,7 +29,21 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     let cli = Cli::parse();
-    match cli.command {
+    
+    // If no command is provided and not in interactive mode, show help
+    if cli.command.is_none() && !cli.interactive {
+        let _ = Cli::command().print_help();
+        println!("\nRun with --interactive for interactive mode");
+        return Ok(());
+    }
+    
+    // Start interactive mode if requested
+    if cli.interactive {
+        return interactive::start().await;
+    }
+    
+    // Otherwise, execute the provided command
+    match cli.command.unwrap() {
         commands::Commands::Contacts(cmd) => cmd.execute().await?,
         commands::Commands::History {
             limit,
