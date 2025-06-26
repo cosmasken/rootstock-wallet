@@ -91,12 +91,8 @@ impl AlchemyClient {
             return Err(anyhow!("Alchemy API error: {}", error));
         }
 
-        Ok(response.get("result").and_then(|r| {
-            if r.is_null() {
-                None
-            } else {
-                Some(r.clone())
-            }
-        }))
+        Ok(response
+            .get("result")
+            .and_then(|r| if r.is_null() { None } else { Some(r.clone()) }))
     }
 }

@@ -1,7 +1,6 @@
 use crate::commands::history::HistoryCommand;
 use crate::commands::tokens::{TokenRegistry, list_tokens};
 use anyhow::Result;
-use std::error::Error;
 use console::style;
 use inquire::{Select, Text, validator::Validation};
 
@@ -100,7 +99,10 @@ pub async fn show_history() -> Result<()> {
                                 .collect();
                         }
                         Err(e) => {
-                            eprintln!("Warning: Failed to load tokens: {}. Using default token options.", e);
+                            eprintln!(
+                                "Warning: Failed to load tokens: {}. Using default token options.",
+                                e
+                            );
                             token_options = vec!["RBTC (Native)".to_string()];
                         }
                     }

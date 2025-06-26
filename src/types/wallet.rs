@@ -2,7 +2,8 @@ use crate::types::contacts::Contact;
 use aes::Aes256;
 use anyhow::Result;
 use anyhow::{Error, anyhow};
-use base64;
+use base64::engine::general_purpose::STANDARD;
+use base64::{self, Engine as _};
 use cbc::cipher::block_padding::Pkcs7;
 use cbc::cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit};
 use cbc::{Decryptor, Encryptor};
@@ -49,9 +50,9 @@ impl Wallet {
             balance: U256::zero(),
             network: String::new(),
             name: name.to_string(),
-            encrypted_private_key: base64::encode(&encrypted_key),
-            salt: base64::encode(&salt),
-            iv: base64::encode(&iv),
+            encrypted_private_key: STANDARD.encode(&encrypted_key),
+            salt: STANDARD.encode(&salt),
+            iv: STANDARD.encode(&iv),
             created_at: Utc::now().to_rfc3339(),
         })
     }
@@ -71,17 +72,21 @@ impl Wallet {
         let pos = buffer.len();
         let pad_len = 16 - (pos % 16);
         buffer.extend(std::iter::repeat(pad_len as u8).take(pad_len));
-        let  encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
+        let encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
         let _ = encryptor.encrypt_padded_mut::<Pkcs7>(&mut buffer, pos);
         Ok((buffer, iv.to_vec(), salt.to_vec()))
     }
 
     pub fn decrypt_private_key(&self, password: &str) -> Result<String, anyhow::Error> {
         // Decode Base64-encoded salt, IV, and encrypted key
-        let salt =
-            base64::decode(&self.salt).map_err(|e| anyhow!("Failed to decode salt: {}", e))?;
-        let iv = base64::decode(&self.iv).map_err(|e| anyhow!("Failed to decode IV: {}", e))?;
-        let encrypted_key = base64::decode(&self.encrypted_private_key)
+        let salt = STANDARD
+            .decode(&self.salt)
+            .map_err(|e| anyhow!("Failed to decode salt: {}", e))?;
+        let iv = STANDARD
+            .decode(&self.iv)
+            .map_err(|e| anyhow!("Failed to decode IV: {}", e))?;
+        let encrypted_key = STANDARD
+            .decode(&self.encrypted_private_key)
             .map_err(|e| anyhow!("Failed to decode encrypted private key: {}", e))?;
 
         // Validate lengths

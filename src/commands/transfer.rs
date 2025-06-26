@@ -2,12 +2,11 @@ use crate::types::wallet::WalletData;
 use crate::utils::constants;
 use crate::utils::eth::EthClient;
 use crate::utils::helper::Config;
-use crate::utils::helper::Helper;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;
 use ethers::signers::LocalWallet;
-use ethers::types::{Address, H256, U256, U64};
+use ethers::types::{Address, H256, U64, U256};
 use rpassword::prompt_password;
 use std::fs;
 use std::str::FromStr;
@@ -110,7 +109,7 @@ impl TransferCommand {
         let tx_hash = eth_client
             .send_transaction(to, amount.into(), token_address)
             .await?;
-    
+
         println!(
             "{}: Transaction sent: 0x{:x} for {} {}",
             "Success".green().bold(),
@@ -120,9 +119,7 @@ impl TransferCommand {
         );
 
         // Wait for transaction receipt
-        let receipt = eth_client
-            .get_transaction_receipt(tx_hash)
-            .await?;
+        let receipt = eth_client.get_transaction_receipt(tx_hash).await?;
 
         Ok(TransferResult {
             tx_hash,

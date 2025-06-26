@@ -1,7 +1,6 @@
 use crate::types::wallet::{Wallet, WalletData};
-use crate::utils::{constants, eth::EthClient, helper::Config, table::TableBuilder};
+use crate::utils::{constants, helper::Config, table::TableBuilder};
 use anyhow::{Result, anyhow};
-use chrono::Utc;
 use clap::Parser;
 use colored::Colorize;
 use ethers::signers::LocalWallet;
@@ -69,7 +68,7 @@ impl WalletCommand {
         } else {
             WalletData::new()
         };
-        wallet_data.add_wallet(wallet.clone());
+        let _ = wallet_data.add_wallet(wallet.clone());
         fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
         println!("{}", "🎉 Wallet created successfully".green());
         println!("Address: {:?}", wallet.address());
@@ -92,7 +91,7 @@ impl WalletCommand {
         } else {
             WalletData::new()
         };
-        wallet_data.add_wallet(wallet);
+        let _ = wallet_data.add_wallet(wallet);
         fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
         println!("{}", "✅ Wallet imported successfully".green());
         println!("Wallet saved at: {}", wallet_file.display());
@@ -135,7 +134,7 @@ impl WalletCommand {
             .get_wallet_by_name(name)
             .ok_or_else(|| anyhow!("Wallet '{}' not found", name))?
             .address;
-        wallet_data.switch_wallet(&format!("0x{:x}", wallet_address));
+        let _ = wallet_data.switch_wallet(&format!("0x{:x}", wallet_address));
         fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
         println!("{}", format!("✅ Switched to wallet: {}", name).green());
         println!("Address: {}", format!("0x{:x}", wallet_address));
@@ -219,7 +218,7 @@ impl WalletCommand {
                 "Cannot delete currently selected wallet. Please switch to a different wallet first."
             ));
         }
-        wallet_data.remove_wallet(&address);
+        let _ = wallet_data.remove_wallet(&address);
         fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
         println!("{}", format!("✅ Deleted wallet: {}", name).green());
         println!("Address: {}", address);

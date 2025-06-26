@@ -1,6 +1,6 @@
-use crate::types::wallet::{Wallet, WalletData};
+use crate::types::wallet::WalletData;
 use crate::utils::constants;
-use crate::utils::helper::{Config, Helper};
+use crate::utils::helper::Helper;
 use crate::utils::table::TableBuilder;
 use anyhow::{Result, anyhow};
 use clap::Parser;

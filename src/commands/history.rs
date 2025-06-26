@@ -1,14 +1,12 @@
-use crate::types::contacts::Contact;
-use crate::types::network::Network;
 use crate::types::transaction::{RskTransaction, TransactionStatus};
 use crate::types::wallet::WalletData;
 use crate::utils::alchemy::AlchemyClient;
-use crate::utils::{constants, eth::EthClient, helper::Config, table::TableBuilder};
+use crate::utils::{constants, table::TableBuilder};
 use anyhow::Result;
 use chrono::TimeZone;
 use clap::Parser;
 use colored::Colorize;
-use ethers::types::{Address, U256};
+use ethers::types::Address;
 use std::fs;
 use std::str::FromStr;
 
@@ -156,12 +154,8 @@ impl HistoryCommand {
         let mut txs = Vec::new();
         for transfer in transfers {
             // Convert Alchemy transfer to RskTransaction
-            let tx = RskTransaction::from_alchemy_transfer(
-                transfer,
-                &address,
-                &alchemy_client,
-            )
-            .await?;
+            let tx =
+                RskTransaction::from_alchemy_transfer(transfer, &address, &alchemy_client).await?;
             txs.push(tx);
         }
 

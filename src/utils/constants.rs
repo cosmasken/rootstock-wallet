@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub fn wallet_file_path() -> PathBuf {

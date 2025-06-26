@@ -1,6 +1,6 @@
 use clap::Parser;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Map, Value};
+use serde_json::json;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -10,15 +10,15 @@ pub struct TokenAddCommand {
     /// Token symbol (e.g., RIF, USD)
     #[arg(short, long)]
     pub symbol: String,
-    
+
     /// Token contract address
     #[arg(short, long)]
     pub address: String,
-    
+
     /// Number of decimal places for the token
     #[arg(short, long, default_value_t = 18)]
     pub decimals: u8,
-    
+
     /// Network to add token to (mainnet/testnet)
     #[arg(short, long, default_value = "mainnet")]
     pub network: String,
@@ -29,7 +29,7 @@ pub struct TokenRemoveCommand {
     /// Token symbol to remove
     #[arg(short, long)]
     pub symbol: String,
-    
+
     /// Network to remove token from (mainnet/testnet)
     #[arg(short, long, default_value = "mainnet")]
     pub network: String,
@@ -42,7 +42,7 @@ pub struct TokenListCommand {
     pub network: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TokenInfo {
     pub address: String,
     pub decimals: u8,
@@ -79,14 +79,23 @@ impl TokenRegistry {
         Ok(())
     }
 
-    pub fn add_token(&mut self, network: &str, symbol: &str, address: &str, decimals: u8) -> Result<(), String> {
+    pub fn add_token(
+        &mut self,
+        network: &str,
+        symbol: &str,
+        address: &str,
+        decimals: u8,
+    ) -> Result<(), String> {
         let network_lower = network.to_lowercase();
         let symbol_upper = symbol.to_uppercase();
         let address_lower = address.to_lowercase();
 
         // Check if symbol already exists in any network
         if self.mainnet.contains_key(&symbol_upper) || self.testnet.contains_key(&symbol_upper) {
-            return Err(format!("Token symbol '{}' already exists in the registry", symbol_upper));
+            return Err(format!(
+                "Token symbol '{}' already exists in the registry",
+                symbol_upper
+            ));
         }
 
         // Check if address already exists in any network
@@ -129,39 +138,51 @@ impl TokenRegistry {
 
     pub fn list_tokens(&self, network: Option<&str>) -> Vec<(String, TokenInfo)> {
         let mut result = Vec::new();
-        
+
         match network {
             Some(net) => match net.to_lowercase().as_str() {
                 "mainnet" => {
                     for (symbol, info) in &self.mainnet {
-                        result.push((symbol.clone(), TokenInfo {
-                            address: info.address.clone(),
-                            decimals: info.decimals,
-                        }));
+                        result.push((
+                            symbol.clone(),
+                            TokenInfo {
+                                address: info.address.clone(),
+                                decimals: info.decimals,
+                            },
+                        ));
                     }
                 }
                 "testnet" => {
                     for (symbol, info) in &self.testnet {
-                        result.push((symbol.clone(), TokenInfo {
-                            address: info.address.clone(),
-                            decimals: info.decimals,
-                        }));
+                        result.push((
+                            symbol.clone(),
+                            TokenInfo {
+                                address: info.address.clone(),
+                                decimals: info.decimals,
+                            },
+                        ));
                     }
                 }
                 _ => {}
             },
             None => {
                 for (symbol, info) in &self.mainnet {
-                    result.push((format!("mainnet/{}", symbol), TokenInfo {
-                        address: info.address.clone(),
-                        decimals: info.decimals,
-                    }));
+                    result.push((
+                        format!("mainnet/{}", symbol),
+                        TokenInfo {
+                            address: info.address.clone(),
+                            decimals: info.decimals,
+                        },
+                    ));
                 }
                 for (symbol, info) in &self.testnet {
-                    result.push((format!("testnet/{}", symbol), TokenInfo {
-                        address: info.address.clone(),
-                        decimals: info.decimals,
-                    }));
+                    result.push((
+                        format!("testnet/{}", symbol),
+                        TokenInfo {
+                            address: info.address.clone(),
+                            decimals: info.decimals,
+                        },
+                    ));
                 }
             }
         }
@@ -169,7 +190,12 @@ impl TokenRegistry {
     }
 }
 
-pub fn add_token(network: &str, symbol: &str, address: &str, decimals: u8) -> Result<(), Box<dyn std::error::Error>> {
+pub fn add_token(
+    network: &str,
+    symbol: &str,
+    address: &str,
+    decimals: u8,
+) -> Result<(), Box<dyn std::error::Error>> {
     let mut registry = TokenRegistry::load()?;
     if let Err(e) = registry.add_token(network, symbol, address, decimals) {
         return Err(e.into());
@@ -187,16 +213,18 @@ pub fn remove_token(network: &str, symbol: &str) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-pub fn list_tokens(network: Option<&str>) -> Result<Vec<(String, TokenInfo)>, Box<dyn std::error::Error>> {
+pub fn list_tokens(
+    network: Option<&str>,
+) -> Result<Vec<(String, TokenInfo)>, Box<dyn std::error::Error>> {
     let registry = TokenRegistry::load()?;
     let tokens = registry.list_tokens(network);
-    
+
     if tokens.is_empty() {
         match network {
             Some(net) => println!("No tokens found in {} network", net),
             None => println!("No tokens found in registry"),
         }
     }
-    
+
     Ok(tokens)
 }

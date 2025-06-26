@@ -1,22 +1,18 @@
 //! Interactive command-line interface for the Rootstock wallet
 
-mod wallet;
 mod balance;
-mod transfer;
-mod tokens;
-mod history;
 mod contacts;
+mod history;
+mod tokens;
+mod transfer;
+mod wallet;
 
 use anyhow::Result;
 use console::style;
 
 pub use self::{
-    wallet::wallet_menu,
-    balance::show_balance,
-    transfer::send_funds,
-    tokens::token_menu,
-    history::show_history,
-    contacts::manage_contacts,
+    balance::show_balance, contacts::manage_contacts, history::show_history, tokens::token_menu,
+    transfer::send_funds, wallet::wallet_menu,
 };
 
 /// Starts the interactive CLI interface

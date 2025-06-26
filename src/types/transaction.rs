@@ -1,14 +1,14 @@
+use crate::utils::alchemy::AlchemyClient;
 use anyhow::{Result, anyhow};
 use ethers::{
     providers::{Http, Provider},
-    types::{Address, Bytes, H256, U256, U64},
+    types::{Address, Bytes, H256, U64, U256},
 };
 use ethers_providers::Middleware;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::str::FromStr;
 use std::time::SystemTime;
-use crate::utils::alchemy::AlchemyClient;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RskTransaction {
@@ -23,12 +23,12 @@ pub struct RskTransaction {
     pub input: Option<Bytes>,
     pub block_number: Option<U64>,
     pub transaction_index: Option<U64>,
-    
+
     // Additional fields
     pub timestamp: SystemTime,
     pub status: TransactionStatus,
     pub token_address: Option<Address>,
-    
+
     // Additional metadata
     pub confirms: Option<U64>,
     pub cumulative_gas_used: Option<U256>,
@@ -88,7 +88,9 @@ impl RskTransaction {
             .and_then(|s| Address::from_str(s).ok())
             .ok_or_else(|| anyhow!("Invalid 'from' address in transfer"))?;
 
-        let to = transfer["to"].as_str().and_then(|s| Address::from_str(s).ok());
+        let to = transfer["to"]
+            .as_str()
+            .and_then(|s| Address::from_str(s).ok());
 
         // Handle value (can be number or hex string)
         let value = if let Some(num) = transfer["value"].as_u64() {
@@ -112,8 +114,12 @@ impl RskTransaction {
             .as_str()
             .and_then(|s| U256::from_str_radix(s.trim_start_matches("0x"), 16).ok())
         {
-            if let Some(block) = alchemy_client.get_block_by_number(block_num.as_u64()).await? {
-                let timestamp = block.get("timestamp")
+            if let Some(block) = alchemy_client
+                .get_block_by_number(block_num.as_u64())
+                .await?
+            {
+                let timestamp = block
+                    .get("timestamp")
                     .and_then(|t| t.as_str())
                     .and_then(|s| u64::from_str_radix(s.trim_start_matches("0x"), 16).ok())
                     .map(|t| SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(t));
@@ -126,7 +132,8 @@ impl RskTransaction {
         };
 
         // Try to get timestamp from metadata first
-        let timestamp = if let Some(timestamp_str) = transfer["metadata"]["blockTimestamp"].as_str() {
+        let timestamp = if let Some(timestamp_str) = transfer["metadata"]["blockTimestamp"].as_str()
+        {
             if let Ok(dt) = chrono::DateTime::parse_from_rfc3339(timestamp_str) {
                 SystemTime::UNIX_EPOCH + std::time::Duration::from_secs(dt.timestamp() as u64)
             } else {
@@ -177,7 +184,7 @@ impl RskTransaction {
             token_address,
             confirms: None, // Would need to be calculated from current block
             cumulative_gas_used: Some(gas_used), // From receipt if available
-            logs: None, // Could be populated from receipt if needed
+            logs: None,     // Could be populated from receipt if needed
         })
     }
 
@@ -203,5 +210,4 @@ impl RskTransaction {
             cumulative_gas_used: r.cumulative_gas_used,
         }))
     }
-
 }
