@@ -156,7 +156,7 @@ impl TxCommand {
         let value = tx_details["value"]
             .as_str()
             .and_then(|v| v.parse::<f64>().ok())
-            .map(|v| format!("{:.8} RBTC", v / 1e18))
+            .map(|v| format!("{:.8}", v / 1e18))
             .unwrap_or_else(|| "0".to_string());
 
         let gas_price = tx_details["gasPrice"]
