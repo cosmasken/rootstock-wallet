@@ -217,6 +217,11 @@ impl EthClient {
         Ok((decimals, symbol))
     }
 
+    /// Get a reference to the underlying provider
+    pub fn provider(&self) -> &Provider<Http> {
+        &self.provider
+    }
+
     pub async fn estimate_gas(
         &self,
         to: Address,
