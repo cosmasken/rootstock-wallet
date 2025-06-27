@@ -1,6 +1,7 @@
 # Rootstock Wallet CLI
 
-> A secure, feature-rich Rust-based CLI wallet for the Rootstock blockchain
+
+ A secure, feature-rich Rust-based CLI wallet for the Rootstock blockchain
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/cosmasken/rootstock-wallet/blob/main/LICENSE)
 [![Made with Rust](https://img.shields.io/badge/Made%20with-Rust-orange)](https://www.rust-lang.org/)
@@ -13,7 +14,7 @@
 - Import existing wallets using private keys
 - Switch between multiple wallets
 - Backup and restore wallet data
-- List all available wallets 
+- List all available wallets
 - Rename or delete wallets
 
 ### Asset Management
@@ -79,14 +80,13 @@
    ./target/release/rootstock-wallet
    ```
 
-
 ## ⚙️ Configuration
 
 The wallet automatically handles configuration through an interactive setup wizard when you first run it. You can also manage your configuration at any time using the interactive menu:
 
 ## 🎮 Usage
 
-### Interactive Mode 
+### Interactive Mode
 
 The wallet features an intuitive interactive interface. Simply run:
 
@@ -96,59 +96,71 @@ cargo run
 
 ## Demo
 
+### First Time Setup
 
-#### 🔑 First Time Setup
 [![First Time Setup](https://asciinema.org/a/V8Qf1AboSZu08l12KJFxTfyeV.svg)](https://asciinema.org/a/V8Qf1AboSZu08l12KJFxTfyeV)
 
+### Importing Existing Wallet
 
-#### 🔑 Importing Existing Wallet
 [![Importing Existing Wallet](https://asciinema.org/a/cVrvEOP4LvJQLvTitxcayRBFt.svg)](https://asciinema.org/a/cVrvEOP4LvJQLvTitxcayRBFt)
 
+### Wallet Creation
 
-#### 🔑 Wallet Creation
 [![Wallet Creation](https://asciinema.org/a/Lj7YVm8idPbAEpHYPfjFuTfns.svg)](https://asciinema.org/a/Lj7YVm8idPbAEpHYPfjFuTfns)
 
+### List Wallets & Switch Wallets
 
-#### 🔑 List Wallets & Switch Wallets
 [![List Wallets](https://asciinema.org/a/HUpONPUC4OgQKFyStNm5KwaqT.svg)](https://asciinema.org/a/HUpONPUC4OgQKFyStNm5KwaqT)
 
+### Delete Wallet & Rename Wallet
 
-
-#### 🔑 Delete Wallet & Rename Wallet
 [![Delete Wallet](https://asciinema.org/a/cqjxdJjfaY1wqvO4upgRUMKDG.svg)](https://asciinema.org/a/cqjxdJjfaY1wqvO4upgRUMKDG)
 
+### Check Balance of RBTC and ERC-20 Tokens
 
-#### 📊 Check Balance of RBTC and ERC-20 tokens(e.g RIF)https://explorer.testnet.rootstock.io/tx/0x0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900
+Check your RBTC and ERC-20 token balances (e.g., RIF).
+
+[View example transaction on explorer](https://explorer.testnet.rootstock.io/tx/0x0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900)
 [![Check Balance](https://asciinema.org/a/rqlxYIWZ2Gh1Pn5sEFZZFK5xz.svg)](https://asciinema.org/a/rqlxYIWZ2Gh1Pn5sEFZZFK5xz
 )
 
-#### 💸 Send Funds (E.g from personal to lock wallet)
+### Send Funds
+
+Transfer RBTC from one wallet to another (e.g., from personal to lock wallet).
 [![Send Funds](https://asciinema.org/a/tEt4dSOgmEEguP6pgQ7setuPV.svg)](https://asciinema.org/a/tEt4dSOgmEEguP6pgQ7setuPV
 )
 
-#### Set API Key (REquired for history and transaction cheking)
+### Set API Key
+
+Configure your API key for accessing transaction history and status checking.
 [![Set API Key](https://asciinema.org/a/6ZdWMvEMMZVsSCFkNHjq3MbPq.svg)](https://asciinema.org/a/6ZdWMvEMMZVsSCFkNHjq3MbPq)
 
-<!-- continue -->
-#### 📊 Transaction History
+### Transaction History
 
+[![Set API Key](https://asciinema.org/a/Sh7qW67bHkDz0KGSjiqBLc8JC.svg)](https://asciinema.org/a/Sh7qW67bHkDz0KGSjiqBLc8JC)
 
-#### 📊 Check Transaction Status
+### Check Transaction Status
+
 [![Check Transaction Status](https://asciinema.org/a/CYYjrSV58KRGMgOmbdknm85Am.svg)](https://asciinema.org/a/CYYjrSV58KRGMgOmbdknm85Am)
 
 You can also view it at [View Transaction](https://explorer.testnet.rsk.co/tx/0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900)
 
-#### 📊 Bulk Transfer
+### Bulk Transfer
 
+Send multiple transactions at once.
+[![Bulk Transfer](https://asciinema.org/a/OeXq0IqQ7jJZ0Jl5jGvXh4q6G.svg)](https://asciinema.org/a/OeXq0IqQ7jJZ0Jl5jGvXh4q6G)
 
-#### 📊 Add Token, List Tokens And Delete Token
+You can also view it at [View Transaction 1](https://explorer.testnet.rsk.co/tx/87f26638a688477230855acc548595c6eb6baaf3fdb5ffba4d2b1cf788d2aaec) and [View Transaction 2](https://explorer.testnet.rsk.co/tx/de62ba82e458e52ae36f47750a86c73a9710ced3f24264a8e65780d42d77b72e)
+
+### Token Management
+
+Add, list, and delete tokens from your wallet.
 [![Add Token](https://asciinema.org/a/dY7GpSsmk6uxsZdB9n6C2Fzgs.svg)](https://asciinema.org/a/dY7GpSsmk6uxsZdB9n6C2Fzgs)
 
-#### Contacts Management
+### Contact
 
-##### Add Contact , List ,Delete Contacts
+Add, list, and delete contacts from your address book.
 [![Add Contact](https://asciinema.org/a/QaN1SZIXud4dxJ8woqDqnb1v5.svg)](https://asciinema.org/a/QaN1SZIXud4dxJ8woqDqnb1v5)
-
 
 ## 🔍 Troubleshooting
 
@@ -199,7 +211,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [RSK Developer Portal](https://developers.rsk.co/)
 - [GitHub Repository](https://github.com/cosmasken/rootstock-wallet)
 - [Issue Tracker](https://github.com/cosmasken/rootstock-wallet/issues)
-
----
 
 Made with ❤️ for the Rootstock ecosystem

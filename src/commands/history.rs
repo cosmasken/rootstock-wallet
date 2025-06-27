@@ -236,7 +236,6 @@ impl HistoryCommand {
                 "TX Hash",
                 "From",
                 "To",
-                "Value (RBTC)",
                 "Status",
                 "Timestamp",
                 "Block",
@@ -269,14 +268,13 @@ impl HistoryCommand {
                         .as_ref()
                         .map(|a| format!("0x{}", &a.to_string()[2..]))
                         .unwrap_or_else(|| "-".into()),
-                    &ethers::utils::format_units(tx.value, 18)?,
                     &status_disp.to_string(),
                     &ts.format("%Y-%m-%d %H:%M:%S").to_string(),
                     // &tx.block_number.to_string(),
                 ]);
             }
         } else {
-            table.add_header(&["TX Hash", "From", "To", "Value", "Status"]);
+            table.add_header(&["TX Hash", "From", "To", "Status"]);
 
             for tx in &txs {
                 let status_disp = match tx.status {
@@ -293,7 +291,6 @@ impl HistoryCommand {
                         .as_ref()
                         .map(|a| format!("0x{}", &a.to_string()[2..6]))
                         .unwrap_or_else(|| "-".into()),
-                    &ethers::utils::format_units(tx.value, 18)?,
                     &status_disp.to_string(),
                 ]);
             }
@@ -302,4 +299,5 @@ impl HistoryCommand {
         table.print();
         Ok(())
     }
+    
 }
