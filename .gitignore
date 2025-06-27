@@ -24,3 +24,5 @@ re.json
 phonebook.json
 
 *.csv
+
+record-demo.sh
