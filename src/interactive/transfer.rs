@@ -1,12 +1,18 @@
 use crate::{
-    commands::{tokens::TokenRegistry, transfer::TransferCommand},
+    commands::{
+        contacts::{ContactsAction, ContactsCommand},
+        tokens::TokenRegistry,
+        transfer::TransferCommand,
+    },
     config::ConfigManager,
     interactive::transfer_preview,
-    types::network::Network,};
-use anyhow::{Result, anyhow};
+    types::network::Network,
+};
+use anyhow::{Context, Result, anyhow};
 use colored::*;
 use console::style;
-use inquire::{Select, validator::Validation};
+use ethers::types::U64;
+use inquire::{Confirm, Select, Text, validator::Validation};
 use std::str::FromStr;
 
 /// Displays the fund transfer interface
@@ -19,19 +25,51 @@ pub async fn send_funds() -> Result<()> {
     let network = config.default_network.to_string().to_lowercase();
     println!("Using network: {}", network);
 
-    // Get recipient address
-    let to = inquire::Text::new("Recipient address (0x...):")
-        .with_help_message("Enter the Ethereum address to send to")
-        .with_validator(|input: &str| {
-            if input.starts_with("0x") && input.len() == 42 {
-                Ok(Validation::Valid)
-            } else {
-                Ok(Validation::Invalid(
-                    "Please enter a valid Ethereum address (0x...)".into(),
-                ))
-            }
-        })
+    // Ask user if they want to select from contacts or enter address manually
+    let send_options = vec![
+        "📝 Enter address manually",
+        "👥 Select from contacts",
+    ];
+    
+    let send_choice = Select::new("How would you like to specify the recipient?", send_options)
         .prompt()?;
+    
+    let to = if send_choice == "👥 Select from contacts" {
+        // Load contacts
+        let cmd = ContactsCommand {
+            action: ContactsAction::List,
+        };
+        let contacts = cmd.load_contacts()?;
+
+        if contacts.is_empty() {
+            println!("No contacts available. Please enter the address manually.");
+            get_recipient_address()?
+        } else {
+            // Show contact selection
+            let contact_names: Vec<String> = contacts
+                .iter()
+                .map(|c| {
+                    format!(
+                        "{} (0x{:x}) - {}",
+                        c.name,
+                        c.address,
+                        c.notes.as_deref().unwrap_or("No notes")
+                    )
+                })
+                .collect();
+
+            let selection = Select::new("Select contact:", contact_names)
+                .prompt()
+                .context("Failed to select contact")?;
+
+            // Extract the address from the selection (it's in the format "Name (0x...)")
+            let addr_start = selection.find('(').unwrap_or(0) + 1;
+            let addr_end = selection.find(')').unwrap_or(selection.len());
+            selection[addr_start..addr_end].to_string()
+        }
+    } else {
+        get_recipient_address()?
+    };
 
     // Load token registry
     let registry = TokenRegistry::load()
@@ -171,4 +209,21 @@ pub async fn send_funds() -> Result<()> {
     );
 
     Ok(())
+}
+
+/// Helper function to get recipient address with validation
+fn get_recipient_address() -> Result<String> {
+    Text::new("Recipient address (0x...):")
+        .with_help_message("Enter the Ethereum address to send to")
+        .with_validator(|input: &str| {
+            if input.starts_with("0x") && input.len() == 42 {
+                Ok(Validation::Valid)
+            } else {
+                Ok(Validation::Invalid(
+                    "Please enter a valid Ethereum address (0x...)".into(),
+                ))
+            }
+        })
+        .prompt()
+        .map_err(Into::into)
 }
