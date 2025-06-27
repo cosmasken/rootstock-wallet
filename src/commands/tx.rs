@@ -153,22 +153,36 @@ impl TxCommand {
             .unwrap_or("contract creation")
             .to_string();
 
-        let value = tx_details["value"]
+        let _value = tx_details["value"]
             .as_str()
-            .and_then(|v| v.parse::<f64>().ok())
-            .map(|v| format!("{:.8}", v / 1e18))
-            .unwrap_or_else(|| "0".to_string());
+            .and_then(|v| {
+                // Parse hex string to U256
+                let value_wei = ethers::types::U256::from_str_radix(v.trim_start_matches("0x"), 16).ok()?;
+                // Convert wei to RBTC (1e18 wei = 1 RBTC)
+                let value_rbtc = value_wei.as_u128() as f64 / 1e18;
+                Some(format!("{:.8} RBTC", value_rbtc))
+            })
+            .unwrap_or_else(|| "0 RBTC".to_string());
 
-        let gas_price = tx_details["gasPrice"]
+        let _gas_price = tx_details["gasPrice"]
             .as_str()
-            .and_then(|v| v.parse::<f64>().ok())
-            .map(|v| format!("{:.0} Gwei", v / 1e9))
+            .and_then(|v| {
+                // Parse hex string to U256
+                let price_wei = ethers::types::U256::from_str_radix(v.trim_start_matches("0x"), 16).ok()?;
+                // Convert wei to gwei (1e9 wei = 1 gwei)
+                let price_gwei = price_wei.as_u128() as f64 / 1e9;
+                Some(format!("{:.2} Gwei", price_gwei))
+            })
             .unwrap_or_else(|| "N/A".to_string());
 
-        let gas_used = receipt["gasUsed"]
+        let _gas_used = receipt["gasUsed"]
             .as_str()
-            .and_then(|v| v.parse::<u64>().ok())
-            .map(|v| v.to_string())
+            .and_then(|v| {
+                // Parse hex string to U256
+                ethers::types::U256::from_str_radix(v.trim_start_matches("0x"), 16)
+                    .ok()
+                    .map(|v| v.to_string())
+            })
             .unwrap_or_else(|| "N/A".to_string());
 
         let status = match receipt["status"].as_str() {
@@ -187,9 +201,9 @@ impl TxCommand {
         println!("{}", style(format!("  To: {}", to)).dim());
         println!("\n{}", style("Transaction Data").bold().underlined());
         println!("{}", "-".repeat(60));
-        println!("{}", style(format!("  Value: {}", value)).dim());
-        println!("{}", style(format!("  Gas Price: {}", gas_price)).dim());
-        println!("{}", style(format!("  Gas Used: {}", gas_used)).dim());
+        // println!("{}", style(format!("  Value: {}", value)).dim());
+        // println!("{}", style(format!("  Gas Price: {}", gas_price)).dim());
+        // println!("{}", style(format!("  Gas Used: {}", gas_used)).dim());
         println!("\n{}", style(format!("  Status: {}", status)).dim());
         
         // If there's a contract address, show it
