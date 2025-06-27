@@ -2,7 +2,6 @@
 
 > A secure, feature-rich Rust-based CLI wallet for the Rootstock blockchain
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/cosmasken/rootstock-wallet/rust.yml?branch=main)](https://github.com/cosmasken/rootstock-wallet/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/cosmasken/rootstock-wallet/blob/main/LICENSE)
 [![Made with Rust](https://img.shields.io/badge/Made%20with-Rust-orange)](https://www.rust-lang.org/)
 
@@ -81,9 +80,14 @@
    ./target/release/rootstock-wallet
    ```
 
+
+## ⚙️ Configuration
+
+The wallet automatically handles configuration through an interactive setup wizard when you first run it. You can also manage your configuration at any time using the interactive menu:
+
 ## 🎮 Usage
 
-### Interactive Mode (Recommended)
+### Interactive Mode 
 
 The wallet features an intuitive interactive interface. Simply run:
 
@@ -91,20 +95,8 @@ The wallet features an intuitive interactive interface. Simply run:
 cargo run
 ```
 
-## ⚙️ Configuration
-
-The wallet automatically handles configuration through an interactive setup wizard when you first run it. You can also manage your configuration at any time using the interactive menu:
-
-1. **Initial Setup**:
-   - The first time you run the wallet, it will guide you through setting up your preferred network and API keys.
-
-2. **View Current Configuration**:
-
-   ```bash
-   cargo run -- config show
-   ```
-
-
+## Demo
+[![asciicast](https://asciinema.org/a/Xoe9AIZi400i0us2PLXGs3lYx.svg)](https://asciinema.org/a/Xoe9AIZi400i0us2PLXGs3lYx)
 ## 🔍 Troubleshooting
 
 ### Common Issues
