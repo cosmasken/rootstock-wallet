@@ -2,12 +2,10 @@ use crate::{
     commands::{tokens::TokenRegistry, transfer::TransferCommand},
     config::ConfigManager,
     interactive::transfer_preview,
-    types::network::Network,
-};
-use anyhow::{Result,anyhow};
+    types::network::Network,};
+use anyhow::{Result, anyhow};
 use colored::*;
 use console::style;
-use ethers::types::U256;
 use inquire::{Select, validator::Validation};
 use std::str::FromStr;
 

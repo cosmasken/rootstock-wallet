@@ -3922,6 +3922,7 @@ version = "0.1.0"
 dependencies = [
  "aes",
  "anyhow",
+ "async-trait",
  "base64 0.22.1",
  "bip32",
  "bip39",

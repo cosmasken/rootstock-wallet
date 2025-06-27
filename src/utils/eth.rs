@@ -241,3 +241,12 @@ impl EthClient {
         }
     }
 }
+
+/// Generate an explorer URL for a transaction hash
+pub fn get_explorer_url(tx_hash: &str, is_testnet: bool) -> String {
+    if is_testnet {
+        format!("https://explorer.testnet.rsk.co/tx/{}", tx_hash)
+    } else {
+        format!("https://explorer.rsk.co/tx/{}", tx_hash)
+    }
+}

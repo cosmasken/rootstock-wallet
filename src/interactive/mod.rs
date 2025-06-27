@@ -8,6 +8,7 @@ mod system;
 mod tokens;
 mod transfer;
 mod transfer_preview;
+mod tx;
 mod wallet;
 
 use anyhow::Result;
@@ -23,6 +24,7 @@ pub use self::{
     wallet::create_wallet_with_name,
     tokens::token_menu,
     transfer::send_funds,
+    tx::check_transaction_status,
     wallet::wallet_menu,
     system::system_menu,
 };
@@ -71,6 +73,7 @@ pub async fn start() -> Result<()> {
         let options = vec![
             format!("{}  Check Balance", style("💰").bold().green()),
             format!("{}  Send Funds", style("💸").bold().yellow()),
+            format!("{}  Check Transaction Status", style("🔍").bold().cyan()),
             format!("{}  Transaction History", style("📜").bold().cyan()),
             format!("{}  Wallet Management", style("🔑").bold().blue()),
             format!("{}  Token Management", style("🪙").bold().magenta()),
@@ -89,13 +92,14 @@ pub async fn start() -> Result<()> {
         match selection {
             0 => show_balance().await?,
             1 => send_funds().await?,
-            2 => show_history().await?,
-            3 => wallet_menu().await?,
-            4 => token_menu().await?,
-            5 => manage_contacts().await?,
-            6 => show_config_menu().await?,
-            7 => system_menu().await?,
-            8 => {
+            2 => check_transaction_status().await?,
+            3 => show_history().await?,
+            4 => wallet_menu().await?,
+            5 => token_menu().await?,
+            6 => manage_contacts().await?,
+            7 => show_config_menu().await?,
+            8 => system_menu().await?,
+            9 => {
                 println!("\n👋 Goodbye!");
                 break;
             }
