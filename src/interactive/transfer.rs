@@ -105,7 +105,7 @@ pub async fn send_funds() -> Result<()> {
 
     // Clone the address since we need to use it multiple times
     let token_address = token_info.address.clone();
-    let token = if token_address == "0x0000000000000000000000000000000000000000" {
+    let _token = if token_address == "0x0000000000000000000000000000000000000000" {
         None
     } else {
         Some(token_address.clone())

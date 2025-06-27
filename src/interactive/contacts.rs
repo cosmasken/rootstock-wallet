@@ -2,7 +2,6 @@ use crate::commands::transfer::TransferCommand;
 use crate::types::transaction::RskTransaction;
 use crate::{
     commands::contacts::{ContactsAction, ContactsCommand},
-    config::ConfigManager,
     utils::table::TableBuilder,
 };
 use anyhow::{Context, Result};

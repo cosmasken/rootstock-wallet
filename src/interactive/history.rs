@@ -1,18 +1,23 @@
 use crate::commands::history::HistoryCommand;
 use crate::commands::tokens::{TokenRegistry, list_tokens};
-use anyhow::Result;
+use crate::config::ConfigManager;
+use anyhow::{Result, Context};
 use console::style;
-use inquire::{Select, Text, validator::Validation};
+use inquire::{Select, Text, validator::Validation, Confirm};
 
 /// Shows the transaction history in an interactive way
 pub async fn show_history() -> Result<()> {
     println!("\n{}", style("📜 Transaction History").bold());
     println!("{}", "=".repeat(30));
 
+    // Load config and get current network
+    let config_manager = ConfigManager::new()?;
+    let config = config_manager.load()?;
+    
     // Network selection
     let network_options = vec!["mainnet", "testnet"];
     let network_selection = Select::new("Select network:", network_options)
-        .with_starting_cursor(0)
+        .with_starting_cursor(if config.default_network.to_string().to_lowercase().contains("testnet") { 1 } else { 0 })
         .prompt()?;
 
     // Default values for the history command
@@ -29,7 +34,11 @@ pub async fn show_history() -> Result<()> {
         sort_order: "desc".to_string(),
         incoming: false,
         outgoing: false,
-        api_key: None,
+        api_key: match network_selection {
+            "mainnet" => config.alchemy_mainnet_key.clone(),
+            "testnet" => config.alchemy_testnet_key.clone(),
+            _ => None,
+        },
         network: network_selection.to_string(),
     };
 
@@ -65,8 +74,59 @@ pub async fn show_history() -> Result<()> {
         println!("Limit: {} transactions", command.limit);
         println!("{}", "-".repeat(40));
 
+        // Check if we have an API key, prompt if not
+        if command.api_key.is_none() {
+            println!("\n{}", style("⚠️  Alchemy API Key Required").yellow().bold());
+            println!("Transaction history requires an Alchemy API key.");
+            
+            let should_add_key = Confirm::new("Would you like to add an API key now?")
+                .with_default(true)
+                .prompt()
+                .unwrap_or(false);
+
+            if should_add_key {
+                let api_key = Text::new("Enter your Alchemy API key:")
+                    .with_help_message("Get one at https://www.alchemy.com/")
+                    .prompt()?;
+                
+                if !api_key.trim().is_empty() {
+                    // Save the API key using ConfigManager
+                    let mut config = config_manager.load()?;
+                    match network_selection {
+                        "mainnet" => config.alchemy_mainnet_key = Some(api_key.trim().to_string()),
+                        "testnet" => config.alchemy_testnet_key = Some(api_key.trim().to_string()),
+                        _ => {}
+                    }
+                    config_manager.save(&config)?;
+                    
+                    println!("\n{}", style("✅ API key saved successfully!").green());
+                    command.api_key = Some(api_key.trim().to_string());
+                } else {
+                    println!("\n{}", style("❌ No API key provided. Cannot fetch transaction history.").red());
+                    println!("You can add an API key later from the Configuration menu.");
+                    return Ok(());
+                }
+            } else {
+                println!("\n{}", style("⚠️  Transaction history requires an API key.").yellow());
+                println!("You can add an API key later from the Configuration menu.");
+                return Ok(());
+            }
+        }
+
         // Execute the command and show results
-        command.execute().await?;
+        match command.execute().await {
+            Ok(_) => {}
+            Err(e) => {
+                if e.to_string().contains("API key") {
+                    println!("\n{}", style("❌ Error: Invalid or missing Alchemy API key").red());
+                    println!("Please check your API key and try again.");
+                    println!("You can update your API key in the Configuration menu.");
+                    return Ok(());
+                } else {
+                    return Err(e).context("Failed to fetch transaction history");
+                }
+            }
+        }
 
         // Show options for further actions
         let options = vec![
