@@ -126,8 +126,48 @@ impl TransferCommand {
             token_symbol.clone().unwrap_or("RBTC".to_string())
         );
 
-        // Wait for transaction receipt
-        let receipt = eth_client.get_transaction_receipt(tx_hash).await?;
+        println!("\n{}: Transaction submitted. Waiting for confirmation... (This may take a moment)", "Info".blue().bold());
+        
+        // Try to get receipt with retries
+        let mut retries = 5;
+        let receipt = loop {
+            match eth_client.get_transaction_receipt(tx_hash).await {
+                Ok(receipt) => break receipt,
+                Err(e) if retries > 0 => {
+                    retries -= 1;
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                }
+                Err(e) => {
+                    println!("\n{}: Could not get transaction receipt. The transaction has been submitted but is still pending.", "Warning".yellow().bold());
+                    println!("You can check the status later with: wallet tx --tx-hash 0x{:x}", tx_hash);
+                    
+                    // Return with minimal receipt info since we couldn't get the full receipt
+                    return Ok(TransferResult {
+                        tx_hash,
+                        from: default_wallet.address(),
+                        to,
+                        value: amount.into(),
+                        gas_used: U256::zero(),
+                        gas_price: U256::zero(),
+                        status: U64::from(0), // 0 indicates unknown/pending status
+                        token_address,
+                        token_symbol,
+                    });
+                }
+            }
+        };
+
+        // If we got here, we have a receipt
+        let status = receipt.status.unwrap_or_else(|| U64::from(0));
+        let status_str = if status == U64::from(1) {
+            format!("{}", "✓ Success".green().bold())
+        } else if status == U64::from(0) {
+            format!("{}", "✗ Failed".red().bold())
+        } else {
+            format!("{}", "⏳ Pending".yellow().bold())
+        };
+
+        println!("\n{}: Transaction confirmed! Status: {}", "Success".green().bold(), status_str);
 
         Ok(TransferResult {
             tx_hash,
@@ -136,7 +176,7 @@ impl TransferCommand {
             value: amount.into(),
             gas_used: receipt.gas_used.unwrap_or_default(),
             gas_price: receipt.effective_gas_price.unwrap_or_default(),
-            status: receipt.status.unwrap_or_else(|| U64::from(0)),
+            status,
             token_address,
             token_symbol,
         })
