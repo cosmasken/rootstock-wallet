@@ -34,6 +34,7 @@ pub async fn show_history() -> Result<()> {
         sort_order: "desc".to_string(),
         incoming: false,
         outgoing: false,
+        export_csv: None,
         api_key: match network_selection {
             "mainnet" => config.alchemy_mainnet_key.clone(),
             "testnet" => config.alchemy_testnet_key.clone(),
@@ -130,12 +131,13 @@ pub async fn show_history() -> Result<()> {
 
         // Show options for further actions
         let options = vec![
+            "Export to CSV",
             "Change network",
             "Change token",
             "Change limit",
             "Filter by status",
             "Toggle incoming/outgoing",
-            "Toggle detailed view",
+            "Toggle detailed view",           
             "Clear all filters",
             "Filter by date range",
             "Back to main menu",
@@ -198,14 +200,9 @@ pub async fn show_history() -> Result<()> {
                 };
             }
             "Toggle incoming/outgoing" => {
-                let options = vec!["All", "Incoming only", "Outgoing only"];
-                let selection = Select::new("Filter by direction:", options).prompt()?;
-
+                let options = vec!["Both", "Incoming only", "Outgoing only"];
+                let selection = Select::new("Filter transactions:", options).prompt()?;
                 match selection {
-                    "All" => {
-                        command.incoming = false;
-                        command.outgoing = false;
-                    }
                     "Incoming only" => {
                         command.incoming = true;
                         command.outgoing = false;
@@ -214,8 +211,33 @@ pub async fn show_history() -> Result<()> {
                         command.incoming = false;
                         command.outgoing = true;
                     }
-                    _ => {}
+                    _ => {
+                        command.incoming = false;
+                        command.outgoing = false;
+                    }
                 }
+            }
+            "Export to CSV" => {
+                let filename = Text::new("Enter filename to save (e.g., transactions.csv):")
+                    .with_default("transactions.csv")
+                    .with_validator(|input: &str| {
+                        if input.ends_with(".csv") {
+                            Ok(Validation::Valid)
+                        } else {
+                            Ok(Validation::Invalid("Filename must end with .csv".into()))
+                        }
+                    })
+                    .prompt()?;
+                
+                let mut export_cmd = command.clone();
+                export_cmd.export_csv = Some(filename);
+                
+                match export_cmd.execute().await {
+                    Ok(_) => {}
+                    Err(e) => eprintln!("Error exporting to CSV: {}", e),
+                }
+                
+                continue;
             }
             "Toggle detailed view" => {
                 command.detailed = !command.detailed;

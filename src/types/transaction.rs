@@ -8,7 +8,8 @@ use ethers_providers::Middleware;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::str::FromStr;
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RskTransaction {
@@ -66,6 +67,40 @@ pub struct TransactionReceipt {
 }
 
 impl RskTransaction {
+    /// Converts the transaction to a CSV record
+    pub fn to_csv_record(&self) -> csv::StringRecord {
+        let timestamp = self.timestamp.duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+            
+        let datetime: DateTime<Utc> = DateTime::from_timestamp(timestamp as i64, 0).unwrap_or_default();
+        let formatted_time = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+        
+        let to_address = self.to.map(|a| format!("0x{:x}", a)).unwrap_or_default();
+        let token_address = self.token_address.map(|a| format!("0x{:x}", a)).unwrap_or_default();
+        
+        let status = match self.status {
+            TransactionStatus::Success => "Success",
+            TransactionStatus::Failed => "Failed",
+            TransactionStatus::Pending => "Pending",
+            TransactionStatus::Unknown => "Unknown",
+        };
+
+        let mut record = csv::StringRecord::new();
+        record.push_field(&format!("0x{:x}", self.hash));
+        record.push_field(&formatted_time);
+        record.push_field(&format!("0x{:x}", self.from));
+        record.push_field(&to_address);
+        record.push_field(&self.value.to_string());
+        record.push_field(&token_address);
+        record.push_field(&self.gas_price.to_string());
+        record.push_field(&self.gas.to_string());
+        record.push_field(status);
+        record.push_field(&self.block_number.map(|n| n.to_string()).unwrap_or_default());
+        
+        record
+    }
+
     pub async fn from_alchemy_transfer(
         transfer: &Value,
         _wallet_address: &Address,
