@@ -130,6 +130,7 @@ cargo run
 #### Set API Key (REquired for history and transaction cheking)
 [![Set API Key](https://asciinema.org/a/6ZdWMvEMMZVsSCFkNHjq3MbPq.svg)](https://asciinema.org/a/6ZdWMvEMMZVsSCFkNHjq3MbPq)
 
+<!-- continue -->
 #### 📊 Transaction History
 [![Transaction History](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
 
@@ -140,29 +141,13 @@ cargo run
 #### 📊 Bulk Transfer
 [![Bulk Transfer](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
 
-#### 📊 Add Token
-[![Add Token](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
-
-#### 📊 List Tokens
-[![List Tokens](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
-
+#### 📊 Add Token, List Tokens And Delete Token
+[![Add Token](https://asciinema.org/a/dY7GpSsmk6uxsZdB9n6C2Fzgs.svg)](https://asciinema.org/a/dY7GpSsmk6uxsZdB9n6C2Fzgs)
 
 #### Contacts Management
 
-##### Add Contact
-[![Add Contact](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q.svg)](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q)
-
-##### List Contacts
-[![List Contacts](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q.svg)](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q)
-
-##### Delete Contact
-[![Delete Contact](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q.svg)](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q)
-
-
-
-
-
-
+##### Add Contact , List ,Delete Contacts
+[![Add Contact](https://asciinema.org/a/QaN1SZIXud4dxJ8woqDqnb1v5.svg)](https://asciinema.org/a/QaN1SZIXud4dxJ8woqDqnb1v5)
 
 
 ## 🔍 Troubleshooting
