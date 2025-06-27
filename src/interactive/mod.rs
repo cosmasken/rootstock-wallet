@@ -4,6 +4,7 @@ mod balance;
 mod config;
 mod contacts;
 mod history;
+mod system;
 mod tokens;
 mod transfer;
 mod wallet;
@@ -22,6 +23,7 @@ pub use self::{
     tokens::token_menu,
     transfer::send_funds,
     wallet::wallet_menu,
+    system::system_menu,
 };
 
 // Import for network status display
@@ -73,6 +75,7 @@ pub async fn start() -> Result<()> {
             format!("{}  Token Management", style("🪙").bold().magenta()),
             format!("{}  Contact Management", style("📇").bold().cyan()),
             format!("{}  Configuration", style("⚙️").bold().white()),
+            format!("{}  System", style("💻").bold().cyan()),
             format!("{}  Exit", style("🚪").bold().red()),
         ];
 
@@ -90,7 +93,8 @@ pub async fn start() -> Result<()> {
             4 => token_menu().await?,
             5 => manage_contacts().await?,
             6 => show_config_menu().await?,
-            7 => {
+            7 => system_menu().await?,
+            8 => {
                 println!("\n👋 Goodbye!");
                 break;
             }
