@@ -51,19 +51,37 @@ pub fn run_setup_wizard() -> Result<()> {
     Ok(())
 }
 
-pub fn ensure_configured() -> Result<()> {
+pub async fn ensure_configured() -> Result<()> {
     let config_manager = ConfigManager::new()?;
-    
-    // Check if config file exists by trying to load it
-    if config_manager.load().is_err() {
-        println!("\n{}", style("👋 Welcome to Rootstock Wallet!").bold().cyan());
-        println!("Let's set up your wallet...\n");
+    if !config_manager.config_path().exists() {
+        println!("\n{}", style("✨ Welcome to Rootstock Wallet!").bold().blue());
+        println!("{}\n", style("Let's get you set up...").dim());
+        
+        // First, run the network setup
         run_setup_wizard()?;
-        println!("\n{}", style("Setup complete! Press Enter to continue...").dim());
-        io::stdout().flush()?;
-        io::stdin().read_line(&mut String::new())?;
+        
+        // Then guide through wallet creation
+        println!("\n{}", style("🎉 Great! Now let's create your first wallet.").bold());
+        println!("\n{}", style("A wallet is like your personal bank account for cryptocurrencies.").dim());
+        
+        // Create a default wallet with a friendly name
+        let default_wallet_name = "My Wallet";
+        println!("\nCreating your wallet: {}", style(default_wallet_name).bold());
+        
+        // Use the wallet module to create a new wallet
+        if let Err(e) = crate::interactive::create_wallet_with_name(default_wallet_name).await {
+            eprintln!("Failed to create default wallet: {}", e);
+            println!("\n{}", style("You can create a wallet later from the main menu.").yellow());
+        } else {
+            println!("\n{} {}", 
+                style("✓").green().bold(),
+                style("Wallet created successfully!").bold()
+            );
+            println!("\n{}", style("Your wallet is now ready to use. You can manage it from the main menu.").dim());
+        }
+        
+        println!("\n{}", style("Setup complete! 🚀").bold().green());
     }
-    
     Ok(())
 }
 

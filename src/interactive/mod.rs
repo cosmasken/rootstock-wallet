@@ -18,6 +18,7 @@ pub use self::{
     config::show_config_menu,
     contacts::manage_contacts,
     history::show_history,
+    wallet::create_wallet_with_name,
     tokens::token_menu,
     transfer::send_funds,
     wallet::wallet_menu,

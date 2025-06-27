@@ -1,5 +1,4 @@
-use anyhow::Context;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -146,5 +145,39 @@ impl ConfigManager {
             }
             _ => Ok(())
         }
+    }
+
+    /// Removes all wallet data, configuration, and cache
+    /// WARNING: This will delete all wallet data and cannot be undone!
+    pub fn clear_cache(&self) -> Result<()> {
+        use std::fs;
+        
+        let config_dir = self.config_path().parent()
+            .ok_or_else(|| anyhow::anyhow!("Invalid config directory path"))?;
+        
+        if config_dir.exists() {
+            // Remove all files in the config directory
+            for entry in fs::read_dir(config_dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                
+                if path.is_dir() {
+                    fs::remove_dir_all(&path)?;
+                } else {
+                    fs::remove_file(&path)?;
+                }
+                
+                println!("Removed: {}", path.display());
+            }
+            
+            // Recreate the empty directory
+            fs::create_dir_all(config_dir)?;
+            println!("\n✅ Cache and all wallet data have been cleared successfully.");
+            println!("A new configuration will be created when you start the wallet again.");
+        } else {
+            println!("No wallet data found to clear.");
+        }
+        
+        Ok(())
     }
 }

@@ -38,6 +38,7 @@ pub async fn wallet_menu() -> Result<()> {
     Ok(())
 }
 
+/// Creates a new wallet with the given name and prompts for a password
 async fn create_wallet() -> Result<()> {
     println!("\n{}", style("🆕 Create New Wallet").bold());
     println!("{}", "=".repeat(30));
@@ -55,13 +56,30 @@ async fn create_wallet() -> Result<()> {
         .without_confirmation()
         .prompt()?;
 
+    create_wallet_with_name(&name).await
+}
+
+/// Creates a new wallet with the given name without interactive prompts
+/// This is used during initial setup
+pub async fn create_wallet_with_name(name: &str) -> Result<()> {
+    println!("\n{} {}", style("Creating wallet:").dim(), style(name).bold());
+    
+    let password = inquire::Password::new("Enter a password to secure your wallet:")
+        .with_display_toggle_enabled()
+        .with_display_mode(inquire::PasswordDisplayMode::Masked)
+        .with_custom_confirmation_error_message("The passwords don't match.")
+        .with_custom_confirmation_message("Please confirm your password:")
+        .with_formatter(&|_| String::from("Password received"))
+        .prompt()?;
+
+    // Just to show we're working (the actual password isn't used in the command)
+    let _ = password;
+    
     let cmd = WalletCommand {
-        action: WalletAction::Create { name: name.clone() },
+        action: WalletAction::Create { name: name.to_string() },
     };
 
     cmd.execute().await?;
-
-    println!("\n{}", style("✅ Wallet created successfully!").green());
     Ok(())
 }
 

@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     // Ensure wallet is configured
-    if let Err(e) = setup::ensure_configured() {
+    if let Err(e) = setup::ensure_configured().await {
         eprintln!("Failed to configure wallet: {}", e);
         std::process::exit(1);
     }

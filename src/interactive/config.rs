@@ -1,13 +1,15 @@
 use anyhow::Result;
 use console::style;
-use dialoguer::{theme::ColorfulTheme, Select, Input};
+use dialoguer::{
+    theme::ColorfulTheme, Confirm, Input, Select
+};
 
 // Import config and API types
 use crate::config::ConfigManager;
 use crate::api::ApiProvider;
 use crate::types::network::Network;
 
-// This module provides the show_config_menu function
+// This module provides configuration management functionality
 
 pub async fn show_config_menu() -> Result<()> {
     let config_manager = ConfigManager::new()?;
@@ -49,8 +51,9 @@ pub async fn show_config_menu() -> Result<()> {
         }
         
         let options = vec![
-            format!("{}  Change Network", style("🔄").bold().yellow()),
+            format!("{}  Change Network", style("🌐").bold().blue()),
             format!("{}  Manage API Keys", style("🔑").bold().green()),
+            format!("{}  Clear Cache & Reset", style("🧹").bold().red()),
             format!("{}  Back to Main Menu", style("⬅️").bold().blue()),
         ];
 
@@ -63,7 +66,22 @@ pub async fn show_config_menu() -> Result<()> {
         match selection {
             0 => change_network(&config_manager).await?,
             1 => manage_api_keys(&config_manager).await?,
-            2 => break,
+            2 => {
+                let confirm = Confirm::new()
+                    .with_prompt("⚠️  WARNING: This will delete ALL wallet data and cannot be undone! Continue?")
+                    .default(false)
+                    .interact()?;
+                
+                if confirm {
+                    config_manager.clear_cache()?;
+                    println!("\n✅ Cache and all wallet data have been cleared successfully.");
+                    println!("Please restart the wallet to complete the reset process.");
+                    std::process::exit(0);
+                } else {
+                    println!("\nOperation cancelled. No data was deleted.");
+                }
+            },
+            3 => break,
             _ => {}
         }
     }
