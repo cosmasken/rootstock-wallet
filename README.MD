@@ -96,7 +96,42 @@ cargo run
 ```
 
 ## Demo
-[![asciicast](https://asciinema.org/a/Xoe9AIZi400i0us2PLXGs3lYx.svg)](https://asciinema.org/a/Xoe9AIZi400i0us2PLXGs3lYx)
+
+### Wallet Management 
+
+
+#### 🔑 First Time Setup
+[![First Time Setup](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+
+#### 🔑 Importing Existing Wallet
+[![Importing Existing Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+
+#### 🔑 Wallet Creation
+[![Wallet Creation](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+
+#### 🔑 List Wallets
+[![List Wallets](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+
+#### 🔑 Switch Wallet
+[![Switch Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+
+#### 🔑 Delete Wallet
+[![Delete Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+#### 🔑 Rename Wallet
+[![Rename Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+#### 🔑 Backup Wallet
+[![Backup Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+
+
+
 ## 🔍 Troubleshooting
 
 ### Common Issues
