@@ -85,30 +85,33 @@ impl TransferCommand {
         let to = Address::from_str(&self.address)
             .map_err(|_| anyhow!("Invalid recipient address: {}", &self.address))?;
 
-        // Parse amount (convert f64 to wei or token units, assuming 18 decimals)
-        let amount = ethers::utils::parse_units(self.value.to_string(), 18)
-            .map_err(|e| anyhow!("Invalid amount: {}", e))?;
-
         // Parse optional token address
-        let token_address = self
-            .token
-            .as_ref()
-            .map(|t| Address::from_str(t).map_err(|_| anyhow!("Invalid token address: {}", t)))
-            .transpose()?;
-
-        // Get token info if transferring ERC-20
-        let token_symbol = if let Some(token_addr) = token_address {
-            let (decimals, symbol) = eth_client.get_token_info(token_addr).await?;
-            if decimals != 18 {
-                return Err(anyhow!(
-                    "Token decimals ({}) not supported; only 18 decimals allowed",
-                    decimals
-                ));
+        let (token_address, token_symbol) = if let Some(token_addr) = &self.token {
+            // Handle RBTC case (zero address or None)
+            if token_addr == "0x0000000000000000000000000000000000000000" || token_addr.is_empty() {
+                (None, Some("RBTC".to_string()))
+            } else {
+                // Parse token address
+                let addr = Address::from_str(token_addr)
+                    .map_err(|_| anyhow!("Invalid token address: {}", token_addr))?;
+                
+                // Try to get token info, but don't fail if we can't
+                let symbol = match eth_client.get_token_info(addr).await {
+                    Ok((_, sym)) => sym,
+                    Err(_) => format!("Token (0x{})", &token_addr[2..10]),
+                };
+                
+                (Some(addr), Some(symbol))
             }
-            Some(symbol)
         } else {
-            None
+            // Native RBTC transfer
+            (None, Some("RBTC".to_string()))
         };
+
+        // Parse amount (convert f64 to wei or token units)
+        let decimals = if token_address.is_some() { 18 } else { 18 }; // Default to 18 for both RBTC and tokens
+        let amount = ethers::utils::parse_units(self.value.to_string(), decimals)
+            .map_err(|e| anyhow!("Invalid amount: {}", e))?;
 
         // Send transaction
         let tx_hash = eth_client

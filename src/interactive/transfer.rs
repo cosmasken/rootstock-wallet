@@ -2,9 +2,11 @@ use crate::commands::tokens::TokenRegistry;
 use crate::commands::transfer::TransferCommand;
 use crate::config::ConfigManager;
 use anyhow::Result;
+use colored::*;
 use console::style;
 use inquire::Select;
 use inquire::validator::Validation;
+use anyhow::anyhow;
 
 /// Displays the fund transfer interface
 pub async fn send_funds() -> Result<()> {
@@ -30,87 +32,91 @@ pub async fn send_funds() -> Result<()> {
         })
         .prompt()?;
 
-    // Check if sending tokens or RBTC
-    let is_token = inquire::Confirm::new("Are you sending an ERC20 token?")
-        .with_default(false)
+    // Load token registry
+    let registry = TokenRegistry::load()
+        .map_err(|e| {
+            eprintln!("⚠️  Warning: Could not load token registry: {}", e);
+            e
+        })
+        .unwrap_or_default();
+
+    // Get tokens for the current network
+    let mut tokens = registry.list_tokens(Some(&network));
+
+    // Add RBTC as the first option
+    tokens.insert(
+        0,
+        (
+            "RBTC (Native)".to_string(),
+            crate::commands::tokens::TokenInfo {
+                address: "0x0000000000000000000000000000000000000000".to_string(),
+                decimals: 18,
+            },
+        ),
+    );
+    
+    if tokens.is_empty() {
+        return Err(anyhow!("No tokens found for {} network", network));
+    }
+
+    // Create a vector of (display_name, token_info) pairs
+    let token_choices: Vec<(String, crate::commands::tokens::TokenInfo)> = tokens
+        .into_iter()
+        .filter(|(_, info)| {
+            // Only include tokens that match the current network or are RBTC
+            info.address == "0x0000000000000000000000000000000000000000" || 
+            registry.list_tokens(Some(&network))
+                .iter()
+                .any(|(_, token_info)| token_info.address == info.address)
+        })
+        .collect();
+
+    // Get just the display names for the selection menu
+    let token_display_names: Vec<String> = token_choices
+        .iter()
+        .map(|(name, _)| name.clone())
+        .collect();
+
+    // Let the user select which token to send
+    let selection = Select::new("Select token to send:", token_display_names)
         .prompt()?;
 
-    let (amount, token) = if is_token {
-        let registry = TokenRegistry::load()
-            .map_err(|e| {
-                eprintln!("⚠️  Warning: Could not load token registry: {}", e);
-                e
-            })
-            .unwrap_or_default();
+    // Find the selected token info
+    let (display_name, token_info) = token_choices
+        .into_iter()
+        .find(|(name, _)| name == &selection)
+        .ok_or_else(|| anyhow!("Selected token not found"))?;
+        
+    // Extract the token symbol (remove the (Native) suffix if present)
+    let token_symbol = display_name
+        .split_whitespace()
+        .next()
+        .unwrap_or(&display_name)
+        .to_string();
 
-        let tokens = registry.list_tokens(Some(&network));
+    let amount = inquire::Text::new(&format!("Amount of {} to send:", token_symbol))
+        .with_help_message("Enter the amount to send")
+        .with_validator(|input: &str| match input.parse::<f64>() {
+            Ok(n) if n > 0.0 => Ok(Validation::Valid),
+            _ => Ok(Validation::Invalid("Please enter a valid positive number".into())),
+        })
+        .prompt()?
+        .parse::<f64>()?;
 
-        if tokens.is_empty() {
-            return Err(anyhow::anyhow!(
-                "No tokens found. Please add tokens first using the token management menu (option 3)."
-            ));
-        }
-
-        // Create a vector of (symbol, token_info) pairs
-        let token_choices: Vec<(String, crate::commands::tokens::TokenInfo)> = tokens
-            .into_iter()
-            .map(|(symbol, info)| (symbol, info))
-            .collect();
-
-        // Create a parallel vector of just the symbols for the selection menu
-        let token_symbols: Vec<&str> = token_choices
-            .iter()
-            .map(|(symbol, _)| symbol.as_str())
-            .collect();
-
-        // Get the selected symbol index
-        let selection_idx = Select::new("Select token to send:", token_symbols)
-            .prompt_skippable()?
-            .and_then(|selected| {
-                token_choices
-                    .iter()
-                    .position(|(symbol, _)| symbol == selected)
-            })
-            .ok_or_else(|| anyhow::anyhow!("No token selected"))?;
-
-        // Get the selected token info by index
-        let (symbol, token_info) = &token_choices[selection_idx];
-        let token_info = token_info.clone();
-
-        let amount = inquire::Text::new("Amount to send:")
-            .with_help_message(&format!("Enter the amount of {} to send", symbol))
-            .with_validator(|input: &str| match input.parse::<f64>() {
-                Ok(_) => Ok(Validation::Valid),
-                Err(_) => Ok(Validation::Invalid("Please enter a valid number".into())),
-            })
-            .prompt()?
-            .parse::<f64>()?;
-
-        (amount, Some(token_info.address.clone()))
+    // Clone the address since we need to use it multiple times
+    let token_address = token_info.address.clone();
+    let token = if token_address == "0x0000000000000000000000000000000000000000" {
+        None
     } else {
-        // For RBTC
-        let amount = inquire::Text::new("Amount to send (in RBTC):")
-            .with_help_message("Enter the amount of RBTC to send")
-            .with_validator(|input: &str| match input.parse::<f64>() {
-                Ok(_) => Ok(Validation::Valid),
-                Err(_) => Ok(Validation::Invalid("Please enter a valid number".into())),
-            })
-            .prompt()?
-            .parse::<f64>()?;
-
-        (amount, None)
+        Some(token_address.clone())
     };
-
+    
     // Show transaction summary
     println!("\n{}", style("📝 Transaction Summary").bold());
     println!("{}", "=".repeat(30));
     println!("To: {}", to);
-    if let Some(token_addr) = &token {
-        println!("Token: {}", token_addr);
-    } else {
-        println!("Asset: RBTC");
-    }
-    println!("Amount: {}", amount);
+    println!("Token: {}", token_symbol);
+    println!("Amount: {} {}", amount, token_symbol);
     println!("Network: {}", network);
 
     // Confirm transaction
@@ -118,22 +124,29 @@ pub async fn send_funds() -> Result<()> {
         .with_default(false)
         .prompt()?;
 
-    if confirm {
-        // Get the network from config if not provided
-        let config = ConfigManager::new()?.load()?;
-        
-        let cmd = TransferCommand {
-            address: to,
-            value: amount,
-            token,
-        };
-
-        // Execute the transfer
-        cmd.execute().await?;
-        println!("\n{}", style("✅ Transaction sent successfully!").green());
-    } else {
-        println!("\n{}", style("❌ Transaction cancelled").yellow());
+    if !confirm {
+        println!("Transaction cancelled");
+        return Ok(());
     }
+
+    // Execute the transfer command
+    let cmd = TransferCommand {
+        address: to,
+        value: amount,
+        token: if token_address == "0x0000000000000000000000000000000000000000" {
+            None
+        } else {
+            Some(token_address)
+        },
+    };
+
+    let result = cmd.execute().await?;
+    
+    println!(
+        "\n{}: Transaction confirmed! Tx Hash: {}",
+        "Success".green().bold(),
+        result.tx_hash
+    );
 
     Ok(())
 }

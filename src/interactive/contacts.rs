@@ -356,9 +356,6 @@ pub async fn quick_send_to_contact() -> Result<()> {
         println!("Sending {} RBTC to {}...", amount, selected_contact.name);
 
         // Create and execute the transfer command
-        // Get the network from config
-        let config = ConfigManager::new()?.load()?;
-        
         let transfer_cmd = TransferCommand {
             address: format!("0x{:x}", selected_contact.address),
             value: amount.parse().unwrap_or(0.0),
