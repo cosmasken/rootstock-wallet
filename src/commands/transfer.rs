@@ -133,11 +133,11 @@ impl TransferCommand {
         let receipt = loop {
             match eth_client.get_transaction_receipt(tx_hash).await {
                 Ok(receipt) => break receipt,
-                Err(e) if retries > 0 => {
+                Err(_e) if retries > 0 => {
                     retries -= 1;
                     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
                 }
-                Err(e) => {
+                Err(_e) => {
                     println!("\n{}: Could not get transaction receipt. The transaction has been submitted but is still pending.", "Warning".yellow().bold());
                     println!("You can check the status later with: wallet tx --tx-hash 0x{:x}", tx_hash);
                     

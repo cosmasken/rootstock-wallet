@@ -6,14 +6,12 @@ use crate::{
     },
     config::ConfigManager,
     interactive::transfer_preview,
-    types::network::Network,
 };
 use anyhow::{Context, Result, anyhow};
 use colored::*;
 use console::style;
-use ethers::types::U64;
-use inquire::{Confirm, Select, Text, validator::Validation};
-use std::str::FromStr;
+use inquire::{Select, Text, validator::Validation};
+
 
 /// Displays the fund transfer interface
 pub async fn send_funds() -> Result<()> {

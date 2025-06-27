@@ -6,7 +6,7 @@ use crate::utils::terminal::{self, show_version};
 use anyhow::Result;
 use console::style;
 use dialoguer::{Select, theme::ColorfulTheme};
-use ethers::providers::{Middleware, Provider, Http};
+use ethers::providers::{Middleware};
 use ethers::types::U256;
 use std::io;
 use std::time::Duration;
