@@ -1,11 +1,16 @@
 use crate::{
     config::ConfigManager,
-    types::network::Network,
+    types::network::{Network, NetworkConfig},
+    utils::{
+        eth::EthClient,
+        helper::{Config as HelperConfig, WalletConfig},
+    },
 };
-use anyhow::{Result,anyhow};
+use anyhow::{Result, anyhow};
 use console::style;
 use dialoguer::Confirm;
-use ethers::types::U256;
+use ethers::types::{Address, U256};
+use ethers_providers::Middleware;
 
 /// Helper function to convert wei to RBTC
 fn convert_wei_to_rbtc(wei: U256) -> f64 {
@@ -35,17 +40,35 @@ pub async fn show_transaction_preview(
         style(amount_wei).dim()
     );
     
-    // Get current gas price and estimate gas
-    let _config = ConfigManager::new()?.load()?;
+    // Get current config and initialize EthClient
+    let config = ConfigManager::new()?.load()?;
+    let helper_config = HelperConfig {
+        network: NetworkConfig {
+            name: config.default_network.to_string(),
+            rpc_url: config.default_network.get_config().rpc_url,
+            explorer_url: config.default_network.get_config().explorer_url,
+        },
+        wallet: WalletConfig {
+            current_wallet_address: None,
+            private_key: None,
+            mnemonic: None,
+        },
+    };
+    let eth_client = EthClient::new(&helper_config, None).await?;
     
-    // For the preview, we'll use a default gas price and gas limit
-    // In a real implementation, you might want to fetch these from the network
-    let gas_price = U256::from(20_000_000_000u64); // 20 Gwei as default
-    let estimated_gas = U256::from(21_000); // Default gas limit for simple transfers
-    
-    // Note: In a real implementation, you would uncomment the following:
-    // let provider = config.get_provider()?;
-    // let gas_price = provider.get_gas_price().await?;
+    // Fetch current gas price from the network
+    let gas_price = eth_client.provider()
+        .get_gas_price()
+        .await
+        .map_err(|e| anyhow!("Failed to get gas price: {}", e))?;
+        
+    // Estimate gas for the transaction
+    let to_address: Address = to.parse().map_err(|_| anyhow!("Invalid recipient address"))?;
+    let estimated_gas = eth_client.estimate_gas(
+        to_address,
+        amount_wei,
+        None, // No token address for native transfers
+    ).await?;
     let gas_cost = gas_price.checked_mul(estimated_gas).unwrap_or_default();
     let gas_cost_rbtc = convert_wei_to_rbtc(gas_cost);
     
