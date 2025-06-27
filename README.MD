@@ -132,14 +132,15 @@ cargo run
 
 <!-- continue -->
 #### 📊 Transaction History
-[![Transaction History](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
 
 #### 📊 Check Transaction Status
-[![Check Transaction Status](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+[![Check Transaction Status](https://asciinema.org/a/CYYjrSV58KRGMgOmbdknm85Am.svg)](https://asciinema.org/a/CYYjrSV58KRGMgOmbdknm85Am)
 
+YOu can also view it at [View Transaction](https://explorer.testnet.rsk.co/tx/0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900)
 
 #### 📊 Bulk Transfer
-[![Bulk Transfer](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
 
 #### 📊 Add Token, List Tokens And Delete Token
 [![Add Token](https://asciinema.org/a/dY7GpSsmk6uxsZdB9n6C2Fzgs.svg)](https://asciinema.org/a/dY7GpSsmk6uxsZdB9n6C2Fzgs)
