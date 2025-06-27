@@ -1,5 +1,6 @@
 use crate::commands::balance::BalanceCommand;
 use crate::commands::tokens::TokenRegistry;
+use crate::config::ConfigManager;
 use anyhow::Result;
 use console::style;
 use inquire::Select;
@@ -9,13 +10,10 @@ pub async fn show_balance() -> Result<()> {
     println!("\n{}", style("💰 Check Balance").bold());
     println!("{}", "=".repeat(30));
 
-    // Select network
-    let network = inquire::Select::new(
-        "Select network:",
-        vec![String::from("mainnet"), String::from("testnet")],
-    )
-    .prompt()?
-    .to_string();
+    // Get the current network from config
+    let config = ConfigManager::new()?.load()?;
+    let network = config.default_network.to_string().to_lowercase();
+    println!("Using network: {}", network);
 
     // Ask if user wants to check token balance instead of RBTC
     let check_token = inquire::Confirm::new("Check token balance? (No for RBTC balance)")
@@ -75,7 +73,6 @@ pub async fn show_balance() -> Result<()> {
     // Execute the balance command
     let cmd = BalanceCommand {
         address: None, // Will use default wallet
-        network: network.to_string(),
         token,
     };
 

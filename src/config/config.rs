@@ -3,10 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-// Import Network from the types module
-use crate::types::network::Network;
-
 // Re-export the API types for easier access
+use crate::types::network::Network;
 pub use crate::api::{ApiConfig, ApiProvider, ApiKey};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

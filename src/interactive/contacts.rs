@@ -2,6 +2,7 @@ use crate::commands::transfer::TransferCommand;
 use crate::types::transaction::RskTransaction;
 use crate::{
     commands::contacts::{ContactsAction, ContactsCommand},
+    config::ConfigManager,
     utils::table::TableBuilder,
 };
 use anyhow::{Context, Result};
@@ -355,11 +356,13 @@ pub async fn quick_send_to_contact() -> Result<()> {
         println!("Sending {} RBTC to {}...", amount, selected_contact.name);
 
         // Create and execute the transfer command
+        // Get the network from config
+        let config = ConfigManager::new()?.load()?;
+        
         let transfer_cmd = TransferCommand {
             address: format!("0x{:x}", selected_contact.address),
             value: amount.parse().unwrap_or(0.0),
             token: None, // Only RBTC for now
-            network: "mainnet".to_string(),
         };
 
         match transfer_cmd.execute().await {

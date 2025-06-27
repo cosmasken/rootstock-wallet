@@ -1,5 +1,6 @@
 use crate::commands::tokens::TokenRegistry;
 use crate::commands::transfer::TransferCommand;
+use crate::config::ConfigManager;
 use anyhow::Result;
 use console::style;
 use inquire::Select;
@@ -10,13 +11,10 @@ pub async fn send_funds() -> Result<()> {
     println!("\n{}", style("💸 Send Funds").bold());
     println!("{}", "=".repeat(30));
 
-    // Select network
-    let network = inquire::Select::new(
-        "Select network:",
-        vec![String::from("mainnet"), String::from("testnet")],
-    )
-    .prompt()?
-    .to_string();
+    // Get the current network from config
+    let config = ConfigManager::new()?.load()?;
+    let network = config.default_network.to_string().to_lowercase();
+    println!("Using network: {}", network);
 
     // Get recipient address
     let to = inquire::Text::new("Recipient address (0x...):")
@@ -121,11 +119,13 @@ pub async fn send_funds() -> Result<()> {
         .prompt()?;
 
     if confirm {
+        // Get the network from config if not provided
+        let config = ConfigManager::new()?.load()?;
+        
         let cmd = TransferCommand {
             address: to,
             value: amount,
             token,
-            network: network.to_string(),
         };
 
         // Execute the transfer

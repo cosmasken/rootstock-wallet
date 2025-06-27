@@ -7,16 +7,13 @@ use clap::Parser;
 use ethers::types::Address;
 use std::fs;
 use std::str::FromStr;
+use crate::config::ConfigManager;
 
 #[derive(Parser, Debug)]
 pub struct BalanceCommand {
     /// Address to check balance for
     #[arg(long)]
     pub address: Option<String>,
-
-    /// Network to use (mainnet/testnet)
-    #[arg(long, default_value = "mainnet")]
-    pub network: String,
 
     /// Optional Token to get Balance for
     #[arg(long)]
@@ -25,7 +22,11 @@ pub struct BalanceCommand {
 
 impl BalanceCommand {
     pub async fn execute(&self) -> Result<()> {
-        let (_config, eth_client) = Helper::init_eth_client(&self.network).await?;
+        // Load config to get the current network
+        let config = ConfigManager::new()?.load()?;
+        let network = config.default_network.to_string().to_lowercase();
+        
+        let (_config, eth_client) = Helper::init_eth_client(&network).await?;
 
         // Get address - use default wallet if none provided
         let address = if let Some(addr) = &self.address {
@@ -64,7 +65,7 @@ impl BalanceCommand {
         table.add_header(&["Address", "Network", "Balance"]);
         table.add_row(&[
             &Helper::format_address(&address),
-            &Helper::format_network(&self.network),
+            &config.default_network.to_string(),
             &balance_str,
         ]);
 

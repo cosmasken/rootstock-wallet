@@ -1,7 +1,8 @@
 use crate::types::wallet::WalletData;
 use crate::utils::constants;
 use crate::utils::eth::EthClient;
-use crate::utils::helper::Config;
+use crate::utils::helper::Config as HelperConfig;
+use crate::config::ConfigManager;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;
@@ -39,9 +40,6 @@ pub struct TransferCommand {
     #[arg(long)]
     pub token: Option<String>,
 
-    /// Network to use (mainnet/testnet)
-    #[arg(long, default_value = "mainnet")]
-    pub network: String,
 }
 
 impl TransferCommand {
@@ -68,13 +66,20 @@ impl TransferCommand {
         let _local_wallet = LocalWallet::from_str(&private_key)
             .map_err(|e| anyhow!("Failed to create LocalWallet: {}", e))?;
 
-        // Inject the private key into the config for EthClient
-        let mut config = Config::default();
-        config.network = crate::types::network::Network::from_str(&self.network)
-            .unwrap_or(crate::types::network::Network::Mainnet)
-            .get_config();
-        config.wallet.private_key = Some(private_key.clone());
-        let eth_client = EthClient::new(&config, None).await?;
+        // Get the network from config
+        let config = ConfigManager::new()?.load()?;
+        
+        // Create a new helper config with the private key
+        let client_config = HelperConfig {
+            network: config.default_network.get_config(),
+            wallet: crate::utils::helper::WalletConfig {
+                current_wallet_address: None,
+                private_key: Some(private_key.clone()),
+                mnemonic: None,
+            },
+        };
+        
+        let eth_client = EthClient::new(&client_config, None).await?;
 
         // Parse recipient address
         let to = Address::from_str(&self.address)
