@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{Result};
 use console::style;
 use dialoguer::Input;
 
@@ -6,7 +6,6 @@ use crate::{
     commands::tx::TxCommand,
     config::ConfigManager,
     types::network::Network,
-    utils::eth::get_explorer_url,
 };
 
 /// Interactive transaction status checker

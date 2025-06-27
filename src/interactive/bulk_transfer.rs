@@ -16,7 +16,7 @@ use ethers::{
     types::{Address, U256},
 };
 use serde::Deserialize;
-use std::{fs, str::FromStr, sync::Arc};
+use std::{fs, sync::Arc};
 
 #[derive(Debug, Clone)]
 struct Transfer {
