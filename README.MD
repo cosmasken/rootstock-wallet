@@ -1,112 +1,160 @@
 # Rootstock Wallet CLI
 
-A lightweight Rust-based CLI application for managing Rootstock wallets, transferring RBTC and tokens, and interacting with the Rootstock blockchain. Designed for developers building on the Rootstock ecosystem.
+> A secure, feature-rich Rust-based CLI wallet for the Rootstock blockchain
 
-## Features
+[![Build Status](https://img.shields.io/github/actions/workflow/status/cosmasken/rootstock-wallet/rust.yml?branch=main)](https://github.com/cosmasken/rootstock-wallet/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/cosmasken/rootstock-wallet/blob/main/LICENSE)
+[![Made with Rust](https://img.shields.io/badge/Made%20with-Rust-orange)](https://www.rust-lang.org/)
 
-- **Wallet Management**:
-  - Generate new wallets
-  - Import/export wallets
-  - Manage multiple wallets
-  - Switch between wallets
+## 🚀 Features
 
-- **Transactions**:
-  - Send RBTC to any address
-  - Transfer ERC-20 tokens
-  - View transaction history
-  - Check balances (RBTC and tokens)
+### Wallet Management
 
-- **Token Management**:
-  - Add custom tokens
-  - List supported tokens
-  - Remove tokens
-  - View token balances
+- Create new wallets with custom names
+- Import existing wallets using private keys
+- Switch between multiple wallets
+- Backup and restore wallet data
+- List all available wallets with balances
+- Rename or delete wallets
 
-- **Contacts**:
-  - Save frequently used addresses with names
-  - Update Contact names and/or address
-  - List all saved contacts
-  - Remove contacts
-  - Quick send to Contacts
+### Asset Management
 
-- **Network**:
-  - Automatic network detection from RPC URL
-  - Support for both mainnet and testnet
+- Check RBTC balance for any address
+- View token balances (supports all ERC-20 tokens)
+- Add custom tokens to your wallet
+- Remove unwanted tokens from your token list
+- View detailed token information
 
-## Installation
+### Transactions
 
-Clone the repository and build the project using Cargo:
+- Send RBTC to any address
+- Transfer ERC-20 tokens
+- View transaction history with filtering options
+- Check transaction status
+- Bulk transfer functionality
 
-```bash
-git clone https://github.com/cosmasken/rootstock-wallet
-cd rootstock-wallet
-cargo build
-```
+### Contact Management
 
-## Usage
+- Save frequently used addresses as contacts
+- Add notes and tags to contacts
+- Search through your contacts
+- Update or remove existing contacts
+- Import/export contact lists
 
-### Interactive Mode (Default)
+### Network & Configuration
 
-By default, the wallet runs in interactive mode with a text-based interface. Simply run:
+- Switch between Mainnet and Testnet
+- Configure custom RPC endpoints
+- Manage API keys for services
+- View network status and connection details
+
+## 🛠️ Installation
+
+### Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (latest stable version)
+- [Git](https://git-scm.com/)
+- [Cargo](https://doc.rust-lang.org/cargo/) (comes with Rust)
+
+### Building from Source
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/cosmasken/rootstock-wallet.git
+   cd rootstock-wallet
+   ```
+
+2. Build the project:
+
+   ```bash
+   cargo build --release
+   ```
+
+3. Run the application:
+
+   ```bash
+   # For development
+   cargo run
+   
+   # For production
+   ./target/release/rootstock-wallet
+   ```
+
+## 🎮 Usage
+
+### Interactive Mode (Recommended)
+
+The wallet features an intuitive interactive interface. Simply run:
 
 ```bash
 cargo run
 ```
 
-You'll see a menu like this:
-```
-Rootstock Wallet CLI
+## ⚙️ Configuration
 
-1. Wallet Management
-2. Transfer RBTC/Tokens
-3. Check Balance
-4. View Transaction History
-5. Manage Tokens
-6. Manage Contacts
-7. Network Settings
-8. Exit
+The wallet automatically handles configuration through an interactive setup wizard when you first run it. You can also manage your configuration at any time using the interactive menu:
 
-Select an option:
-```
+1. **Initial Setup**:
+   - The first time you run the wallet, it will guide you through setting up your preferred network and API keys.
 
-## Troubleshooting
+2. **View Current Configuration**:
+
+   ```bash
+   cargo run -- config show
+   ```
+
+
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Transaction Failures**:
-   - Ensure you have enough RBTC for gas fees
-   - Check that the recipient address is valid
-   - Verify you're on the correct network (mainnet/testnet)
+#### Transaction Failures
 
-2. **Connection Issues**:
-   - Check your internet connection
-   - Verify your RPC API key is set correctly
-   - Ensure the RPC endpoint is accessible
+- Ensure you have enough RBTC for gas fees
+- Verify recipient address format (0x...)
+- Check network compatibility (mainnet/testnet)
 
-3. **Wallet Not Found**:
-   - Make sure you've created a wallet first
-   - Check that you're using the correct wallet address
+#### Connection Issues
 
-## Configuration
+- Verify your internet connection
 
-The application connects to the Rootstock network using the public JSON-RPC endpoint:
+#### Wallet Issues
 
-- **Mainnet**: `https://public-node.rsk.co`
-- **Testnet**: `https://public-node.testnet.rsk.co`
+- Confirm wallet file exists at `~/.local/share/rootstock-wallet/`
+- Check file permissions if access is denied
+- Ensure you're using the correct network (mainnet/testnet)
 
+## 🤝 Contributing
 
-## Contribution
+We welcome contributions from the community! Here's how you can help:
 
-Contributions are welcome! Please follow these steps:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Submit a pull request with a detailed description of your changes.
+Please read our [Contributing Guidelines](CONTRIBUTING.md) for more details on our development process and code of conduct.
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-This project was developed as part of the Rootstock Hacktivator program to contribute to the Rootstock ecosystem. Special thanks to the Rootstock team for their support and resources.
+- Built as part of the Rootstock Hacktivator program
+- Special thanks to the Rootstock team for their support
+- Inspired by the vibrant Rootstock community
+
+## 📚 Resources
+
+- [Rootstock Documentation](https://developers.rsk.co/)
+- [RSK Smart Contracts](https://developers.rsk.co/develop/)
+- [RSK Developer Portal](https://developers.rsk.co/)
+- [GitHub Repository](https://github.com/cosmasken/rootstock-wallet)
+- [Issue Tracker](https://github.com/cosmasken/rootstock-wallet/issues)
+
+---
+
+Made with ❤️ for the Rootstock ecosystem
