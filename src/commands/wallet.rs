@@ -5,7 +5,6 @@ use clap::Parser;
 use colored::Colorize;
 use ethers::signers::LocalWallet;
 use rand::thread_rng;
-use rpassword::prompt_password;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -18,8 +17,8 @@ pub struct WalletCommand {
 
 #[derive(Parser, Debug)]
 pub enum WalletAction {
-    Create { name: String },
-    Import { private_key: String, name: String },
+    Create { name: String, password: String },
+    Import { private_key: String, name: String, password: String },
     List,
     Switch { name: String },
     Rename { old_name: String, new_name: String },
@@ -31,9 +30,9 @@ impl WalletCommand {
     pub async fn execute(&self) -> Result<()> {
         let config = Config::default(); // Use default config
         match &self.action {
-            WalletAction::Create { name } => self.create_wallet(&config, name).await?,
-            WalletAction::Import { private_key, name } => {
-                self.import_wallet(&config, private_key, name).await?
+            WalletAction::Create { name, password } => self.create_wallet(&config, name, password).await?,
+            WalletAction::Import { private_key, name, password } => {
+                self.import_wallet(&config, private_key, name, password).await?
             }
             WalletAction::List => self.list_wallets(&config)?,
             WalletAction::Switch { name } => self.switch_wallet(name)?,
@@ -46,12 +45,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    async fn create_wallet(&self, _config: &Config, name: &str) -> Result<()> {
-        let password = prompt_password("Enter password to encrypt wallet: ")?;
-        let confirm_password = prompt_password("Confirm password: ")?;
-        if password != confirm_password {
-            return Err(anyhow!("Passwords do not match"));
-        }
+    async fn create_wallet(&self, _config: &Config, name: &str, password: &str) -> Result<()> {
         let wallet_file = constants::wallet_file_path();
         if wallet_file.exists() {
             let data = fs::read_to_string(&wallet_file)?;
@@ -76,12 +70,7 @@ impl WalletCommand {
         Ok(())
     }
 
-    async fn import_wallet(&self, _config: &Config, private_key: &str, name: &str) -> Result<()> {
-        let password = prompt_password("Enter password to encrypt wallet: ")?;
-        let confirm_password = prompt_password("Confirm password: ")?;
-        if password != confirm_password {
-            return Err(anyhow!("Passwords do not match"));
-        }
+    async fn import_wallet(&self, _config: &Config, private_key: &str, name: &str, password: &str) -> Result<()> {
         let wallet = LocalWallet::from_str(private_key)?;
         let wallet = Wallet::new(wallet, name, &password)?;
         let wallet_file = constants::wallet_file_path();
