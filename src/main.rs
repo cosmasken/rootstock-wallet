@@ -3,6 +3,7 @@ use anyhow::{Result, anyhow};
 use dotenv::dotenv;
 use std::env;
 
+mod api;
 mod commands;
 mod config;
 mod interactive;

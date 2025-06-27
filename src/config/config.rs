@@ -1,24 +1,87 @@
-use anyhow::{Context, Result};
+use anyhow::Context;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
 // Import Network from the types module
 use crate::types::network::Network;
 
+// Re-export the API types for easier access
+pub use crate::api::{ApiConfig, ApiProvider, ApiKey};
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub default_network: Network,
+    #[serde(default)]
+    pub api: ApiConfig,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alchemy_mainnet_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alchemy_testnet_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub default_wallet: Option<String>,
+}
+
+impl Config {
+    /// Get the appropriate API key for the current network
+    pub fn get_api_key(&self, provider: &ApiProvider) -> Option<&str> {
+        let network_str = match self.default_network {
+            Network::Mainnet | Network::AlchemyMainnet | Network::RootStockMainnet => "mainnet",
+            Network::Testnet | Network::AlchemyTestnet | Network::RootStockTestnet | Network::Regtest => "testnet",
+        };
+        
+        // First try to get from the new API config
+        if let Some(key) = self.api.keys.iter().find(|k| {
+            &k.provider == provider && k.network == network_str
+        }) {
+            return Some(&key.key);
+        }
+        
+        // Fall back to legacy keys for backward compatibility
+        match (provider, network_str) {
+            (ApiProvider::Alchemy, "mainnet") => self.alchemy_mainnet_key.as_deref(),
+            (ApiProvider::Alchemy, "testnet") => self.alchemy_testnet_key.as_deref(),
+            _ => None,
+        }
+    }
+    
+    /// Add or update an API key
+    pub fn set_api_key(&mut self, provider: ApiProvider, key: String, name: Option<String>) -> String {
+        let network = match self.default_network {
+            Network::Mainnet | Network::AlchemyMainnet | Network::RootStockMainnet => "mainnet",
+            _ => "testnet",
+        };
+        
+        let display_name = name.as_deref().unwrap_or("unnamed");
+        
+        // Create and add the API key
+        let api_key = ApiKey {
+            key: key.clone(),
+            network: network.to_string(),
+            provider: provider.clone(),
+            name: name.clone(),
+        };
+        
+        // Add to the API keys list
+        self.api.keys.push(api_key);
+        
+        // Also update the legacy fields for backward compatibility
+        match (provider.clone(), network) {
+            (ApiProvider::Alchemy, "mainnet") => self.alchemy_mainnet_key = Some(key),
+            (ApiProvider::Alchemy, _) => self.alchemy_testnet_key = Some(key),
+            _ => {}
+        }
+        
+        format!("API key for {} on {} saved as '{}'", provider, network, display_name)
+    }
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             default_network: Network::Testnet,
+            api: ApiConfig::default(),
             alchemy_mainnet_key: None,
             alchemy_testnet_key: None,
             default_wallet: None,
