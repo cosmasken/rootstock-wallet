@@ -148,7 +148,7 @@ You can also view it at [View Transaction](https://explorer.testnet.rsk.co/tx/02
 ### Bulk Transfer
 
 Send multiple transactions at once.
-[![Bulk Transfer](https://asciinema.org/a/OeXq0IqQ7jJZ0Jl5jGvXh4q6G.svg)](https://asciinema.org/a/OeXq0IqQ7jJZ0Jl5jGvXh4q6G)
+[![Bulk Transfer](https://asciinema.org/a/CX1fT6B9prX6Jjg652YWWrLrR.svg)](https://asciinema.org/a/CX1fT6B9prX6Jjg652YWWrLrR)
 
 You can also view it at [View Transaction 1](https://explorer.testnet.rsk.co/tx/87f26638a688477230855acc548595c6eb6baaf3fdb5ffba4d2b1cf788d2aaec) and [View Transaction 2](https://explorer.testnet.rsk.co/tx/de62ba82e458e52ae36f47750a86c73a9710ced3f24264a8e65780d42d77b72e)
 
