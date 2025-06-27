@@ -58,13 +58,13 @@ pub enum Commands {
     },
 
     SetApiKey(SetApiKeyCommand),
-    
+
     /// Add a new token to the registry
     TokenAdd(TokenAddCommand),
-    
+
     /// Remove a token from the registry
     TokenRemove(TokenRemoveCommand),
-    
+
     /// List tokens in the registry
     TokenList(TokenListCommand),
 }

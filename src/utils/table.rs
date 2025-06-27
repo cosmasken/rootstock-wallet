@@ -1,5 +1,5 @@
 use colored::Colorize;
-use prettytable::{format, Cell, Row, Table};
+use prettytable::{Cell, Row, Table};
 
 pub struct TableBuilder {
     table: Table,

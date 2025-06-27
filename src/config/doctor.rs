@@ -1,7 +1,8 @@
 use anyhow::Result;
 use console::style;
 
-use crate::config::{Config, ConfigManager, Network};
+use crate::config::{Config, ConfigManager};
+use crate::types::network::Network;
 
 pub fn run_doctor() -> Result<()> {
     println!("\n{}", style("🩺 Running diagnostics...").bold().cyan());
@@ -26,8 +27,17 @@ pub fn run_doctor() -> Result<()> {
 
     // Check API keys
     println!("\n{}", style("🔑 API Keys:").bold());
+    
+    // Check mainnet API keys
     check_api_key(&config, Network::Mainnet);
+    check_api_key(&config, Network::AlchemyMainnet);
+    check_api_key(&config, Network::RootStockMainnet);
+    
+    // Check testnet API keys
     check_api_key(&config, Network::Testnet);
+    check_api_key(&config, Network::AlchemyTestnet);
+    check_api_key(&config, Network::RootStockTestnet);
+    check_api_key(&config, Network::Regtest);
 
     // Check wallet configuration
     println!("\n{}", style("💼 Wallet Configuration:").bold());
@@ -45,8 +55,12 @@ pub fn run_doctor() -> Result<()> {
 
 fn check_api_key(config: &Config, network: Network) {
     let key = match network {
-        Network::Mainnet => &config.alchemy_mainnet_key,
-        Network::Testnet => &config.alchemy_testnet_key,
+        Network::Mainnet | Network::AlchemyMainnet | Network::RootStockMainnet => {
+            &config.alchemy_mainnet_key
+        }
+        Network::Testnet | Network::AlchemyTestnet | Network::RootStockTestnet | Network::Regtest => {
+            &config.alchemy_testnet_key
+        }
     };
 
     let status = match key {
@@ -59,6 +73,11 @@ fn check_api_key(config: &Config, network: Network) {
         match network {
             Network::Mainnet => "Mainnet",
             Network::Testnet => "Testnet",
+            Network::Regtest => "Regtest",
+            Network::AlchemyMainnet => "Alchemy Mainnet",
+            Network::AlchemyTestnet => "Alchemy Testnet",
+            Network::RootStockMainnet => "Rootstock Mainnet",
+            Network::RootStockTestnet => "Rootstock Testnet",
         },
         status
     );

@@ -1,48 +1,86 @@
-use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Network {
-    Mainnet,
-    Testnet,
-}
+use anyhow::{Context, Result};
+use dirs;
+use serde::{Deserialize, Serialize};
 
-impl FromStr for Network {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "mainnet" => Ok(Network::Mainnet),
-            "testnet" => Ok(Network::Testnet),
-            _ => anyhow::bail!("Invalid network. Must be 'mainnet' or 'testnet'"),
-        }
-    }
-}
-
-impl std::fmt::Display for Network {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Network::Mainnet => write!(f, "mainnet"),
-            Network::Testnet => write!(f, "testnet"),
-        }
-    }
-}
+// Re-export the API types for easier access
+use crate::types::network::Network;
+pub use crate::api::{ApiConfig, ApiProvider, ApiKey};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
     pub default_network: Network,
+    #[serde(default)]
+    pub api: ApiConfig,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alchemy_mainnet_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub alchemy_testnet_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub default_wallet: Option<String>,
+}
+
+impl Config {
+    /// Get the appropriate API key for the current network
+    pub fn get_api_key(&self, provider: &ApiProvider) -> Option<&str> {
+        let network_str = match self.default_network {
+            Network::Mainnet | Network::AlchemyMainnet | Network::RootStockMainnet => "mainnet",
+            Network::Testnet | Network::AlchemyTestnet | Network::RootStockTestnet | Network::Regtest => "testnet",
+        };
+        
+        // First try to get from the new API config
+        if let Some(key) = self.api.keys.iter().find(|k| {
+            &k.provider == provider && k.network == network_str
+        }) {
+            return Some(&key.key);
+        }
+        
+        // Fall back to legacy keys for backward compatibility
+        match (provider, network_str) {
+            (ApiProvider::Alchemy, "mainnet") => self.alchemy_mainnet_key.as_deref(),
+            (ApiProvider::Alchemy, "testnet") => self.alchemy_testnet_key.as_deref(),
+            _ => None,
+        }
+    }
+    
+    /// Add or update an API key
+    pub fn set_api_key(&mut self, provider: ApiProvider, key: String, name: Option<String>) -> String {
+        let network = match self.default_network {
+            Network::Mainnet | Network::AlchemyMainnet | Network::RootStockMainnet => "mainnet",
+            _ => "testnet",
+        };
+        
+        let display_name = name.as_deref().unwrap_or("unnamed");
+        
+        // Create and add the API key
+        let api_key = ApiKey {
+            key: key.clone(),
+            network: network.to_string(),
+            provider: provider.clone(),
+            name: name.clone(),
+        };
+        
+        // Add to the API keys list
+        self.api.keys.push(api_key);
+        
+        // Also update the legacy fields for backward compatibility
+        match (provider.clone(), network) {
+            (ApiProvider::Alchemy, "mainnet") => self.alchemy_mainnet_key = Some(key),
+            (ApiProvider::Alchemy, _) => self.alchemy_testnet_key = Some(key),
+            _ => {}
+        }
+        
+        format!("API key for {} on {} saved as '{}'", provider, network, display_name)
+    }
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             default_network: Network::Testnet,
+            api: ApiConfig::default(),
             alchemy_mainnet_key: None,
             alchemy_testnet_key: None,
             default_wallet: None,
@@ -107,5 +145,63 @@ impl ConfigManager {
             }
             _ => Ok(())
         }
+    }
+
+    /// Removes all wallet data, configuration, and cache
+    /// WARNING: This will delete ALL wallet data and cannot be undone!
+    pub fn clear_cache(&self) -> Result<()> {
+        use std::fs;
+        
+        // Clear config directory
+        let config_dir = self.config_path().parent()
+            .ok_or_else(|| anyhow::anyhow!("Invalid config directory path"))?;
+        
+        if config_dir.exists() {
+            // Remove all files in the config directory
+            for entry in fs::read_dir(config_dir)? {
+                let entry = entry?;
+                let path = entry.path();
+                
+                if path.is_dir() {
+                    fs::remove_dir_all(&path)?;
+                } else {
+                    fs::remove_file(&path)?;
+                }
+                
+                println!("Removed: {}", path.display());
+            }
+            
+            // Recreate the empty directory
+            fs::create_dir_all(config_dir)?;
+        }
+        
+        // Clear wallet data directory
+        if let Some(data_dir) = dirs::data_local_dir() {
+            let wallet_data_dir = data_dir.join("rootstock-wallet");
+            if wallet_data_dir.exists() {
+                // Remove all files in the wallet data directory
+                for entry in fs::read_dir(&wallet_data_dir)? {
+                    let entry = entry?;
+                    let path = entry.path();
+                    
+                    if path.is_dir() {
+                        fs::remove_dir_all(&path)?;
+                    } else {
+                        fs::remove_file(&path)?;
+                    }
+                    
+                    println!("Removed: {}", path.display());
+                }
+                
+                // Remove the wallet data directory itself
+                fs::remove_dir(&wallet_data_dir)?;
+                println!("Removed: {}", wallet_data_dir.display());
+            }
+        }
+        
+        println!("\n✅ Cache and all wallet data have been cleared successfully.");
+        println!("A new configuration will be created when you start the wallet again.");
+        
+        Ok(())
     }
 }

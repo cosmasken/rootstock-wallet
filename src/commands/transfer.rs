@@ -1,13 +1,13 @@
 use crate::types::wallet::WalletData;
 use crate::utils::constants;
 use crate::utils::eth::EthClient;
-use crate::utils::helper::Config;
-use crate::utils::helper::Helper;
+use crate::utils::helper::Config as HelperConfig;
+use crate::config::ConfigManager;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;
 use ethers::signers::LocalWallet;
-use ethers::types::{Address, H256, U256, U64};
+use ethers::types::{Address, H256, U64, U256};
 use rpassword::prompt_password;
 use std::fs;
 use std::str::FromStr;
@@ -40,9 +40,6 @@ pub struct TransferCommand {
     #[arg(long)]
     pub token: Option<String>,
 
-    /// Network to use (mainnet/testnet)
-    #[arg(long, default_value = "mainnet")]
-    pub network: String,
 }
 
 impl TransferCommand {
@@ -69,48 +66,58 @@ impl TransferCommand {
         let _local_wallet = LocalWallet::from_str(&private_key)
             .map_err(|e| anyhow!("Failed to create LocalWallet: {}", e))?;
 
-        // Inject the private key into the config for EthClient
-        let mut config = Config::default();
-        config.network = crate::types::network::Network::from_str(&self.network)
-            .unwrap_or(crate::types::network::Network::Mainnet)
-            .get_config();
-        config.wallet.private_key = Some(private_key.clone());
-        let eth_client = EthClient::new(&config, None).await?;
+        // Get the network from config
+        let config = ConfigManager::new()?.load()?;
+        
+        // Create a new helper config with the private key
+        let client_config = HelperConfig {
+            network: config.default_network.get_config(),
+            wallet: crate::utils::helper::WalletConfig {
+                current_wallet_address: None,
+                private_key: Some(private_key.clone()),
+                mnemonic: None,
+            },
+        };
+        
+        let eth_client = EthClient::new(&client_config, None).await?;
 
         // Parse recipient address
         let to = Address::from_str(&self.address)
             .map_err(|_| anyhow!("Invalid recipient address: {}", &self.address))?;
 
-        // Parse amount (convert f64 to wei or token units, assuming 18 decimals)
-        let amount = ethers::utils::parse_units(self.value.to_string(), 18)
-            .map_err(|e| anyhow!("Invalid amount: {}", e))?;
-
         // Parse optional token address
-        let token_address = self
-            .token
-            .as_ref()
-            .map(|t| Address::from_str(t).map_err(|_| anyhow!("Invalid token address: {}", t)))
-            .transpose()?;
-
-        // Get token info if transferring ERC-20
-        let token_symbol = if let Some(token_addr) = token_address {
-            let (decimals, symbol) = eth_client.get_token_info(token_addr).await?;
-            if decimals != 18 {
-                return Err(anyhow!(
-                    "Token decimals ({}) not supported; only 18 decimals allowed",
-                    decimals
-                ));
+        let (token_address, token_symbol) = if let Some(token_addr) = &self.token {
+            // Handle RBTC case (zero address or None)
+            if token_addr == "0x0000000000000000000000000000000000000000" || token_addr.is_empty() {
+                (None, Some("RBTC".to_string()))
+            } else {
+                // Parse token address
+                let addr = Address::from_str(token_addr)
+                    .map_err(|_| anyhow!("Invalid token address: {}", token_addr))?;
+                
+                // Try to get token info, but don't fail if we can't
+                let symbol = match eth_client.get_token_info(addr).await {
+                    Ok((_, sym)) => sym,
+                    Err(_) => format!("Token (0x{})", &token_addr[2..10]),
+                };
+                
+                (Some(addr), Some(symbol))
             }
-            Some(symbol)
         } else {
-            None
+            // Native RBTC transfer
+            (None, Some("RBTC".to_string()))
         };
+
+        // Parse amount (convert f64 to wei or token units)
+        let decimals = if token_address.is_some() { 18 } else { 18 }; // Default to 18 for both RBTC and tokens
+        let amount = ethers::utils::parse_units(self.value.to_string(), decimals)
+            .map_err(|e| anyhow!("Invalid amount: {}", e))?;
 
         // Send transaction
         let tx_hash = eth_client
             .send_transaction(to, amount.into(), token_address)
             .await?;
-    
+
         println!(
             "{}: Transaction sent: 0x{:x} for {} {}",
             "Success".green().bold(),
@@ -119,10 +126,48 @@ impl TransferCommand {
             token_symbol.clone().unwrap_or("RBTC".to_string())
         );
 
-        // Wait for transaction receipt
-        let receipt = eth_client
-            .get_transaction_receipt(tx_hash)
-            .await?;
+        println!("\n{}: Transaction submitted. Waiting for confirmation... (This may take a moment)", "Info".blue().bold());
+        
+        // Try to get receipt with retries
+        let mut retries = 5;
+        let receipt = loop {
+            match eth_client.get_transaction_receipt(tx_hash).await {
+                Ok(receipt) => break receipt,
+                Err(e) if retries > 0 => {
+                    retries -= 1;
+                    tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                }
+                Err(e) => {
+                    println!("\n{}: Could not get transaction receipt. The transaction has been submitted but is still pending.", "Warning".yellow().bold());
+                    println!("You can check the status later with: wallet tx --tx-hash 0x{:x}", tx_hash);
+                    
+                    // Return with minimal receipt info since we couldn't get the full receipt
+                    return Ok(TransferResult {
+                        tx_hash,
+                        from: default_wallet.address(),
+                        to,
+                        value: amount.into(),
+                        gas_used: U256::zero(),
+                        gas_price: U256::zero(),
+                        status: U64::from(0), // 0 indicates unknown/pending status
+                        token_address,
+                        token_symbol,
+                    });
+                }
+            }
+        };
+
+        // If we got here, we have a receipt
+        let status = receipt.status.unwrap_or_else(|| U64::from(0));
+        let status_str = if status == U64::from(1) {
+            format!("{}", "✓ Success".green().bold())
+        } else if status == U64::from(0) {
+            format!("{}", "✗ Failed".red().bold())
+        } else {
+            format!("{}", "⏳ Pending".yellow().bold())
+        };
+
+        println!("\n{}: Transaction confirmed! Status: {}", "Success".green().bold(), status_str);
 
         Ok(TransferResult {
             tx_hash,
@@ -131,7 +176,7 @@ impl TransferCommand {
             value: amount.into(),
             gas_used: receipt.gas_used.unwrap_or_default(),
             gas_price: receipt.effective_gas_price.unwrap_or_default(),
-            status: receipt.status.unwrap_or_else(|| U64::from(0)),
+            status,
             token_address,
             token_symbol,
         })

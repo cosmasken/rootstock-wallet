@@ -1,19 +1,18 @@
-use crate::types::contacts::Contact;
-use crate::types::network::Network;
 use crate::types::transaction::{RskTransaction, TransactionStatus};
 use crate::types::wallet::WalletData;
 use crate::utils::alchemy::AlchemyClient;
-use crate::utils::{constants, eth::EthClient, helper::Config, table::TableBuilder};
+use crate::utils::{constants, table::TableBuilder};
 use anyhow::Result;
 use chrono::TimeZone;
 use clap::Parser;
 use colored::Colorize;
-use ethers::types::{Address, U256};
+use console::style;
+use ethers::types::Address;
 use std::fs;
 use std::str::FromStr;
 
 /// Show the transaction history for an address or the current wallet
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct HistoryCommand {
     /// Address to check transaction history for
     #[arg(short, long)]
@@ -52,8 +51,12 @@ pub struct HistoryCommand {
     pub sort_by: String,
 
     /// Sort order (asc/desc)
-    #[arg(short, long, default_value = "desc")]
+    #[arg(long, default_value = "desc")]
     pub sort_order: String,
+
+    /// Export transactions to CSV file
+    #[arg(long)]
+    pub export_csv: Option<String>,
 
     /// Show only incoming transactions
     #[arg(short, long)]
@@ -78,6 +81,13 @@ impl HistoryCommand {
         // let config = Config::load()?;
         let wallet_file = constants::wallet_file_path();
         let mut stored_api_key: Option<String> = None;
+        
+        // If export is requested, ensure we have a filename
+        if let Some(filename) = &self.export_csv {
+            if !filename.ends_with(".csv") {
+                return Err(anyhow::anyhow!("Export filename must end with .csv"));
+            }
+        }
 
         // Try to load API key from wallet file
         if wallet_file.exists() {
@@ -156,12 +166,8 @@ impl HistoryCommand {
         let mut txs = Vec::new();
         for transfer in transfers {
             // Convert Alchemy transfer to RskTransaction
-            let tx = RskTransaction::from_alchemy_transfer(
-                transfer,
-                &address,
-                &alchemy_client,
-            )
-            .await?;
+            let tx =
+                RskTransaction::from_alchemy_transfer(transfer, &address, &alchemy_client).await?;
             txs.push(tx);
         }
 
@@ -190,7 +196,40 @@ impl HistoryCommand {
             _ => {}
         }
 
-        // 8. Display results
+        // 8. Export to CSV if requested
+        if let Some(filename) = &self.export_csv {
+            let mut wtr = csv::Writer::from_path(filename)?;
+            
+            // Write header
+            wtr.write_record(&[
+                "Transaction Hash",
+                "Timestamp",
+                "From",
+                "To",
+                "Value (wei)",
+                "Token Address",
+                "Gas Price (wei)",
+                "Gas Used",
+                "Status",
+                "Block Number"
+            ])?;
+            
+            // Write transactions
+            for tx in &txs {
+                let record = tx.to_csv_record();
+                wtr.write_record(&record)?;
+            }
+            
+            wtr.flush()?;
+            println!("\n{} Exported {} transactions to {}", 
+                style("✓").green().bold(), 
+                txs.len(), 
+                style(filename).cyan()
+            );
+            return Ok(());
+        }
+
+        // 9. Display results in terminal
         let mut table = TableBuilder::new();
         if self.detailed {
             table.add_header(&[

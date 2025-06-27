@@ -1,15 +1,14 @@
-use anyhow::{Result, Context};
-use console::style;
-use ethers::types::{Address, H256, U256, U64};
-use ethers::utils::{format_ether, format_units};
-use inquire::{Confirm, Select, Text, validator::Validation};
-use std::str::FromStr;
 use crate::commands::transfer::TransferCommand;
 use crate::types::transaction::RskTransaction;
 use crate::{
     commands::contacts::{ContactsAction, ContactsCommand},
-    utils::{table::TableBuilder, eth::EthClient},
+    utils::table::TableBuilder,
 };
+use anyhow::{Context, Result};
+use console::style;
+use ethers::types::{U64, U256};
+use ethers::utils::{format_ether, format_units};
+use inquire::{Confirm, Select, Text, validator::Validation};
 /// Interacive contacts manage
 pub async fn manage_contacts() -> Result<()> {
     loop {
@@ -51,11 +50,17 @@ pub async fn list_contacts() -> Result<()> {
         action: ContactsAction::List,
     }
     .load_contacts()?;
-    
+
     // Sort contacts by most recently interacted with
     contacts.sort_by(|a, b| {
-        let a_time = a.last_transaction_time().map(|dt| dt.timestamp_millis()).unwrap_or(0);
-        let b_time = b.last_transaction_time().map(|dt| dt.timestamp_millis()).unwrap_or(0);
+        let a_time = a
+            .last_transaction_time()
+            .map(|dt| dt.timestamp_millis())
+            .unwrap_or(0);
+        let b_time = b
+            .last_transaction_time()
+            .map(|dt| dt.timestamp_millis())
+            .unwrap_or(0);
         b_time.cmp(&a_time)
     });
 
@@ -255,34 +260,39 @@ pub async fn search_contacts() -> Result<()> {
         .prompt()?;
 
     let cmd = ContactsCommand {
-        action: ContactsAction::Search { query: query.clone() },
+        action: ContactsAction::Search {
+            query: query.clone(),
+        },
     };
-    
+
     // First try to use the search command's execute
     if let Err(_e) = cmd.execute().await {
         // If execute fails (not implemented), fall back to manual search
         println!("Search not implemented, falling back to local search...");
-        
+
         let contacts = cmd.load_contacts()?;
         let filtered: Vec<_> = contacts
             .into_iter()
             .filter(|c| {
-                c.name.to_lowercase().contains(&query.to_lowercase()) ||
-                c.address.to_string().to_lowercase().contains(&query.to_lowercase())
+                c.name.to_lowercase().contains(&query.to_lowercase())
+                    || c.address
+                        .to_string()
+                        .to_lowercase()
+                        .contains(&query.to_lowercase())
             })
             .collect();
-            
+
         if filtered.is_empty() {
             println!("No contacts found matching '{}'", query);
             return Ok(());
         }
-        
+
         println!("\nFound {} contacts:", filtered.len());
         for contact in filtered {
             println!("• {} - {}", contact.name, contact.address);
         }
     }
-    
+
     Ok(())
 }
 
@@ -343,27 +353,28 @@ pub async fn quick_send_to_contact() -> Result<()> {
 
     if confirm {
         println!("Sending {} RBTC to {}...", amount, selected_contact.name);
-        
+
         // Create and execute the transfer command
         let transfer_cmd = TransferCommand {
             address: format!("0x{:x}", selected_contact.address),
             value: amount.parse().unwrap_or(0.0),
             token: None, // Only RBTC for now
-            network: "mainnet".to_string(),
         };
-        
+
         match transfer_cmd.execute().await {
             Ok(transfer_result) => {
-                println!("\n{} {}", 
+                println!(
+                    "\n{} {}",
                     style("✅ Transaction sent successfully!").green(),
                     style(format!("(0x{:x})", transfer_result.tx_hash)).dim()
                 );
-                
+
                 // Update contact's transaction history
                 let mut contacts = cmd.load_contacts()?;
-                if let Some(contact) = contacts.iter_mut()
-                    .find(|c| c.address == selected_contact.address) {
-                    
+                if let Some(contact) = contacts
+                    .iter_mut()
+                    .find(|c| c.address == selected_contact.address)
+                {
                     let tx = RskTransaction {
                         hash: transfer_result.tx_hash,
                         from: transfer_result.from,
@@ -386,12 +397,12 @@ pub async fn quick_send_to_contact() -> Result<()> {
                         cumulative_gas_used: Some(transfer_result.gas_used),
                         logs: None, // Would need to be fetched separately
                     };
-                    
+
                     contact.update_transaction_stats(&tx, false);
-                    
+
                     // Save the updated contacts
                     cmd.save_contacts(&contacts)?;
-                    
+
                     // Show transaction details
                     println!("\n{}", style("Transaction Details:").bold());
                     println!("  • Hash: 0x{:x}", tx.hash);
@@ -401,12 +412,18 @@ pub async fn quick_send_to_contact() -> Result<()> {
                     }
                     println!("  • Value: {} RBTC", format_ether(tx.value));
                     println!("  • Gas Used: {}", tx.gas);
-                    println!("  • Gas Price: {} Gwei", format_units(tx.gas_price, 9).unwrap_or_else(|_| "N/A".into()));
+                    println!(
+                        "  • Gas Price: {} Gwei",
+                        format_units(tx.gas_price, 9).unwrap_or_else(|_| "N/A".into())
+                    );
                     println!("  • Status: {:?}", tx.status);
                 }
             }
             Err(e) => {
-                eprintln!("\n{}", style(format!("❌ Error sending transaction: {}", e)).red());
+                eprintln!(
+                    "\n{}",
+                    style(format!("❌ Error sending transaction: {}", e)).red()
+                );
             }
         }
     } else {
@@ -451,9 +468,9 @@ pub async fn view_contact_transactions() -> Result<()> {
 
     // Load transactions (you'll need to implement this part)
     let all_transactions = Vec::new(); // Replace with actual transaction loading
-    
+
     let contact_txs = selected_contact.get_recent_transactions(&all_transactions, None);
-    
+
     if contact_txs.is_empty() {
         println!("No transactions found for this contact.");
         return Ok(());
@@ -469,34 +486,37 @@ pub async fn view_contact_transactions() -> Result<()> {
             "IN"
         };
 
-        let amount = ethers::utils::format_units(tx.value, 18)
-            .unwrap_or_else(|_| "N/A".to_string());
+        let amount =
+            ethers::utils::format_units(tx.value, 18).unwrap_or_else(|_| "N/A".to_string());
 
-        let date_str = tx.timestamp
+        let date_str = tx
+            .timestamp
             .duration_since(std::time::UNIX_EPOCH)
             .map(|d| {
-                chrono::DateTime::<chrono::Local>::from(
-                    std::time::UNIX_EPOCH + d
-                )
-                .format("%Y-%m-%d %H:%M")
-                .to_string()
+                chrono::DateTime::<chrono::Local>::from(std::time::UNIX_EPOCH + d)
+                    .format("%Y-%m-%d %H:%M")
+                    .to_string()
             })
             .unwrap_or_else(|_| "Unknown".to_string());
-            
+
         let tx_type_str = tx_type.to_string();
         let amount_str = format!("{} RBTC", amount);
         let status_str = format!("{:?}", tx.status);
-        
+
         table.add_row(&[&date_str, &tx_type_str, &amount_str, &status_str]);
     }
 
-    println!("\nTransaction history for {} (0x{:x}):", 
-        selected_contact.name, selected_contact.address);
-    println!("Total Volume: {} RBTC\n", 
+    println!(
+        "\nTransaction history for {} (0x{:x}):",
+        selected_contact.name, selected_contact.address
+    );
+    println!(
+        "Total Volume: {} RBTC\n",
         ethers::utils::format_units(selected_contact.get_total_volume(), 18)
-            .unwrap_or_else(|_| "N/A".to_string()));
-    
+            .unwrap_or_else(|_| "N/A".to_string())
+    );
+
     table.print();
-    
+
     Ok(())
 }

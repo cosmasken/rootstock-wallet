@@ -5,10 +5,7 @@ use crate::utils::helper::Config;
 use anyhow::anyhow;
 use ethers::types::{H256, U256};
 use ethers::{
-    contract::abigen,
-    prelude::*,
-    providers::Provider,
-    signers::LocalWallet,
+    contract::abigen, prelude::*, providers::Provider, signers::LocalWallet,
     types::transaction::eip2718::TypedTransaction,
 };
 use std::fs;
@@ -32,20 +29,6 @@ pub struct EthClient {
 }
 
 impl EthClient {
-    // Helper to get the correct Alchemy URL
-    fn alchemy_url(&self) -> String {
-        let api_key = self.api_key.as_ref().expect("Alchemy API key not set");
-        // if self.network.is_testnet() {
-        //     format!("https://rootstock-testnet.g.alchemy.com/v2/{}", api_key)
-        // } else {
-        //     format!("https://rootstock-mainnet.g.alchemy.com/v2/{}", api_key)
-        // }
-        format!(
-            "https://rootstock-{}.g.alchemy.com/v2/{}",
-            self.network.name, api_key
-        )
-    }
-
     pub async fn new(config: &Config, cli_api_key: Option<String>) -> Result<Self, anyhow::Error> {
         // Load or update API key
         let wallet_file = constants::wallet_file_path();
@@ -221,9 +204,7 @@ impl EthClient {
             .get_transaction_receipt(tx_hash)
             .await
             .map_err(|e| anyhow!("Failed to get transaction receipt: {}", e))
-            .and_then(|receipt| {
-                receipt.ok_or_else(|| anyhow!("Transaction receipt not found"))
-            })
+            .and_then(|receipt| receipt.ok_or_else(|| anyhow!("Transaction receipt not found")))
     }
 
     pub async fn get_token_info(
@@ -234,6 +215,11 @@ impl EthClient {
         let decimals = contract.decimals().call().await?;
         let symbol = contract.symbol().call().await?;
         Ok((decimals, symbol))
+    }
+
+    /// Get a reference to the underlying provider
+    pub fn provider(&self) -> &Provider<Http> {
+        &self.provider
     }
 
     pub async fn estimate_gas(
@@ -259,19 +245,13 @@ impl EthClient {
             }
         }
     }
+}
 
-    // Helper to build the JSON-RPC params for asset transfers
-    fn build_asset_transfers_params(&self, address: &Address, limit: u32) -> serde_json::Value {
-        serde_json::json!([{
-            "fromBlock": "0x0",
-            "toBlock": "latest",
-            "fromAddress": format!("{:#x}", address),
-            "toAddress": format!("{:#x}", address),
-            "category": ["external", "erc20"],
-            "withMetadata": true,
-            "excludeZeroValue": false,
-            "maxCount": format!("0x{:x}", limit),
-        }])
+/// Generate an explorer URL for a transaction hash
+pub fn get_explorer_url(tx_hash: &str, is_testnet: bool) -> String {
+    if is_testnet {
+        format!("https://explorer.testnet.rsk.co/tx/{}", tx_hash)
+    } else {
+        format!("https://explorer.rsk.co/tx/{}", tx_hash)
     }
-
 }
