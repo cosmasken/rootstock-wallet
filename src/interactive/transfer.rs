@@ -1,12 +1,15 @@
-use crate::commands::tokens::TokenRegistry;
-use crate::commands::transfer::TransferCommand;
-use crate::config::ConfigManager;
-use anyhow::Result;
+use crate::{
+    commands::{tokens::TokenRegistry, transfer::TransferCommand},
+    config::ConfigManager,
+    interactive::transfer_preview,
+    types::network::Network,
+};
+use anyhow::{Result,anyhow};
 use colored::*;
 use console::style;
-use inquire::Select;
-use inquire::validator::Validation;
-use anyhow::anyhow;
+use ethers::types::U256;
+use inquire::{Select, validator::Validation};
+use std::str::FromStr;
 
 /// Displays the fund transfer interface
 pub async fn send_funds() -> Result<()> {
@@ -94,14 +97,35 @@ pub async fn send_funds() -> Result<()> {
         .unwrap_or(&display_name)
         .to_string();
 
-    let amount = inquire::Text::new(&format!("Amount of {} to send:", token_symbol))
-        .with_help_message("Enter the amount to send")
-        .with_validator(|input: &str| match input.parse::<f64>() {
-            Ok(n) if n > 0.0 => Ok(Validation::Valid),
-            _ => Ok(Validation::Invalid("Please enter a valid positive number".into())),
-        })
-        .prompt()?
-        .parse::<f64>()?;
+    let amount = loop {
+        let input = inquire::Text::new(&format!("Amount of {} to send:", token_symbol))
+            .with_help_message("Enter the amount to send")
+            .with_validator(|input: &str| {
+                if input.parse::<f64>().is_ok() {
+                    Ok(Validation::Valid)
+                } else {
+                    Ok(Validation::Invalid("Please enter a valid number".into()))
+                }
+            })
+            .prompt()?;
+            
+        // Convert RBTC to wei for preview
+        let rbtc: f64 = input.parse().unwrap_or(0.0);
+        let wei = (rbtc * 1e18) as u128;
+        
+        // Show preview and ask for confirmation
+        let confirmed = transfer_preview::show_transaction_preview(
+            &to,
+            &wei.to_string(),
+            config.default_network,
+        ).await?;
+        
+        if confirmed {
+            break input;
+        } else {
+            println!("Transaction cancelled. Please enter a new amount or press Ctrl+C to exit.");
+        }
+    };
 
     // Clone the address since we need to use it multiple times
     let token_address = token_info.address.clone();
@@ -132,7 +156,7 @@ pub async fn send_funds() -> Result<()> {
     // Execute the transfer command
     let cmd = TransferCommand {
         address: to,
-        value: amount,
+        value: amount.parse::<f64>().map_err(|_| anyhow::anyhow!("Invalid amount format"))?,
         token: if token_address == "0x0000000000000000000000000000000000000000" {
             None
         } else {

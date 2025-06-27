@@ -7,6 +7,7 @@ mod history;
 mod system;
 mod tokens;
 mod transfer;
+mod transfer_preview;
 mod wallet;
 
 use anyhow::Result;
