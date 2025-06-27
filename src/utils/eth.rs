@@ -1,4 +1,3 @@
-use crate::types::network::NetworkConfig;
 use crate::types::wallet::WalletData;
 use crate::utils::constants;
 use crate::utils::helper::Config;
@@ -24,8 +23,6 @@ abigen!(
 pub struct EthClient {
     provider: Arc<Provider<Http>>,
     wallet: Option<LocalWallet>,
-    network: NetworkConfig,
-    api_key: Option<String>,
 }
 
 impl EthClient {
@@ -39,7 +36,7 @@ impl EthClient {
             WalletData::new()
         };
 
-        let api_key = if let Some(key) = cli_api_key {
+        let _api_key = if let Some(key) = cli_api_key {
             wallet_data.api_key = Some(key.clone());
             fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
             Some(key)
@@ -61,8 +58,6 @@ impl EthClient {
         Ok(Self {
             provider: Arc::new(provider),
             wallet,
-            network: config.network.clone(),
-            api_key,
         })
     }
 
