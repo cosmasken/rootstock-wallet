@@ -97,37 +97,70 @@ cargo run
 
 ## Demo
 
-### Wallet Management 
-
 
 #### 🔑 First Time Setup
-[![First Time Setup](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+[![First Time Setup](https://asciinema.org/a/V8Qf1AboSZu08l12KJFxTfyeV.svg)](https://asciinema.org/a/V8Qf1AboSZu08l12KJFxTfyeV)
 
 
 #### 🔑 Importing Existing Wallet
-[![Importing Existing Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+[![Importing Existing Wallet](https://asciinema.org/a/cVrvEOP4LvJQLvTitxcayRBFt.svg)](https://asciinema.org/a/cVrvEOP4LvJQLvTitxcayRBFt)
 
 
 #### 🔑 Wallet Creation
-[![Wallet Creation](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+[![Wallet Creation](https://asciinema.org/a/Lj7YVm8idPbAEpHYPfjFuTfns.svg)](https://asciinema.org/a/Lj7YVm8idPbAEpHYPfjFuTfns)
 
 
-#### 🔑 List Wallets
-[![List Wallets](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+#### 🔑 List Wallets & Switch Wallets
+[![List Wallets](https://asciinema.org/a/HUpONPUC4OgQKFyStNm5KwaqT.svg)](https://asciinema.org/a/HUpONPUC4OgQKFyStNm5KwaqT)
 
 
-#### 🔑 Switch Wallet
-[![Switch Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+
+#### 🔑 Delete Wallet & Rename Wallet
+[![Delete Wallet](https://asciinema.org/a/cqjxdJjfaY1wqvO4upgRUMKDG.svg)](https://asciinema.org/a/cqjxdJjfaY1wqvO4upgRUMKDG)
 
 
-#### 🔑 Delete Wallet
-[![Delete Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+#### 📊 Check Balance of RBTC and ERC-20 tokens(e.g RIF)
+[![Check Balance](https://asciinema.org/a/rqlxYIWZ2Gh1Pn5sEFZZFK5xz.svg)](https://asciinema.org/a/rqlxYIWZ2Gh1Pn5sEFZZFK5xz
+)
 
-#### 🔑 Rename Wallet
-[![Rename Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+#### 💸 Send Funds (E.g from personal to lock wallet)
+[![Send Funds](https://asciinema.org/a/tEt4dSOgmEEguP6pgQ7setuPV.svg)](https://asciinema.org/a/tEt4dSOgmEEguP6pgQ7setuPV
+)
 
-#### 🔑 Backup Wallet
-[![Backup Wallet](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ.svg)](https://asciinema.org/a/B3gYJHQRei4h1OnDsBoYm1GkQ)
+#### Set API Key (REquired for history and transaction cheking)
+[![Set API Key](https://asciinema.org/a/6ZdWMvEMMZVsSCFkNHjq3MbPq.svg)](https://asciinema.org/a/6ZdWMvEMMZVsSCFkNHjq3MbPq)
+
+#### 📊 Transaction History
+[![Transaction History](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
+#### 📊 Check Transaction Status
+[![Check Transaction Status](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
+
+#### 📊 Bulk Transfer
+[![Bulk Transfer](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
+#### 📊 Add Token
+[![Add Token](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
+#### 📊 List Tokens
+[![List Tokens](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z.svg)](https://asciinema.org/a/WVXHq5X1WvR7uRn3wvKkRbH5Z)
+
+
+#### Contacts Management
+
+##### Add Contact
+[![Add Contact](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q.svg)](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q)
+
+##### List Contacts
+[![List Contacts](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q.svg)](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q)
+
+##### Delete Contact
+[![Delete Contact](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q.svg)](https://asciinema.org/a/A9vQq0s0tTt6F7PmKmXkqJj5q)
+
+
+
+
 
 
 

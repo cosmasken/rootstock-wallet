@@ -1,0 +1,10 @@
+{
+  "address": "0xebaad81491cb748698037a6ca42fa133dabc9788",
+  "balance": "0x0",
+  "network": "",
+  "name": "lock",
+  "encrypted_private_key": "h/xmoM8361S/qUGQWRMYD79AmHqqTwnBiyYbagb+cirBK6tOXB2KeMDb9p/U8Ba6",
+  "salt": "uIqh6x25XRqK1P8eA/Sy4Q==",
+  "iv": "5n3fFdvgwblc/jJwT+94aw==",
+  "created_at": "2025-06-27T13:05:46.147803516+00:00"
+}
