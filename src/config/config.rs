@@ -1,7 +1,9 @@
-use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+
+use anyhow::{Context, Result};
+use dirs;
+use serde::{Deserialize, Serialize};
 
 // Re-export the API types for easier access
 use crate::types::network::Network;
@@ -146,10 +148,11 @@ impl ConfigManager {
     }
 
     /// Removes all wallet data, configuration, and cache
-    /// WARNING: This will delete all wallet data and cannot be undone!
+    /// WARNING: This will delete ALL wallet data and cannot be undone!
     pub fn clear_cache(&self) -> Result<()> {
         use std::fs;
         
+        // Clear config directory
         let config_dir = self.config_path().parent()
             .ok_or_else(|| anyhow::anyhow!("Invalid config directory path"))?;
         
@@ -170,11 +173,34 @@ impl ConfigManager {
             
             // Recreate the empty directory
             fs::create_dir_all(config_dir)?;
-            println!("\n✅ Cache and all wallet data have been cleared successfully.");
-            println!("A new configuration will be created when you start the wallet again.");
-        } else {
-            println!("No wallet data found to clear.");
         }
+        
+        // Clear wallet data directory
+        if let Some(data_dir) = dirs::data_local_dir() {
+            let wallet_data_dir = data_dir.join("rootstock-wallet");
+            if wallet_data_dir.exists() {
+                // Remove all files in the wallet data directory
+                for entry in fs::read_dir(&wallet_data_dir)? {
+                    let entry = entry?;
+                    let path = entry.path();
+                    
+                    if path.is_dir() {
+                        fs::remove_dir_all(&path)?;
+                    } else {
+                        fs::remove_file(&path)?;
+                    }
+                    
+                    println!("Removed: {}", path.display());
+                }
+                
+                // Remove the wallet data directory itself
+                fs::remove_dir(&wallet_data_dir)?;
+                println!("Removed: {}", wallet_data_dir.display());
+            }
+        }
+        
+        println!("\n✅ Cache and all wallet data have been cleared successfully.");
+        println!("A new configuration will be created when you start the wallet again.");
         
         Ok(())
     }

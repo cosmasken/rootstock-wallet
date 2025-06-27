@@ -47,14 +47,14 @@ async fn create_wallet() -> Result<()> {
         .with_help_message("Enter a name for your new wallet")
         .prompt()?;
 
-    let _password = inquire::Password::new("Enter password:")
-        .with_display_toggle_enabled()
-        .with_display_mode(inquire::PasswordDisplayMode::Masked)
-        .with_custom_confirmation_error_message("The passwords don't match.")
-        .with_custom_confirmation_message("Please confirm your password:")
-        .with_formatter(&|_| String::from("Password received"))
-        .without_confirmation()
-        .prompt()?;
+    // let _password = inquire::Password::new("Enter password:")
+    //     .with_display_toggle_enabled()
+    //     .with_display_mode(inquire::PasswordDisplayMode::Masked)
+    //     .with_custom_confirmation_error_message("The passwords don't match.")
+    //     .with_custom_confirmation_message("Please confirm your password:")
+    //     .with_formatter(&|_| String::from("Password received"))
+    //     .without_confirmation()
+    //     .prompt()?;
 
     create_wallet_with_name(&name).await
 }

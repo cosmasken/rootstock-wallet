@@ -15,6 +15,7 @@ mod wallet;
 use anyhow::Result;
 use console::style;
 use dialoguer::{theme::ColorfulTheme, Select};
+use crate::utils::constants;
 
 // Re-export public functions
 pub use self::{
@@ -69,7 +70,29 @@ pub async fn start() -> Result<()> {
     
     println!("  {}", style("🟢 Online").green());
     println!("  {}", get_network_status(config.default_network));
-    println!("  {}\n", style("💼 1 wallet loaded").dim());
+    
+    // Check if wallet data file exists and count wallets
+    let wallet_file = constants::wallet_file_path();
+    let wallet_count = if wallet_file.exists() {
+        match std::fs::read_to_string(&wallet_file) {
+            Ok(contents) => {
+                match serde_json::from_str::<crate::types::wallet::WalletData>(&contents) {
+                    Ok(wallet_data) => wallet_data.wallets.len(),
+                    Err(_) => 0,
+                }
+            }
+            Err(_) => 0,
+        }
+    } else {
+        0
+    };
+    
+    let wallet_text = match wallet_count {
+        0 => "💼 No wallets loaded".to_string(),
+        1 => "💼 1 wallet loaded".to_string(),
+        _ => format!("💼 {} wallets loaded", wallet_count),
+    };
+    println!("  {}\n", style(wallet_text).dim());
 
     loop {
         let options = vec![
