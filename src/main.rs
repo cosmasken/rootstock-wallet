@@ -4,7 +4,9 @@ use dotenv::dotenv;
 use std::env;
 
 mod commands;
+mod config;
 mod interactive;
+mod setup;
 mod types;
 mod utils;
 
@@ -22,6 +24,12 @@ async fn main() -> Result<()> {
     
     // Load environment variables from .env file if it exists
     dotenv().ok();
+
+    // Ensure wallet is configured
+    if let Err(e) = setup::ensure_configured() {
+        eprintln!("Failed to configure wallet: {}", e);
+        std::process::exit(1);
+    }
 
     // Start the interactive interface
     interactive::start().await?;

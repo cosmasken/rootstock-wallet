@@ -1,6 +1,7 @@
 //! Interactive command-line interface for the Rootstock wallet
 
 mod balance;
+mod config;
 mod contacts;
 mod history;
 mod tokens;
@@ -9,11 +10,40 @@ mod wallet;
 
 use anyhow::Result;
 use console::style;
+use dialoguer::{theme::ColorfulTheme, Select};
 
+// Re-export public functions
 pub use self::{
-    balance::show_balance, contacts::manage_contacts, history::show_history, tokens::token_menu,
-    transfer::send_funds, wallet::wallet_menu,
+    balance::show_balance,
+    config::show_config_menu,
+    contacts::manage_contacts,
+    history::show_history,
+    tokens::token_menu,
+    transfer::send_funds,
+    wallet::wallet_menu,
 };
+
+// Import for network status display
+use crate::config::ConfigManager;
+
+// Import Network from the types module
+use crate::types::network::Network;
+
+// Re-export the Network type for consistency
+pub use crate::types::network::Network as ConfigNetwork;
+
+// Helper function to get styled network status
+fn get_network_status(network: Network) -> console::StyledObject<&'static str> {
+    match network {
+        Network::Mainnet => style("🔗 Mainnet").cyan(),
+        Network::Testnet => style("🔗 Testnet").yellow(),
+        Network::Regtest => style("🔗 Regtest").magenta(),
+        Network::AlchemyMainnet => style("🔗 Alchemy Mainnet").blue(),
+        Network::AlchemyTestnet => style("🔗 Alchemy Testnet").blue(),
+        Network::RootStockMainnet => style("🔗 Rootstock Mainnet").green(),
+        Network::RootStockTestnet => style("🔗 Rootstock Testnet").green(),
+    }
+}
 
 /// Starts the interactive CLI interface
 pub async fn start() -> Result<()> {
@@ -25,9 +55,12 @@ pub async fn start() -> Result<()> {
     println!("{}", style("Your Gateway to the Rootstock Blockchain").dim());
     println!("{}\n", "-".repeat(40));
     
-    // Display quick status (you can enhance this with actual wallet status)
+    // Display current status
+    let config_manager = ConfigManager::new()?;
+    let config = config_manager.load()?;
+    
     println!("  {}", style("🟢 Online").green());
-    println!("  {}", style("🔗 Mainnet").cyan());
+    println!("  {}", get_network_status(config.default_network));
     println!("  {}\n", style("💼 1 wallet loaded").dim());
 
     loop {
@@ -38,27 +71,25 @@ pub async fn start() -> Result<()> {
             format!("{}  Wallet Management", style("🔑").bold().blue()),
             format!("{}  Token Management", style("🪙").bold().magenta()),
             format!("{}  Contact Management", style("📇").bold().cyan()),
+            format!("{}  Configuration", style("⚙️").bold().white()),
             format!("{}  Exit", style("🚪").bold().red()),
         ];
 
-        let selection = inquire::Select::new(
-            "\nWhat would you like to do? (Use ↑↓ arrows to navigate, Enter to select)",
-            options,
-        )
-        .with_page_size(10)
-        .with_help_message("Press 'q' to quit at any time")
-        .with_formatter(&|i| i.value.to_string())
-        .prompt()
-        .map_err(|_| anyhow::anyhow!("Operation cancelled"))?;
+        let selection = Select::with_theme(&ColorfulTheme::default())
+            .with_prompt("\nWhat would you like to do?")
+            .items(&options)
+            .default(0)
+            .interact()?;
 
-        match selection.as_str() {
-            "💰 Check Balance" => show_balance().await?,
-            "💸 Send Funds" => send_funds().await?,
-            "📜 Transaction History" => show_history().await?,
-            "🔑 Wallet Management" => wallet_menu().await?,
-            "🪙 Token Management" => token_menu().await?,
-            "📇 Contact Management" => manage_contacts().await?,
-            "❌ Exit" => {
+        match selection {
+            0 => show_balance().await?,
+            1 => send_funds().await?,
+            2 => show_history().await?,
+            3 => wallet_menu().await?,
+            4 => token_menu().await?,
+            5 => manage_contacts().await?,
+            6 => show_config_menu().await?,
+            7 => {
                 println!("\n👋 Goodbye!");
                 break;
             }

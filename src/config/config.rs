@@ -4,32 +4,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum Network {
-    Mainnet,
-    Testnet,
-}
-
-impl FromStr for Network {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "mainnet" => Ok(Network::Mainnet),
-            "testnet" => Ok(Network::Testnet),
-            _ => anyhow::bail!("Invalid network. Must be 'mainnet' or 'testnet'"),
-        }
-    }
-}
-
-impl std::fmt::Display for Network {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Network::Mainnet => write!(f, "mainnet"),
-            Network::Testnet => write!(f, "testnet"),
-        }
-    }
-}
+// Import Network from the types module
+use crate::types::network::Network;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Config {
