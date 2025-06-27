@@ -13,7 +13,7 @@
 - Import existing wallets using private keys
 - Switch between multiple wallets
 - Backup and restore wallet data
-- List all available wallets with balances
+- List all available wallets 
 - Rename or delete wallets
 
 ### Asset Management
@@ -22,7 +22,6 @@
 - View token balances (supports all ERC-20 tokens)
 - Add custom tokens to your wallet
 - Remove unwanted tokens from your token list
-- View detailed token information
 
 ### Transactions
 
@@ -119,7 +118,7 @@ cargo run
 [![Delete Wallet](https://asciinema.org/a/cqjxdJjfaY1wqvO4upgRUMKDG.svg)](https://asciinema.org/a/cqjxdJjfaY1wqvO4upgRUMKDG)
 
 
-#### 📊 Check Balance of RBTC and ERC-20 tokens(e.g RIF)
+#### 📊 Check Balance of RBTC and ERC-20 tokens(e.g RIF)https://explorer.testnet.rootstock.io/tx/0x0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900
 [![Check Balance](https://asciinema.org/a/rqlxYIWZ2Gh1Pn5sEFZZFK5xz.svg)](https://asciinema.org/a/rqlxYIWZ2Gh1Pn5sEFZZFK5xz
 )
 
@@ -137,7 +136,7 @@ cargo run
 #### 📊 Check Transaction Status
 [![Check Transaction Status](https://asciinema.org/a/CYYjrSV58KRGMgOmbdknm85Am.svg)](https://asciinema.org/a/CYYjrSV58KRGMgOmbdknm85Am)
 
-YOu can also view it at [View Transaction](https://explorer.testnet.rsk.co/tx/0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900)
+You can also view it at [View Transaction](https://explorer.testnet.rsk.co/tx/0293c59578303f3dc88daeda6c8564fd39b612dd85d7a1e025a37e611dc5b900)
 
 #### 📊 Bulk Transfer
 
