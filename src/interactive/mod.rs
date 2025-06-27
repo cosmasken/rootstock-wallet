@@ -1,6 +1,7 @@
 //! Interactive command-line interface for the Rootstock wallet
 
 mod balance;
+mod bulk_transfer;
 mod config;
 mod contacts;
 mod history;
@@ -18,6 +19,7 @@ use dialoguer::{theme::ColorfulTheme, Select};
 // Re-export public functions
 pub use self::{
     balance::show_balance,
+    bulk_transfer::bulk_transfer,
     config::show_config_menu,
     contacts::manage_contacts,
     history::show_history,
@@ -73,6 +75,7 @@ pub async fn start() -> Result<()> {
         let options = vec![
             format!("{}  Check Balance", style("💰").bold().green()),
             format!("{}  Send Funds", style("💸").bold().yellow()),
+            format!("{}  Bulk Transfer", style("📤").bold().yellow()),
             format!("{}  Check Transaction Status", style("🔍").bold().cyan()),
             format!("{}  Transaction History", style("📜").bold().cyan()),
             format!("{}  Wallet Management", style("🔑").bold().blue()),
@@ -92,14 +95,15 @@ pub async fn start() -> Result<()> {
         match selection {
             0 => show_balance().await?,
             1 => send_funds().await?,
-            2 => check_transaction_status().await?,
-            3 => show_history().await?,
-            4 => wallet_menu().await?,
-            5 => token_menu().await?,
-            6 => manage_contacts().await?,
-            7 => show_config_menu().await?,
-            8 => system_menu().await?,
-            9 => {
+            2 => bulk_transfer().await?,
+            3 => check_transaction_status().await?,
+            4 => show_history().await?,
+            5 => wallet_menu().await?,
+            6 => token_menu().await?,
+            7 => manage_contacts().await?,
+            8 => show_config_menu().await?,
+            9 => system_menu().await?,
+            11 => {
                 println!("\n👋 Goodbye!");
                 break;
             }

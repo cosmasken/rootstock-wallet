@@ -3942,6 +3942,7 @@ dependencies = [
  "eth-keystore",
  "ethers",
  "ethers-providers",
+ "ethers-signers",
  "generic-array",
  "hdpath",
  "hex",
