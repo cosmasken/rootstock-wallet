@@ -22,3 +22,5 @@ here
 exported.key
 re.json
 phonebook.json
+
+*.csv
