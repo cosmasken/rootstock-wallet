@@ -48,6 +48,7 @@ typenum = "1.18.0"
 generic-array = "0.14.7"
 dialoguer = { version = "0.11", features = ["fuzzy-select"] }
 console = "0.15"
+clearscreen = "2.0.0"
 tabled = { version = "0.11", features = ["derive"] }
 rustyline = { version = "11.0", features = ["with-file-history"] }
 inquire = "0.7.5"

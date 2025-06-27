@@ -17,23 +17,39 @@ pub use self::{
 
 /// Starts the interactive CLI interface
 pub async fn start() -> Result<()> {
-    println!("\n{}", style("🌐 Rootstock Wallet").bold().blue());
-    println!("{}", "=".repeat(30));
+    // Clear the screen for a fresh start
+    clearscreen::clear().ok();
+    
+    // Display welcome banner
+    println!("\n{}", style("🌐 Rootstock Wallet").bold().blue().underlined());
+    println!("{}", style("Your Gateway to the Rootstock Blockchain").dim());
+    println!("{}\n", "-".repeat(40));
+    
+    // Display quick status (you can enhance this with actual wallet status)
+    println!("  {}", style("🟢 Online").green());
+    println!("  {}", style("🔗 Mainnet").cyan());
+    println!("  {}\n", style("💼 1 wallet loaded").dim());
 
     loop {
         let options = vec![
-            String::from("💰 Check Balance"),
-            String::from("💸 Send Funds"),
-            String::from("📜 Transaction History"),
-            String::from("🔑 Wallet Management"),
-            String::from("🪙 Token Management"),
-            String::from("📇 Contact Management"),
-            String::from("❌ Exit"),
+            format!("{}  Check Balance", style("💰").bold().green()),
+            format!("{}  Send Funds", style("💸").bold().yellow()),
+            format!("{}  Transaction History", style("📜").bold().cyan()),
+            format!("{}  Wallet Management", style("🔑").bold().blue()),
+            format!("{}  Token Management", style("🪙").bold().magenta()),
+            format!("{}  Contact Management", style("📇").bold().cyan()),
+            format!("{}  Exit", style("🚪").bold().red()),
         ];
 
-        let selection = inquire::Select::new("What would you like to do?", options)
-            .prompt()
-            .map_err(|_| anyhow::anyhow!("Failed to get selection"))?;
+        let selection = inquire::Select::new(
+            "\nWhat would you like to do? (Use ↑↓ arrows to navigate, Enter to select)",
+            options,
+        )
+        .with_page_size(10)
+        .with_help_message("Press 'q' to quit at any time")
+        .with_formatter(&|i| i.value.to_string())
+        .prompt()
+        .map_err(|_| anyhow::anyhow!("Operation cancelled"))?;
 
         match selection.as_str() {
             "💰 Check Balance" => show_balance().await?,
