@@ -1,6 +1,7 @@
 use anyhow::Result;
 use console::style;
 use dialoguer::{theme::ColorfulTheme, Select};
+use inquire::Text;
 use std::io::{self, Write};
 
 use crate::config::{Config, ConfigManager};
@@ -64,12 +65,19 @@ pub async fn ensure_configured() -> Result<()> {
         println!("\n{}", style("🎉 Great! Now let's create your first wallet.").bold());
         println!("\n{}", style("A wallet is like your personal bank account for cryptocurrencies.").dim());
         
-        // Create a default wallet with a friendly name
-        let default_wallet_name = "My Wallet";
-        println!("\nCreating your wallet: {}", style(default_wallet_name).bold());
+        // Prompt user for wallet name
+        println!("\n{}", style("Let's create your first wallet").bold().blue());
+        println!("{}", style("Please choose a name for your wallet (e.g., 'Savings', 'Trading', 'Personal')").dim());
+        
+        let wallet_name = inquire::Text::new("\nWallet name:")
+            .with_help_message("Enter a name to identify this wallet")
+            .with_default("My Wallet")
+            .prompt()?;
+            
+        println!("\nCreating your wallet: {}", style(&wallet_name).bold());
         
         // Use the wallet module to create a new wallet
-        if let Err(e) = crate::interactive::create_wallet_with_name(default_wallet_name).await {
+        if let Err(e) = crate::interactive::create_wallet_with_name(&wallet_name).await {
             eprintln!("Failed to create default wallet: {}", e);
             println!("\n{}", style("You can create a wallet later from the main menu.").yellow());
         } else {
