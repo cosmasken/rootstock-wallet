@@ -1,268 +1,160 @@
 # Rootstock Wallet CLI
 
-A lightweight Rust-based CLI application for managing Rootstock wallets, transferring RBTC and tokens, and interacting with the Rootstock blockchain. Designed for developers building on the Rootstock ecosystem.
+> A secure, feature-rich Rust-based CLI wallet for the Rootstock blockchain
 
-## Features
+[![Build Status](https://img.shields.io/github/actions/workflow/status/cosmasken/rootstock-wallet/rust.yml?branch=main)](https://github.com/cosmasken/rootstock-wallet/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/cosmasken/rootstock-wallet/blob/main/LICENSE)
+[![Made with Rust](https://img.shields.io/badge/Made%20with-Rust-orange)](https://www.rust-lang.org/)
 
-- **Wallet Management**:
-  - Generate new wallets
-  - Import/export wallets
-  - Manage multiple wallets
-  - Switch between wallets
+## 🚀 Features
 
-- **Transactions**:
-  - Send RBTC to any address
-  - Transfer ERC-20 tokens
-  - View transaction history
-  - Check balances (RBTC and tokens)
+### Wallet Management
 
-- **Token Management**:
-  - Add custom tokens
-  - List supported tokens
-  - Remove tokens
-  - View token balances
+- Create new wallets with custom names
+- Import existing wallets using private keys
+- Switch between multiple wallets
+- Backup and restore wallet data
+- List all available wallets with balances
+- Rename or delete wallets
 
-- **Contacts**:
-  - Save frequently used addresses with names
-  - List all saved contacts
-  - Remove contacts
+### Asset Management
 
-- **Network**:
-  - Automatic network detection from RPC URL
-  - Support for both mainnet and testnet
-  - Set custom RPC API key
+- Check RBTC balance for any address
+- View token balances (supports all ERC-20 tokens)
+- Add custom tokens to your wallet
+- Remove unwanted tokens from your token list
+- View detailed token information
 
-## Installation
+### Transactions
 
-Clone the repository and build the project using Cargo:
+- Send RBTC to any address
+- Transfer ERC-20 tokens
+- View transaction history with filtering options
+- Check transaction status
+- Bulk transfer functionality
 
-```bash
-cd rootstock-wallet
-cargo build --release
-```
+### Contact Management
 
-## Usage
+- Save frequently used addresses as contacts
+- Add notes and tags to contacts
+- Search through your contacts
+- Update or remove existing contacts
+- Import/export contact lists
 
-### Interactive Mode (Default)
+### Network & Configuration
 
-By default, the wallet runs in interactive mode with a text-based interface. Simply run:
+- Switch between Mainnet and Testnet
+- Configure custom RPC endpoints
+- Manage API keys for services
+- View network status and connection details
+
+## 🛠️ Installation
+
+### Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (latest stable version)
+- [Git](https://git-scm.com/)
+- [Cargo](https://doc.rust-lang.org/cargo/) (comes with Rust)
+
+### Building from Source
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/cosmasken/rootstock-wallet.git
+   cd rootstock-wallet
+   ```
+
+2. Build the project:
+
+   ```bash
+   cargo build --release
+   ```
+
+3. Run the application:
+
+   ```bash
+   # For development
+   cargo run
+   
+   # For production
+   ./target/release/rootstock-wallet
+   ```
+
+## 🎮 Usage
+
+### Interactive Mode (Recommended)
+
+The wallet features an intuitive interactive interface. Simply run:
 
 ```bash
 cargo run
 ```
 
-You'll see a menu like this:
-```
-Rootstock Wallet CLI
+## ⚙️ Configuration
 
-1. Wallet Management
-2. Transfer RBTC/Tokens
-3. Check Balance
-4. View Transaction History
-5. Manage Tokens
-6. Manage Contacts
-7. Network Settings
-8. Exit
+The wallet automatically handles configuration through an interactive setup wizard when you first run it. You can also manage your configuration at any time using the interactive menu:
 
-Select an option:
-```
+1. **Initial Setup**:
+   - The first time you run the wallet, it will guide you through setting up your preferred network and API keys.
 
-### Non-Interactive Mode
+2. **View Current Configuration**:
 
-For scripting or automation, you can use the following commands directly:
-
-#### Wallet Management
-
-```bash
-# Create a new wallet
-cargo run -- wallet new
-
-# List all wallets
-cargo run -- wallet list
-
-# Switch to a different wallet
-cargo run -- wallet switch <WALLET_ADDRESS>
-
-# Remove a wallet
-cargo run -- wallet remove <WALLET_ADDRESS>
-```
-
-#### Balance and Transactions
-
-```bash
-# Check RBTC balance
-cargo run -- balance --address <ADDRESS>
-
-# Transfer RBTC
-cargo run -- transfer --recipient <ADDRESS> --amount <AMOUNT>
-
-# Transfer tokens (RIF, USDRIF, etc.)
-cargo run -- transfer --recipient <ADDRESS> --amount <AMOUNT> --token <TOKEN_SYMBOL>
-
-# View transaction history
-cargo run -- history --address <ADDRESS> --limit <NUMBER>
-```
-
-#### Token Management
-
-```bash
-# Add a new token
-cargo run -- token-add --symbol <SYMBOL> --address <ADDRESS> --decimals <DECIMALS>
-
-# List all tokens
-cargo run -- token-list
-
-# Remove a token
-cargo run -- token-remove --symbol <SYMBOL>
-```
-
-#### Contact Management
-
-```bash
-# Add a contact
-cargo run -- contacts add --name <NAME> --address <ADDRESS>
-
-# List all contacts
-cargo run -- contacts list
-
-# Remove a contact
-cargo run -- contacts remove --name <NAME>
-```
-
-#### Network Configuration
-
-```bash
-# Set RPC API key
-cargo run -- set-api-key <API_KEY>
-
-# Force non-interactive mode (useful for scripts)
-cargo run -- --no-interactive <command> [args...]
-```
-
-### Examples
-
-1. **Interactive Mode** (default):
    ```bash
-   cargo run
-   # Then follow the on-screen menus
+   cargo run -- config show
    ```
 
-2. **Quick Balance Check** (non-interactive):
-   ```bash
-   cargo run -- balance --address 0x1234...
-   ```
 
-3. **Send RBTC** (non-interactive):
-   ```bash
-   cargo run -- transfer --recipient 0x1234... --amount 0.1
-   ```
-
-4. **Send Tokens** (non-interactive):
-   ```bash
-   cargo run -- transfer --recipient 0x1234... --amount 10 --token RIF
-   ```
-
-## Examples
-
-1. **Create a new wallet**:
-   ```bash
-   cargo run -- wallet new
-   ```
-
-2. **Check RBTC balance**:
-   ```bash
-   cargo run -- balance --address 0x1234...
-   ```
-
-3. **Send 0.1 RBTC**:
-   ```bash
-   cargo run -- transfer --recipient 0x1234... --amount 0.1
-   ```
-
-4. **Send 10 RIF tokens**:
-   ```bash
-   cargo run -- transfer --recipient 0x1234... --amount 10 --token RIF
-   ```
-
-5. **View last 5 transactions**:
-   ```bash
-   cargo run -- history --address 0x1234... --limit 5
-   ```
-
-## Troubleshooting
+## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Transaction Failures**:
-   - Ensure you have enough RBTC for gas fees
-   - Check that the recipient address is valid
-   - Verify you're on the correct network (mainnet/testnet)
+#### Transaction Failures
 
-2. **Connection Issues**:
-   - Check your internet connection
-   - Verify your RPC API key is set correctly
-   - Ensure the RPC endpoint is accessible
+- Ensure you have enough RBTC for gas fees
+- Verify recipient address format (0x...)
+- Check network compatibility (mainnet/testnet)
 
-3. **Wallet Not Found**:
-   - Make sure you've created a wallet first
-   - Check that you're using the correct wallet address
+#### Connection Issues
 
-   - **Show Contact Details**:
+- Verify your internet connection
 
-   ```bash
-   cargo run show-contact --name <NAME>
-   ```
+#### Wallet Issues
 
-   Example:
+- Confirm wallet file exists at `~/.local/share/rootstock-wallet/`
+- Check file permissions if access is denied
+- Ensure you're using the correct network (mainnet/testnet)
 
-   ![Show Contact](screenshots/show-contact.png)
+## 🤝 Contributing
 
-   - **Transfer to a Contact**:
-   You can use a contact's name instead of an address in transfer commands:
+We welcome contributions from the community! Here's how you can help:
 
-   ```bash
-   cargo run transfer --recipient <CONTACT_NAME> --amount <AMOUNT>
-   ```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-   Example:
+Please read our [Contributing Guidelines](CONTRIBUTING.md) for more details on our development process and code of conduct.
 
-   ```bash
-   cargo run transfer --recipient alice --amount 0.01
-   ```
+## 📄 License
 
-## Adding Tokens
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-Add new tokens to the registry by adding them to the `tokens.json` file in the `src` directory.
+## 🙏 Acknowledgments
 
-```bash
-   cargo run add-token --symbol ARCAD --address 0x0c917Ccc38203734aC963152059439cd33EA57fF --decimals 18 --network testnet
-   ```
+- Built as part of the Rootstock Hacktivator program
+- Special thanks to the Rootstock team for their support
+- Inspired by the vibrant Rootstock community
 
-## Configuration
+## 📚 Resources
 
-The application connects to the Rootstock network using the public JSON-RPC endpoint:
+- [Rootstock Documentation](https://developers.rsk.co/)
+- [RSK Smart Contracts](https://developers.rsk.co/develop/)
+- [RSK Developer Portal](https://developers.rsk.co/)
+- [GitHub Repository](https://github.com/cosmasken/rootstock-wallet)
+- [Issue Tracker](https://github.com/cosmasken/rootstock-wallet/issues)
 
-- **Mainnet**: `https://public-node.rsk.co`
-- **Testnet**: `https://public-node.testnet.rsk.co`
+---
 
-
-
-Ensure these variables are properly set in your environment file before running the application.
-
-You can modify the provider URL in the env files file if needed.
-
-## Contribution
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Submit a pull request with a detailed description of your changes.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-This project was developed as part of the Rootstock Hacktivator program to contribute to the Rootstock ecosystem. Special thanks to the Rootstock team for their support and resources.
+Made with ❤️ for the Rootstock ecosystem

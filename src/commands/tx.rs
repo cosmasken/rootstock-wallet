@@ -1,16 +1,12 @@
 use anyhow::Context;
-use async_trait::async_trait;
 use clap::Parser;
 use console::style;
-use ethers::types::H256;
 use serde_json::Value;
 
 use crate::{
-    commands::traits::ApiKeyCommand,
-    utils::{
-        api::{ApiKeys, Network},
-        constants,
-    },
+    config::ConfigManager,
+    types::network::Network,
+    api::ApiProvider,
 };
 
 /// Command to check transaction status
@@ -31,62 +27,45 @@ pub struct TxCommand {
 
 impl TxCommand {
     pub async fn execute(&self) -> anyhow::Result<()> {
-        let api_keys = if let Some(key) = &self.api_key {
-            let mut keys = ApiKeys::default();
-            if self.testnet {
-                keys.alchemy_testnet = Some(key.clone());
-            } else {
-                keys.alchemy_mainnet = Some(key.clone());
-            }
-            keys
+        let client = reqwest::Client::new();
+        let network = if self.testnet {
+            Network::RootStockTestnet
         } else {
-            ApiKeys::load()?
+            Network::RootStockMainnet
         };
 
-        self.execute_with_api_key(&api_keys).await
-    }
-}
-
-#[async_trait]
-impl ApiKeyCommand for TxCommand {
-    fn network(&self) -> Network {
-        if self.testnet {
-            Network::Testnet
+        // Load config
+        let config = ConfigManager::new()?.load()?;
+        
+        // Get API key from config
+        let api_key = if let Some(key) = &self.api_key {
+            key.clone()
         } else {
-            Network::Mainnet
-        }
-    }
+            config.get_api_key(&ApiProvider::Alchemy)
+                .ok_or_else(|| anyhow::anyhow!("No API key found for {}. Please set one up using 'wallet config'.", network))?
+                .to_string()
+        };
 
-    async fn execute_with_api_key(&self, api_keys: &ApiKeys) -> anyhow::Result<()> {
-        let client = ApiKeys::get_http_client();
-        let network = self.network();
-        let url = api_keys.get_alchemy_url(network)?;
+        let base_url = if self.testnet {
+            "https://rootstock-testnet.g.alchemy.com/v2/"
+        } else {
+            "https://rootstock-mainnet.g.alchemy.com/v2/"
+        };
 
-        println!(
-            "\n{}",
-            style(format!("🔍 Checking transaction status on {}...", network))
-                .bold()
-                .cyan()
-        );
-        println!("{}", "=".repeat(60));
+        let url = format!("{}{}", base_url, api_key);
 
-        // Get transaction receipt
-        let receipt = self
-            .get_transaction_receipt(&client, &url, &self.tx_hash)
-            .await?;
-
-        // Get transaction details
-        let tx_details = self
-            .get_transaction_details(&client, &url, &self.tx_hash)
-            .await?;
-
+        // Get receipt first as it contains the status
+        let receipt = self.get_transaction_receipt(&client, &url, &self.tx_hash).await?;
+        
+        // Get transaction details for additional info
+        let tx_details = self.get_transaction_details(&client, &url, &self.tx_hash).await?;
+        
+        // Display the information
         self.display_transaction_info(&tx_details, &receipt)?;
-
+        
         Ok(())
     }
-}
 
-impl TxCommand {
     async fn get_transaction_receipt(
         &self,
         client: &reqwest::Client,
@@ -153,97 +132,101 @@ impl TxCommand {
             .context("Invalid transaction details response")
     }
 
-    fn display_transaction_info(&self, tx_details: &Value, receipt: &Value) -> anyhow::Result<()> {
-        println!("\n{}", style("📄 Transaction Details").bold().cyan());
-        println!(
-            "{} {}",
-            "  Hash:".dim(),
-            style(tx_details["hash"].as_str().unwrap_or("N/A")).white()
-        );
-        println!(
-            "{} {}",
-            "  Block:".dim(),
-            style(tx_details["blockNumber"].as_str().unwrap_or("N/A")).white()
-        );
-        println!(
-            "{} {}",
-            "  From:".dim(),
-            style(tx_details["from"].as_str().unwrap_or("N/A")).white()
-        );
-        println!(
-            "{} {}",
-            "  To:".dim(),
-            style(
-                tx_details["to"]
-                    .as_str()
-                    .unwrap_or("Contract Creation")
-            )
-            .white()
-        );
-        println!(
-            "{} {} RBTC",
-            "  Value:".dim(),
-            style(hex_to_rbtc(tx_details["value"].as_str().unwrap_or("0x0"))?).white()
-        );
-        println!(
-            "{} {}",
-            "  Gas Price:".dim(),
-            style(hex_to_gwei(tx_details["gasPrice"].as_str().unwrap_or("0x0"))?).white()
-        );
-        println!(
-            "{} {}",
-            "  Gas Used:".dim(),
-            style(hex_to_u64(&receipt["gasUsed"].to_string())?).white()
-        );
-        println!(
-            "{} {}",
-            "  Status:".dim(),
-            if receipt["status"].as_str() == Some("0x1") {
-                style("✅ Success").green()
-            } else {
-                style("❌ Failed").red()
-            }
-        );
+    fn display_transaction_info(
+        &self,
+        tx_details: &Value,
+        receipt: &Value,
+    ) -> anyhow::Result<()> {
+        // Extract values with defaults
+        let block_number = receipt["blockNumber"]
+            .as_str()
+            .unwrap_or("pending")
+            .to_string();
 
-        if let Some(events) = receipt["logs"].as_array() {
-            if !events.is_empty() {
-                println!("\n{}", style("📝 Events:").bold().cyan());
-                for event in events {
-                    println!(
-                        "  - {}",
-                        event["topics"][0].as_str().unwrap_or("Unknown")
-                    );
+        let from = tx_details["from"]
+            .as_str()
+            .unwrap_or("unknown")
+            .to_string();
+
+        let to = tx_details["to"]
+            .as_str()
+            .unwrap_or("contract creation")
+            .to_string();
+
+        let value = tx_details["value"]
+            .as_str()
+            .and_then(|v| v.parse::<f64>().ok())
+            .map(|v| format!("{:.8} RBTC", v / 1e18))
+            .unwrap_or_else(|| "0".to_string());
+
+        let gas_price = tx_details["gasPrice"]
+            .as_str()
+            .and_then(|v| v.parse::<f64>().ok())
+            .map(|v| format!("{:.0} Gwei", v / 1e9))
+            .unwrap_or_else(|| "N/A".to_string());
+
+        let gas_used = receipt["gasUsed"]
+            .as_str()
+            .and_then(|v| v.parse::<u64>().ok())
+            .map(|v| v.to_string())
+            .unwrap_or_else(|| "N/A".to_string());
+
+        let status = match receipt["status"].as_str() {
+            Some("0x1") | Some("0x01") => format!("{}", style("✓ Success").green().bold()),
+            Some("0x0") | Some("0x00") => format!("{}", style("✗ Failed").red().bold()),
+            _ => "⏳ Pending".to_string(),
+        };
+
+        // Display the information
+        println!("\n{}\n", style("Transaction Details").bold().underlined());
+        println!("{}", "-".repeat(60));
+        
+        println!("{}", style(format!("  Hash: {}", self.tx_hash)).dim());
+        println!("{}", style(format!("  Block: {}", block_number)).dim());
+        println!("{}", style(format!("  From: {}", from)).dim());
+        println!("{}", style(format!("  To: {}", to)).dim());
+        println!("\n{}", style("Transaction Data").bold().underlined());
+        println!("{}", "-".repeat(60));
+        println!("{}", style(format!("  Value: {}", value)).dim());
+        println!("{}", style(format!("  Gas Price: {}", gas_price)).dim());
+        println!("{}", style(format!("  Gas Used: {}", gas_used)).dim());
+        println!("\n{}", style(format!("  Status: {}", status)).dim());
+        
+        // If there's a contract address, show it
+        if let Some(contract_addr) = receipt["contractAddress"].as_str() {
+            if !contract_addr.is_empty() {
+                println!("\n{}", style("Contract Creation").bold().underlined());
+                println!("{}", "-".repeat(60));
+                println!("{}", style(format!("  Contract: {}", contract_addr)).dim());
+            }
+        }
+
+        // Show logs if any
+        if let Some(logs) = receipt["logs"].as_array() {
+            if !logs.is_empty() {
+                println!("\n{}", style(format!("  Logs ({}):", logs.len())).bold().underlined());
+                for log in logs {
+                    if let Some(topic) = log["topics"].as_array().and_then(|t| t[0].as_str()) {
+                        println!("  - {}", topic);
+                    }
                 }
             }
         }
 
+        // Add explorer URL
         let explorer_url = if self.testnet {
-            format!(
-                "https://explorer.testnet.rootstock.io/tx/{}",
-                self.tx_hash.trim_start_matches("0x")
-            )
+            format!("https://explorer.testnet.rsk.co/tx/{}", self.tx_hash.trim_start_matches("0x"))
         } else {
-            format!(
-                "https://explorer.rsk.co/tx/{}",
-                self.tx_hash.trim_start_matches("0x")
-            )
+            format!("https://explorer.rsk.co/tx/{}", self.tx_hash.trim_start_matches("0x"))
         };
+        
+        println!("\n{} {}",
+            style("ℹ️  Tip:").blue().bold(),
+            style("Use a block explorer for more detailed information").dim()
+        );
+        
         println!("\n🔗 View on Explorer: {}", style(explorer_url).blue().underlined());
 
         Ok(())
     }
-}
-
-fn hex_to_rbtc(hex: &str) -> anyhow::Result<f64> {
-    let wei = u128::from_str_radix(hex.trim_start_matches("0x"), 16)?;
-    Ok(wei as f64 / 1e18)
-}
-
-fn hex_to_gwei(hex: &str) -> anyhow::Result<f64> {
-    let wei = u128::from_str_radix(hex.trim_start_matches("0x"), 16)?;
-    Ok(wei as f64 / 1e9)
-}
-
-fn hex_to_u64(hex: &str) -> anyhow::Result<u64> {
-    Ok(u64::from_str_radix(hex.trim_start_matches("0x"), 16)?)
 }

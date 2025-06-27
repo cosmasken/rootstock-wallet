@@ -10,7 +10,7 @@ pub struct Config {
     pub wallet: WalletConfig,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,Default)]
 pub struct WalletConfig {
     pub current_wallet_address: Option<String>,
     pub private_key: Option<String>,

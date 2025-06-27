@@ -2,7 +2,13 @@ mod config;
 mod setup;
 mod doctor;
 
-pub use config::{Config, ConfigManager, Network};
+// Re-export types from the config module
+pub use config::{Config, ConfigManager};
+
+// Re-export Network from the types module
+pub use crate::types::network::Network;
+
+// Re-export setup and doctor functions
 pub use setup::run_setup_wizard;
 pub use doctor::run_doctor;
 

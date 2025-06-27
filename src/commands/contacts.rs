@@ -10,7 +10,7 @@ use crate::utils::table::TableBuilder;
 #[derive(Parser, Debug)]
 pub struct ContactsCommand {
     #[command(subcommand)]
-   pub action: ContactsAction,
+    pub action: ContactsAction,
 }
 
 #[derive(Parser, Debug)]

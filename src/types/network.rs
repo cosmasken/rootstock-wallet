@@ -13,14 +13,31 @@ pub struct NetworkConfig {
     pub explorer_url: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use std::fmt;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Network {
     Mainnet,
     Testnet,
+    Regtest,
     AlchemyMainnet,
     AlchemyTestnet,
     RootStockMainnet,
     RootStockTestnet,
+}
+
+impl fmt::Display for Network {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Network::Mainnet => write!(f, "Mainnet"),
+            Network::Testnet => write!(f, "Testnet"),
+            Network::Regtest => write!(f, "Regtest"),
+            Network::AlchemyMainnet => write!(f, "Alchemy Mainnet"),
+            Network::AlchemyTestnet => write!(f, "Alchemy Testnet"),
+            Network::RootStockMainnet => write!(f, "Rootstock Mainnet"),
+            Network::RootStockTestnet => write!(f, "Rootstock Testnet"),
+        }
+    }
 }
 
 impl Network {
@@ -35,6 +52,11 @@ impl Network {
                 name: "RSK Testnet".to_string(),
                 rpc_url: "https://public-node.testnet.rsk.co".to_string(),
                 explorer_url: "https://explorer.testnet.rsk.co".to_string(),
+            },
+            Network::Regtest => NetworkConfig {
+                name: "RSK Regtest".to_string(),
+                rpc_url: "http://localhost:4444".to_string(),
+                explorer_url: "".to_string(),
             },
             Network::AlchemyMainnet => NetworkConfig {
                 name: "RSK Mainnet".to_string(),
@@ -62,6 +84,7 @@ impl Network {
         match s.to_lowercase().as_str() {
             "mainnet" => Some(Network::Mainnet),
             "testnet" => Some(Network::Testnet),
+            "regtest" => Some(Network::Regtest),
             "alchemy-mainnet" => Some(Network::AlchemyMainnet),
             "alchemy-testnet" => Some(Network::AlchemyTestnet),
             "rootstock-mainnet" => Some(Network::RootStockMainnet),

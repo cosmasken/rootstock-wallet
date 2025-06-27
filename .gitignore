@@ -22,3 +22,8 @@ here
 exported.key
 re.json
 phonebook.json
+
+*.csv
+
+record-demo.sh
+/tui
