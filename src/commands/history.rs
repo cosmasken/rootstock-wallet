@@ -81,7 +81,7 @@ impl HistoryCommand {
         // let config = Config::load()?;
         let wallet_file = constants::wallet_file_path();
         let mut stored_api_key: Option<String> = None;
-        
+
         // If export is requested, ensure we have a filename
         if let Some(filename) = &self.export_csv {
             if !filename.ends_with(".csv") {
@@ -199,7 +199,7 @@ impl HistoryCommand {
         // 8. Export to CSV if requested
         if let Some(filename) = &self.export_csv {
             let mut wtr = csv::Writer::from_path(filename)?;
-            
+
             // Write header
             wtr.write_record(&[
                 "Transaction Hash",
@@ -211,19 +211,20 @@ impl HistoryCommand {
                 "Gas Price (wei)",
                 "Gas Used",
                 "Status",
-                "Block Number"
+                "Block Number",
             ])?;
-            
+
             // Write transactions
             for tx in &txs {
                 let record = tx.to_csv_record();
                 wtr.write_record(&record)?;
             }
-            
+
             wtr.flush()?;
-            println!("\n{} Exported {} transactions to {}", 
-                style("✓").green().bold(), 
-                txs.len(), 
+            println!(
+                "\n{} Exported {} transactions to {}",
+                style("✓").green().bold(),
+                txs.len(),
                 style(filename).cyan()
             );
             return Ok(());
@@ -299,5 +300,4 @@ impl HistoryCommand {
         table.print();
         Ok(())
     }
-    
 }
