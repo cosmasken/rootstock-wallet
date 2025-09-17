@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
-use crate::security::{SecureString, SecureApiKey};
 use crate::security::redacted_debug::RedactedDebug;
+use crate::security::{SecureApiKey, SecureString};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApiProvider {

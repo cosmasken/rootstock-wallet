@@ -47,10 +47,14 @@ pub async fn show_history() -> Result<()> {
         outgoing: false,
         export_csv: None,
         api_key: match network_selection {
-            "mainnet" => config.alchemy_mainnet_key.as_ref()
+            "mainnet" => config
+                .alchemy_mainnet_key
+                .as_ref()
                 .and_then(|k| k.expose().ok())
                 .map(|k| k.to_string()),
-            "testnet" => config.alchemy_testnet_key.as_ref()
+            "testnet" => config
+                .alchemy_testnet_key
+                .as_ref()
                 .and_then(|k| k.expose().ok())
                 .map(|k| k.to_string()),
             _ => None,
@@ -112,8 +116,12 @@ pub async fn show_history() -> Result<()> {
                     // Save the API key using ConfigManager
                     let mut config = config_manager.load()?;
                     match network_selection {
-                        "mainnet" => config.alchemy_mainnet_key = Some(api_key.trim().to_string().into()),
-                        "testnet" => config.alchemy_testnet_key = Some(api_key.trim().to_string().into()),
+                        "mainnet" => {
+                            config.alchemy_mainnet_key = Some(api_key.trim().to_string().into())
+                        }
+                        "testnet" => {
+                            config.alchemy_testnet_key = Some(api_key.trim().to_string().into())
+                        }
                         _ => {}
                     }
                     config_manager.save(&config)?;

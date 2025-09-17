@@ -1,6 +1,6 @@
+use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::fmt;
 
 use anyhow::{Context, Result};
 use dirs;
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 // Re-export the API types for easier access
 pub use crate::api::{ApiConfig, ApiKey, ApiProvider};
-use crate::security::{SecureString, SecureApiKey};
+use crate::security::{SecureApiKey, SecureString};
 use crate::types::network::Network;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -29,8 +29,14 @@ impl fmt::Debug for Config {
         f.debug_struct("Config")
             .field("default_network", &self.default_network)
             .field("api", &self.api)
-            .field("alchemy_mainnet_key", &self.alchemy_mainnet_key.as_ref().map(|_| "[REDACTED]"))
-            .field("alchemy_testnet_key", &self.alchemy_testnet_key.as_ref().map(|_| "[REDACTED]"))
+            .field(
+                "alchemy_mainnet_key",
+                &self.alchemy_mainnet_key.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field(
+                "alchemy_testnet_key",
+                &self.alchemy_testnet_key.as_ref().map(|_| "[REDACTED]"),
+            )
             .field("default_wallet", &self.default_wallet)
             .finish()
     }
@@ -59,16 +65,16 @@ impl Config {
 
         // Fall back to legacy keys for backward compatibility (Alchemy only)
         match (provider, network_str) {
-            (ApiProvider::Alchemy, "mainnet") => {
-                self.alchemy_mainnet_key.as_ref()
-                    .and_then(|k| k.expose().ok())
-                    .map(|k| SecureApiKey::new(k.to_string()))
-            },
-            (ApiProvider::Alchemy, "testnet") => {
-                self.alchemy_testnet_key.as_ref()
-                    .and_then(|k| k.expose().ok())
-                    .map(|k| SecureApiKey::new(k.to_string()))
-            },
+            (ApiProvider::Alchemy, "mainnet") => self
+                .alchemy_mainnet_key
+                .as_ref()
+                .and_then(|k| k.expose().ok())
+                .map(|k| SecureApiKey::new(k.to_string())),
+            (ApiProvider::Alchemy, "testnet") => self
+                .alchemy_testnet_key
+                .as_ref()
+                .and_then(|k| k.expose().ok())
+                .map(|k| SecureApiKey::new(k.to_string())),
             _ => None,
         }
     }
@@ -98,17 +104,26 @@ impl Config {
         let display_name = name.as_deref().unwrap_or("unnamed");
 
         // Create and add the API key using secure storage
-        let api_key = ApiKey::new(key.clone(), network.to_string(), provider.clone(), name.clone());
+        let api_key = ApiKey::new(
+            key.clone(),
+            network.to_string(),
+            provider.clone(),
+            name.clone(),
+        );
 
         // Remove any existing key for this provider/network combination
-        self.api.keys.retain(|k| !(k.provider == provider && k.network == network));
+        self.api
+            .keys
+            .retain(|k| !(k.provider == provider && k.network == network));
 
         // Add the new API key
         self.api.keys.push(api_key);
 
         // Also update the legacy fields for backward compatibility
         match (provider.clone(), network) {
-            (ApiProvider::Alchemy, "mainnet") => self.alchemy_mainnet_key = Some(SecureString::new(key)),
+            (ApiProvider::Alchemy, "mainnet") => {
+                self.alchemy_mainnet_key = Some(SecureString::new(key))
+            }
             (ApiProvider::Alchemy, _) => self.alchemy_testnet_key = Some(SecureString::new(key)),
             _ => {}
         }
