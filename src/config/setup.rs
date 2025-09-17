@@ -105,12 +105,12 @@ fn setup_api_keys(config: &mut Config, network: Network) -> Result<()> {
 
         // Add RSK RPC API key to config
         use crate::api::{ApiKey, ApiProvider};
-        let rsk_api_key = ApiKey {
-            key: rsk_key,
-            network: key_type.to_string(),
-            provider: ApiProvider::RskRpc,
-            name: Some("RSK RPC".to_string()),
-        };
+        let rsk_api_key = ApiKey::new(
+            rsk_key,
+            key_type.to_string(),
+            ApiProvider::RskRpc,
+            Some("RSK RPC".to_string()),
+        );
         config.api.keys.push(rsk_api_key);
     }
 
@@ -139,20 +139,20 @@ fn setup_api_keys(config: &mut Config, network: Network) -> Result<()> {
 
         // Add Alchemy API key to config
         use crate::api::{ApiKey, ApiProvider};
-        let alchemy_api_key = ApiKey {
-            key: alchemy_key.clone(),
-            network: key_type.to_string(),
-            provider: ApiProvider::Alchemy,
-            name: Some("Alchemy".to_string()),
-        };
+        let alchemy_api_key = ApiKey::new(
+            alchemy_key.clone(),
+            key_type.to_string(),
+            ApiProvider::Alchemy,
+            Some("Alchemy".to_string()),
+        );
         config.api.keys.push(alchemy_api_key);
 
         // Also set legacy fields for backward compatibility
         match network {
             Network::Mainnet | Network::AlchemyMainnet | Network::RootStockMainnet => {
-                config.alchemy_mainnet_key = Some(alchemy_key)
+                config.alchemy_mainnet_key = Some(alchemy_key.into())
             }
-            _ => config.alchemy_testnet_key = Some(alchemy_key),
+            _ => config.alchemy_testnet_key = Some(alchemy_key.into()),
         }
     }
 

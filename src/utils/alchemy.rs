@@ -1,11 +1,11 @@
 // src/utils/alchemy.rs
-use crate::security::SecureHttpClient;
+use crate::security::{SecureApiKey, SecureHttpClient};
 use anyhow::{Result, anyhow};
 use serde_json::Value;
 
 pub struct AlchemyClient {
     client: SecureHttpClient,
-    api_key: String,
+    api_key: SecureApiKey,
     is_testnet: bool,
 }
 
@@ -13,21 +13,25 @@ impl AlchemyClient {
     pub fn new(api_key: String, is_testnet: bool) -> Result<Self> {
         Ok(Self {
             client: SecureHttpClient::new()?,
-            api_key,
+            api_key: SecureApiKey::new(api_key),
             is_testnet,
         })
     }
 
-    pub fn get_base_url(&self) -> String {
+    pub fn get_base_url(&self) -> Result<String> {
         let network = if self.is_testnet {
             "testnet"
         } else {
             "mainnet"
         };
-        format!(
+        let api_key = self
+            .api_key
+            .expose_raw()
+            .map_err(|_| anyhow!("Failed to access API key"))?;
+        Ok(format!(
             "https://rootstock-{}.g.alchemy.com/v2/{}",
-            network, self.api_key
-        )
+            network, api_key
+        ))
     }
 
     pub async fn get_asset_transfers(
@@ -37,7 +41,7 @@ impl AlchemyClient {
         from_block: Option<&str>,
         to_block: Option<&str>,
     ) -> Result<Value> {
-        let url = self.get_base_url();
+        let url = self.get_base_url()?;
 
         let params = serde_json::json!([{
             "fromBlock": from_block.unwrap_or("0x0"),
@@ -71,7 +75,7 @@ impl AlchemyClient {
     }
 
     pub async fn get_block_by_number(&self, block_number: u64) -> Result<Option<Value>> {
-        let url = self.get_base_url();
+        let url = self.get_base_url()?;
         let block_number_hex = format!("0x{:x}", block_number);
 
         let request_body = serde_json::json!({

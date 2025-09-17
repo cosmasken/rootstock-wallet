@@ -3,7 +3,9 @@ use clap::Parser;
 use console::style;
 use serde_json::Value;
 
-use crate::{api::ApiProvider, config::ConfigManager, types::network::Network};
+use crate::{
+    api::ApiProvider, config::ConfigManager, security::SecureApiKey, types::network::Network,
+};
 
 /// Command to check transaction status
 #[derive(Debug, Parser)]
@@ -35,9 +37,9 @@ impl TxCommand {
 
         // Get API key from config
         let api_key = if let Some(key) = &self.api_key {
-            key.clone()
+            SecureApiKey::new(key.clone())
         } else {
-            config
+            let key_str = config
                 .get_api_key(&ApiProvider::Alchemy)
                 .ok_or_else(|| {
                     anyhow::anyhow!(
@@ -45,7 +47,8 @@ impl TxCommand {
                         network
                     )
                 })?
-                .to_string()
+                .to_string();
+            SecureApiKey::new(key_str)
         };
 
         let base_url = if self.testnet {
@@ -54,16 +57,16 @@ impl TxCommand {
             "https://rootstock-mainnet.g.alchemy.com/v2/"
         };
 
-        let url = format!("{}{}", base_url, api_key);
+        let url = base_url.to_string();
 
         // Get receipt first as it contains the status
         let receipt = self
-            .get_transaction_receipt(&client, &url, &self.tx_hash)
+            .get_transaction_receipt(&client, &url, &api_key, &self.tx_hash)
             .await?;
 
         // Get transaction details for additional info
         let tx_details = self
-            .get_transaction_details(&client, &url, &self.tx_hash)
+            .get_transaction_details(&client, &url, &api_key, &self.tx_hash)
             .await?;
 
         // Display the information
@@ -76,6 +79,7 @@ impl TxCommand {
         &self,
         client: &crate::security::SecureHttpClient,
         url: &str,
+        api_key: &SecureApiKey,
         tx_hash: &str,
     ) -> anyhow::Result<Value> {
         let params = serde_json::json!([tx_hash]);
@@ -86,8 +90,12 @@ impl TxCommand {
             "params": params
         });
 
+        let auth_header = api_key
+            .expose_for_auth_header()
+            .context("Failed to expose API key for authentication")?;
+        let headers = [("Authorization", auth_header.as_str())];
         let response = client
-            .post_json(url, &request)
+            .post_json_with_headers(url, &request, &headers)
             .await?
             .json::<Value>()
             .await?;
@@ -107,6 +115,7 @@ impl TxCommand {
         &self,
         client: &crate::security::SecureHttpClient,
         url: &str,
+        api_key: &SecureApiKey,
         tx_hash: &str,
     ) -> anyhow::Result<Value> {
         let params = serde_json::json!([tx_hash]);
@@ -117,8 +126,12 @@ impl TxCommand {
             "params": params
         });
 
+        let auth_header = api_key
+            .expose_for_auth_header()
+            .context("Failed to expose API key for authentication")?;
+        let headers = [("Authorization", auth_header.as_str())];
         let response = client
-            .post_json(url, &request)
+            .post_json_with_headers(url, &request, &headers)
             .await?
             .json::<Value>()
             .await?;

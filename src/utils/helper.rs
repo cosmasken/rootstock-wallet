@@ -50,7 +50,9 @@ impl Helper {
         let alchemy_api_key = app_config.get_alchemy_key();
 
         // Get the appropriate RPC URL with API key preference
-        let rpc_url = network_enum.get_rpc_url_with_key(rsk_api_key, alchemy_api_key);
+        let rsk_key_str = rsk_api_key.as_ref().and_then(|k| k.expose_raw().ok());
+        let alchemy_key_str = alchemy_api_key.as_ref().and_then(|k| k.expose_raw().ok());
+        let rpc_url = network_enum.get_rpc_url_with_key(rsk_key_str, alchemy_key_str);
 
         // Create network config with the selected RPC URL
         let mut net_cfg = network_enum.get_config();

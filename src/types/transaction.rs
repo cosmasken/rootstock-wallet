@@ -143,7 +143,7 @@ impl RskTransaction {
         };
 
         // Get transaction receipt for status and gas used
-        let rpc_url = alchemy_client.get_base_url();
+        let rpc_url = alchemy_client.get_base_url()?;
         let receipt = Self::get_transaction_receipt(&hash, &rpc_url).await?;
         let (status, gas_used) = match receipt {
             Some(r) => (r.status, r.gas_used),

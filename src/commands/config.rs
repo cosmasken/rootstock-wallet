@@ -95,11 +95,11 @@ impl ConfigCommand {
                 println!("Set default network to: {}", network);
             }
             "alchemy-mainnet-key" => {
-                config.alchemy_mainnet_key = Some(value.to_string());
+                config.alchemy_mainnet_key = Some(value.to_string().into());
                 println!("Set Alchemy Mainnet API key");
             }
             "alchemy-testnet-key" => {
-                config.alchemy_testnet_key = Some(value.to_string());
+                config.alchemy_testnet_key = Some(value.to_string().into());
                 println!("Set Alchemy Testnet API key");
             }
             "default-wallet" => {

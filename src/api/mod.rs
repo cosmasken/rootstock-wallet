@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
-use crate::security::redacted_debug::{RedactedDebug, redact_partial};
+use crate::security::{SecureString, SecureApiKey};
+use crate::security::redacted_debug::RedactedDebug;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApiProvider {
@@ -26,7 +27,7 @@ impl fmt::Display for ApiProvider {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ApiKey {
-    pub key: String,
+    pub key: SecureString,
     pub network: String, // "mainnet", "testnet", etc.
     pub provider: ApiProvider,
     pub name: Option<String>,
@@ -35,7 +36,7 @@ pub struct ApiKey {
 impl RedactedDebug for ApiKey {
     fn redacted_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ApiKey")
-            .field("key", &redact_partial(&self.key, 3))
+            .field("key", &self.key) // SecureString already implements RedactedDebug
             .field("network", &self.network)
             .field("provider", &self.provider)
             .field("name", &self.name)
@@ -46,6 +47,29 @@ impl RedactedDebug for ApiKey {
 impl fmt::Debug for ApiKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.redacted_fmt(f)
+    }
+}
+
+impl ApiKey {
+    /// Create a new ApiKey with secure storage
+    pub fn new(key: String, network: String, provider: ApiProvider, name: Option<String>) -> Self {
+        Self {
+            key: SecureString::new(key),
+            network,
+            provider,
+            name,
+        }
+    }
+
+    /// Get the API key as a SecureApiKey for secure usage
+    pub fn as_secure_api_key(&self) -> Result<SecureApiKey, std::str::Utf8Error> {
+        let key_str = self.key.expose()?.to_string();
+        Ok(SecureApiKey::new(key_str))
+    }
+
+    /// Get the raw key value (use with caution, prefer as_secure_api_key)
+    pub fn expose_key(&self) -> Result<&str, std::str::Utf8Error> {
+        self.key.expose()
     }
 }
 
