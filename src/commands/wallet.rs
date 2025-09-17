@@ -1,5 +1,6 @@
 use crate::types::wallet::{Wallet, WalletData};
 use crate::utils::{constants, helper::Config, table::TableBuilder};
+use crate::security::SecurePassword;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;
@@ -79,7 +80,8 @@ impl WalletCommand {
             }
         }
         let wallet = LocalWallet::new(&mut thread_rng());
-        let wallet = Wallet::new(wallet, name, password)?;
+        let secure_password = SecurePassword::new(password.to_string());
+        let wallet = Wallet::new(wallet, name, &secure_password)?;
         let mut wallet_data = if wallet_file.exists() {
             let data = fs::read_to_string(&wallet_file)?;
             serde_json::from_str::<WalletData>(&data)?
@@ -102,7 +104,8 @@ impl WalletCommand {
         password: &str,
     ) -> Result<()> {
         let wallet = LocalWallet::from_str(private_key)?;
-        let wallet = Wallet::new(wallet, name, password)?;
+        let secure_password = SecurePassword::new(password.to_string());
+        let wallet = Wallet::new(wallet, name, &secure_password)?;
         let wallet_file = constants::wallet_file_path();
         let mut wallet_data = if wallet_file.exists() {
             let data = fs::read_to_string(&wallet_file)?;

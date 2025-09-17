@@ -32,7 +32,13 @@ jobs:
       run: cargo test --verbose
       
     - name: Check formatting
-      run: cargo fmt -- --check
+      run: |
+        cargo fmt -- --check || {
+          echo "Code is not formatted. Running cargo fmt..."
+          cargo fmt
+          echo "Code has been formatted. Please commit the changes."
+          exit 1
+        }
       
     - name: Run clippy
       run: cargo clippy -- -D warnings

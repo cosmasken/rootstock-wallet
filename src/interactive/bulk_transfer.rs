@@ -2,6 +2,7 @@ use crate::{
     config::ConfigManager,
     types::{network::Network, wallet::WalletData},
     utils::constants,
+    security::prompt_secure_password,
 };
 use anyhow::{Result, anyhow};
 use dialoguer::{Confirm, Input};
@@ -64,7 +65,7 @@ pub async fn bulk_transfer() -> Result<()> {
     };
 
     // Prompt for password to decrypt the private key
-    let password = rpassword::prompt_password("Enter password for the wallet: ")?;
+    let password = prompt_secure_password("Enter password for the wallet: ")?;
 
     // Decrypt the private key
     let private_key = current_wallet.decrypt_private_key(&password)?;

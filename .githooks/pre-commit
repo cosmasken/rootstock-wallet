@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-commit hook to format Rust code
+
+echo "Running rustfmt..."
+
+# Format all Rust files
+cargo fmt
+
+# Add any formatted files to the commit
+git add -u
+
+# Check if there are any formatting changes
+if ! git diff --cached --quiet; then
+    echo "Code has been formatted. Please review the changes."
+fi
+
+# Run clippy to catch issues early
+echo "Running clippy..."
+if ! cargo clippy -- -D warnings; then
+    echo "Clippy found issues. Please fix them before committing."
+    exit 1
+fi
+
+echo "Pre-commit checks passed!"

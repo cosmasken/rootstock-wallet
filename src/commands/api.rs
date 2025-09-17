@@ -22,7 +22,7 @@ impl SetApiKeyCommand {
             WalletData::new()
         };
 
-        wallet_data.api_key = Some(self.api_key.clone());
+        wallet_data.set_api_key(self.api_key.clone());
         fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
         println!("{}: API key set successfully", "Success".green().bold());
         Ok(())

@@ -3,12 +3,12 @@ use crate::types::wallet::WalletData;
 use crate::utils::constants;
 use crate::utils::eth::EthClient;
 use crate::utils::helper::Config as HelperConfig;
+use crate::security::prompt_secure_password;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;
 use ethers::signers::LocalWallet;
 use ethers::types::{Address, H256, U64, U256};
-use rpassword::prompt_password;
 use std::fs;
 use std::str::FromStr;
 
@@ -60,7 +60,7 @@ impl TransferCommand {
         })?;
 
         // Prompt for password and decrypt private key
-        let password = prompt_password("Enter password for the default wallet: ")?;
+        let password = prompt_secure_password("Enter password for the default wallet: ")?;
         let private_key = default_wallet.decrypt_private_key(&password)?;
         let _local_wallet = LocalWallet::from_str(&private_key)
             .map_err(|e| anyhow!("Failed to create LocalWallet: {}", e))?;

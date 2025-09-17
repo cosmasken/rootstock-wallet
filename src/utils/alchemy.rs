@@ -1,20 +1,21 @@
 // src/utils/alchemy.rs
 use anyhow::{Result, anyhow};
 use serde_json::Value;
+use crate::security::SecureHttpClient;
 
 pub struct AlchemyClient {
-    client: reqwest::Client,
+    client: SecureHttpClient,
     api_key: String,
     is_testnet: bool,
 }
 
 impl AlchemyClient {
-    pub fn new(api_key: String, is_testnet: bool) -> Self {
-        Self {
-            client: reqwest::Client::new(),
+    pub fn new(api_key: String, is_testnet: bool) -> Result<Self> {
+        Ok(Self {
+            client: SecureHttpClient::new()?,
             api_key,
             is_testnet,
-        }
+        })
     }
 
     pub fn get_base_url(&self) -> String {
@@ -48,16 +49,16 @@ impl AlchemyClient {
             "maxCount": format!("0x{:x}", limit),
         }]);
 
+        let request_body = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "alchemy_getAssetTransfers",
+            "params": params
+        });
+
         let response = self
             .client
-            .post(&url)
-            .json(&serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "alchemy_getAssetTransfers",
-                "params": params
-            }))
-            .send()
+            .post_json(&url, &request_body)
             .await?
             .json::<Value>()
             .await?;
@@ -73,16 +74,16 @@ impl AlchemyClient {
         let url = self.get_base_url();
         let block_number_hex = format!("0x{:x}", block_number);
 
+        let request_body = serde_json::json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "eth_getBlockByNumber",
+            "params": [block_number_hex, false]  // false to get transaction hashes only
+        });
+
         let response = self
             .client
-            .post(&url)
-            .json(&serde_json::json!({
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "eth_getBlockByNumber",
-                "params": [block_number_hex, false]  // false to get transaction hashes only
-            }))
-            .send()
+            .post_json(&url, &request_body)
             .await?
             .json::<Value>()
             .await?;

@@ -1,13 +1,13 @@
 // src/utils/api.rs
 use anyhow::{Context, Result};
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::OnceLock;
+use crate::security::SecureHttpClient;
 
 const API_KEYS_FILE: &str = "api_keys.json";
-static HTTP_CLIENT: OnceLock<Client> = OnceLock::new();
+static HTTP_CLIENT: OnceLock<SecureHttpClient> = OnceLock::new();
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct ApiKeys {
@@ -60,8 +60,8 @@ impl ApiKeys {
         ))
     }
 
-    pub fn get_http_client() -> &'static Client {
-        HTTP_CLIENT.get_or_init(Client::new)
+    pub fn get_http_client() -> &'static SecureHttpClient {
+        HTTP_CLIENT.get_or_init(|| SecureHttpClient::new().expect("Failed to create secure HTTP client"))
     }
 
     fn get_config_path() -> Result<PathBuf> {

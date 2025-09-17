@@ -148,7 +148,7 @@ impl HistoryCommand {
         };
 
         // 3. Initialize Alchemy client and fetch transfers
-        let alchemy_client = AlchemyClient::new(final_api_key, is_testnet);
+        let alchemy_client = AlchemyClient::new(final_api_key, is_testnet)?;
         let response = alchemy_client
             .get_asset_transfers(
                 &format!("{:#x}", address),

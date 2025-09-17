@@ -37,11 +37,11 @@ impl EthClient {
         };
 
         let _api_key = if let Some(key) = cli_api_key {
-            wallet_data.api_key = Some(key.clone());
+            wallet_data.set_api_key(key.clone());
             fs::write(&wallet_file, serde_json::to_string_pretty(&wallet_data)?)?;
             Some(key)
         } else {
-            wallet_data.api_key.clone()
+            wallet_data.get_api_key().map(|s| s.to_string())
         };
 
         // Use the RPC URL from config (which defaults to public nodes)

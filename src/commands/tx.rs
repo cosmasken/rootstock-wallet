@@ -23,7 +23,7 @@ pub struct TxCommand {
 
 impl TxCommand {
     pub async fn execute(&self) -> anyhow::Result<()> {
-        let client = reqwest::Client::new();
+        let client = crate::security::SecureHttpClient::new()?;
         let network = if self.testnet {
             Network::RootStockTestnet
         } else {
@@ -74,7 +74,7 @@ impl TxCommand {
 
     async fn get_transaction_receipt(
         &self,
-        client: &reqwest::Client,
+        client: &crate::security::SecureHttpClient,
         url: &str,
         tx_hash: &str,
     ) -> anyhow::Result<Value> {
@@ -87,9 +87,7 @@ impl TxCommand {
         });
 
         let response = client
-            .post(url)
-            .json(&request)
-            .send()
+            .post_json(url, &request)
             .await?
             .json::<Value>()
             .await?;
@@ -107,7 +105,7 @@ impl TxCommand {
 
     async fn get_transaction_details(
         &self,
-        client: &reqwest::Client,
+        client: &crate::security::SecureHttpClient,
         url: &str,
         tx_hash: &str,
     ) -> anyhow::Result<Value> {
@@ -120,9 +118,7 @@ impl TxCommand {
         });
 
         let response = client
-            .post(url)
-            .json(&request)
-            .send()
+            .post_json(url, &request)
             .await?
             .json::<Value>()
             .await?;

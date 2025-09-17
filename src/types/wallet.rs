@@ -16,8 +16,10 @@ use scrypt::{Params, scrypt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
+use zeroize::Zeroize;
 
-use crate::security::redacted_debug::{RedactedDebug, redact_string};
+use crate::security::redacted_debug::RedactedDebug;
+use crate::security::{SecureString, SecurePassword};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Wallet {
@@ -25,9 +27,9 @@ pub struct Wallet {
     pub balance: U256,
     pub network: String,
     pub name: String,
-    pub encrypted_private_key: String,
-    pub salt: String,
-    pub iv: String,
+    encrypted_private_key: SecureString,
+    salt: SecureString,
+    iv: SecureString,
     pub created_at: String,
 }
 
@@ -36,7 +38,7 @@ pub struct WalletData {
     pub current_wallet: String,
     pub wallets: HashMap<String, Wallet>,
     pub contacts: Vec<Contact>,
-    pub api_key: Option<String>,
+    api_key: Option<SecureString>,
 }
 
 impl Wallet {
@@ -44,7 +46,7 @@ impl Wallet {
         self.address
     }
 
-    pub fn new(wallet: LocalWallet, name: &str, password: &str) -> Result<Self, Error> {
+    pub fn new(wallet: LocalWallet, name: &str, password: &SecurePassword) -> Result<Self, Error> {
         let (encrypted_key, iv, salt) =
             Self::encrypt_private_key(wallet.signer().to_bytes().as_ref(), password)?;
         Ok(Self {
@@ -52,16 +54,16 @@ impl Wallet {
             balance: U256::zero(),
             network: String::new(),
             name: name.to_string(),
-            encrypted_private_key: STANDARD.encode(&encrypted_key),
-            salt: STANDARD.encode(&salt),
-            iv: STANDARD.encode(&iv),
+            encrypted_private_key: SecureString::new(STANDARD.encode(&encrypted_key)),
+            salt: SecureString::new(STANDARD.encode(&salt)),
+            iv: SecureString::new(STANDARD.encode(&iv)),
             created_at: Utc::now().to_rfc3339(),
         })
     }
 
     pub fn encrypt_private_key(
         private_key: &[u8],
-        password: &str,
+        password: &SecurePassword,
     ) -> anyhow::Result<(Vec<u8>, Vec<u8>, Vec<u8>)> {
         let mut salt = [0u8; 16];
         rand::thread_rng().fill_bytes(&mut salt);
@@ -69,26 +71,30 @@ impl Wallet {
         rand::thread_rng().fill_bytes(&mut iv);
         let params = Params::recommended();
         let mut key = [0u8; 32];
-        scrypt(password.as_bytes(), &salt, &params, &mut key)?;
+        scrypt(password.expose_bytes(), &salt, &params, &mut key)?;
         let mut buffer = private_key.to_vec();
         let pos = buffer.len();
         let pad_len = 16 - (pos % 16);
         buffer.extend(std::iter::repeat_n(pad_len as u8, pad_len));
         let encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
         let _ = encryptor.encrypt_padded_mut::<Pkcs7>(&mut buffer, pos);
+        
+        // Clear the derived key from memory
+        key.zeroize();
+        
         Ok((buffer, iv.to_vec(), salt.to_vec()))
     }
 
-    pub fn decrypt_private_key(&self, password: &str) -> Result<String, anyhow::Error> {
+    pub fn decrypt_private_key(&self, password: &SecurePassword) -> Result<String, anyhow::Error> {
         // Decode Base64-encoded salt, IV, and encrypted key
         let salt = STANDARD
-            .decode(&self.salt)
+            .decode(self.salt.expose().map_err(|e| anyhow!("Invalid UTF-8 in salt: {}", e))?)
             .map_err(|e| anyhow!("Failed to decode salt: {}", e))?;
         let iv = STANDARD
-            .decode(&self.iv)
+            .decode(self.iv.expose().map_err(|e| anyhow!("Invalid UTF-8 in IV: {}", e))?)
             .map_err(|e| anyhow!("Failed to decode IV: {}", e))?;
         let encrypted_key = STANDARD
-            .decode(&self.encrypted_private_key)
+            .decode(self.encrypted_private_key.expose().map_err(|e| anyhow!("Invalid UTF-8 in encrypted key: {}", e))?)
             .map_err(|e| anyhow!("Failed to decode encrypted private key: {}", e))?;
 
         // Validate lengths
@@ -108,7 +114,7 @@ impl Wallet {
         // Derive the key using scrypt with parameters matching encryption
         let mut key = [0u8; 32];
         let params = Params::recommended(); // Ensure this matches your encryption params
-        scrypt(password.as_bytes(), &salt, &params, &mut key)
+        scrypt(password.expose_bytes(), &salt, &params, &mut key)
             .map_err(|e| anyhow!("Key derivation failed: {}", e))?;
 
         // Convert key and IV to GenericArray for the cipher
@@ -132,6 +138,9 @@ impl Wallet {
             ));
         }
 
+        // Clear the derived key from memory
+        key.zeroize();
+        
         // Return the decrypted private key as a 0x-prefixed hex string
         Ok(format!("0x{}", hex::encode(decrypted)))
     }
@@ -144,12 +153,9 @@ impl RedactedDebug for Wallet {
             .field("balance", &self.balance)
             .field("network", &self.network)
             .field("name", &self.name)
-            .field(
-                "encrypted_private_key",
-                &redact_string(&self.encrypted_private_key, false),
-            )
-            .field("salt", &redact_string(&self.salt, false))
-            .field("iv", &redact_string(&self.iv, false))
+            .field("encrypted_private_key", &"[REDACTED]")
+            .field("salt", &"[REDACTED]")
+            .field("iv", &"[REDACTED]")
             .field("created_at", &self.created_at)
             .finish()
     }
@@ -171,10 +177,42 @@ impl fmt::Display for Wallet {
     }
 }
 
+impl Zeroize for Wallet {
+    fn zeroize(&mut self) {
+        // Zeroize sensitive fields
+        self.encrypted_private_key.zeroize();
+        self.salt.zeroize();
+        self.iv.zeroize();
+        // Note: We don't zeroize public fields like address, balance, network, name, created_at
+        // as they are not considered sensitive for security purposes
+    }
+}
+
+impl Drop for Wallet {
+    fn drop(&mut self) {
+        self.zeroize();
+    }
+}
+
 impl WalletData {
     /// Creates a new, empty wallet data structure.
     pub fn new() -> Self {
         Default::default()
+    }
+
+    /// Set the API key
+    pub fn set_api_key(&mut self, api_key: String) {
+        self.api_key = Some(SecureString::new(api_key));
+    }
+
+    /// Get the API key (returns None if not set)
+    pub fn get_api_key(&self) -> Option<&str> {
+        self.api_key.as_ref().and_then(|key| key.expose().ok())
+    }
+
+    /// Clear the API key
+    pub fn clear_api_key(&mut self) {
+        self.api_key = None;
     }
 
     pub fn add_wallet(&mut self, wallet: Wallet) -> anyhow::Result<()> {
@@ -296,5 +334,26 @@ impl RedactedDebug for WalletData {
 impl fmt::Debug for WalletData {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.redacted_fmt(f)
+    }
+}
+
+impl Zeroize for WalletData {
+    fn zeroize(&mut self) {
+        // Zeroize sensitive fields
+        if let Some(ref mut api_key) = self.api_key {
+            api_key.zeroize();
+        }
+        // Zeroize all wallets
+        for wallet in self.wallets.values_mut() {
+            wallet.zeroize();
+        }
+        // Note: We don't zeroize current_wallet and contacts as they contain
+        // non-sensitive metadata
+    }
+}
+
+impl Drop for WalletData {
+    fn drop(&mut self) {
+        self.zeroize();
     }
 }
