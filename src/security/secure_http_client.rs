@@ -76,10 +76,11 @@ impl<'a> SecureRequestBuilder<'a> {
     fn validate_request(&self, request: &Request) -> Result<()> {
         // Check headers
         for (name, value) in request.headers().iter() {
-            if let Ok(value_str) = value.to_str() {
-                if name.as_str().to_lowercase() != "authorization" && is_sensitive_data(value_str) {
-                    log::warn!("Potentially sensitive data detected in header: {}", name);
-                }
+            if let Ok(value_str) = value.to_str()
+                && name.as_str().to_lowercase() != "authorization"
+                && is_sensitive_data(value_str)
+            {
+                log::warn!("Potentially sensitive data detected in header: {}", name);
             }
         }
 
@@ -283,10 +284,11 @@ impl SecureHttpClient {
         ];
 
         for pattern in &patterns {
-            if let Ok(regex) = regex::Regex::new(pattern) {
-                if regex.is_match(text) && text.len() >= 20 {
-                    return true;
-                }
+            if let Ok(regex) = regex::Regex::new(pattern)
+                && regex.is_match(text)
+                && text.len() >= 20
+            {
+                return true;
             }
         }
 
