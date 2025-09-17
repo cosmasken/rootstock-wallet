@@ -209,27 +209,29 @@ impl TxCommand {
 
         // If there's a contract address, show it
         if let Some(contract_addr) = receipt["contractAddress"].as_str()
-            && !contract_addr.is_empty() {
-                println!("\n{}", style("Contract Creation").bold().underlined());
-                println!("{}", "-".repeat(60));
-                println!("{}", style(format!("  Contract: {}", contract_addr)).dim());
-            }
+            && !contract_addr.is_empty()
+        {
+            println!("\n{}", style("Contract Creation").bold().underlined());
+            println!("{}", "-".repeat(60));
+            println!("{}", style(format!("  Contract: {}", contract_addr)).dim());
+        }
 
         // Show logs if any
         if let Some(logs) = receipt["logs"].as_array()
-            && !logs.is_empty() {
-                println!(
-                    "\n{}",
-                    style(format!("  Logs ({}):", logs.len()))
-                        .bold()
-                        .underlined()
-                );
-                for log in logs {
-                    if let Some(topic) = log["topics"].as_array().and_then(|t| t[0].as_str()) {
-                        println!("  - {}", topic);
-                    }
+            && !logs.is_empty()
+        {
+            println!(
+                "\n{}",
+                style(format!("  Logs ({}):", logs.len()))
+                    .bold()
+                    .underlined()
+            );
+            for log in logs {
+                if let Some(topic) = log["topics"].as_array().and_then(|t| t[0].as_str()) {
+                    println!("  - {}", topic);
                 }
             }
+        }
 
         // Add explorer URL
         let explorer_url = if self.testnet {

@@ -84,9 +84,10 @@ impl HistoryCommand {
 
         // If export is requested, ensure we have a filename
         if let Some(filename) = &self.export_csv
-            && !filename.ends_with(".csv") {
-                return Err(anyhow::anyhow!("Export filename must end with .csv"));
-            }
+            && !filename.ends_with(".csv")
+        {
+            return Err(anyhow::anyhow!("Export filename must end with .csv"));
+        }
 
         // Try to load API key from wallet file
         if wallet_file.exists() {

@@ -145,7 +145,6 @@ impl fmt::Display for Wallet {
     }
 }
 
-
 impl WalletData {
     /// Creates a new, empty wallet data structure.
     pub fn new() -> Self {

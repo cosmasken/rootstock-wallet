@@ -56,9 +56,9 @@ impl Helper {
         let mut net_cfg = network_enum.get_config();
         net_cfg.rpc_url = rpc_url.clone();
 
-        let config = Config { 
-            network: net_cfg.clone(), 
-            ..Default::default() 
+        let config = Config {
+            network: net_cfg.clone(),
+            ..Default::default()
         };
 
         // Log which RPC endpoint is being used

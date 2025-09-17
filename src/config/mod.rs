@@ -1,5 +1,5 @@
-mod settings;
 mod doctor;
+mod settings;
 mod setup;
 
 // Re-export types from the config module
