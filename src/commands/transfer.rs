@@ -108,7 +108,7 @@ impl TransferCommand {
         };
 
         // Parse amount (convert f64 to wei or token units)
-        let decimals = if token_address.is_some() { 18 } else { 18 }; // Default to 18 for both RBTC and tokens
+        let decimals = 18; // Default to 18 for both RBTC and tokens
         let amount = ethers::utils::parse_units(self.value.to_string(), decimals)
             .map_err(|e| anyhow!("Invalid amount: {}", e))?;
 

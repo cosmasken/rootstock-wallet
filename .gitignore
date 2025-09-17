@@ -28,3 +28,6 @@ phonebook.json
 record-demo.sh
 /tui
 *.cast
+
+*.md
+.kiro

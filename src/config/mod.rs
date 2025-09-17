@@ -1,9 +1,9 @@
-mod config;
+mod settings;
 mod doctor;
 mod setup;
 
 // Re-export types from the config module
-pub use config::{Config, ConfigManager};
+pub use settings::{Config, ConfigManager};
 
 // Re-export Network from the types module
 pub use crate::types::network::Network;

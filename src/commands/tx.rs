@@ -208,17 +208,16 @@ impl TxCommand {
         println!("\n{}", style(format!("  Status: {}", status)).dim());
 
         // If there's a contract address, show it
-        if let Some(contract_addr) = receipt["contractAddress"].as_str() {
-            if !contract_addr.is_empty() {
+        if let Some(contract_addr) = receipt["contractAddress"].as_str()
+            && !contract_addr.is_empty() {
                 println!("\n{}", style("Contract Creation").bold().underlined());
                 println!("{}", "-".repeat(60));
                 println!("{}", style(format!("  Contract: {}", contract_addr)).dim());
             }
-        }
 
         // Show logs if any
-        if let Some(logs) = receipt["logs"].as_array() {
-            if !logs.is_empty() {
+        if let Some(logs) = receipt["logs"].as_array()
+            && !logs.is_empty() {
                 println!(
                     "\n{}",
                     style(format!("  Logs ({}):", logs.len()))
@@ -231,7 +230,6 @@ impl TxCommand {
                     }
                 }
             }
-        }
 
         // Add explorer URL
         let explorer_url = if self.testnet {

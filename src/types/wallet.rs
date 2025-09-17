@@ -29,7 +29,7 @@ pub struct Wallet {
     pub created_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WalletData {
     pub current_wallet: String,
     pub wallets: HashMap<String, Wallet>,
@@ -71,7 +71,7 @@ impl Wallet {
         let mut buffer = private_key.to_vec();
         let pos = buffer.len();
         let pad_len = 16 - (pos % 16);
-        buffer.extend(std::iter::repeat(pad_len as u8).take(pad_len));
+        buffer.extend(std::iter::repeat_n(pad_len as u8, pad_len));
         let encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
         let _ = encryptor.encrypt_padded_mut::<Pkcs7>(&mut buffer, pos);
         Ok((buffer, iv.to_vec(), salt.to_vec()))
@@ -145,15 +145,11 @@ impl fmt::Display for Wallet {
     }
 }
 
+
 impl WalletData {
     /// Creates a new, empty wallet data structure.
     pub fn new() -> Self {
-        Self {
-            current_wallet: String::new(),
-            wallets: HashMap::new(),
-            contacts: Vec::new(),
-            api_key: None,
-        }
+        Default::default()
     }
 
     pub fn add_wallet(&mut self, wallet: Wallet) -> anyhow::Result<()> {
@@ -254,7 +250,7 @@ impl WalletData {
             .filter(|c| {
                 c.name.to_lowercase().contains(&query.to_lowercase())
                     || c.address.to_string().contains(query)
-                    || c.notes.as_ref().map_or(false, |n| n.contains(query))
+                    || c.notes.as_ref().is_some_and(|n| n.contains(query))
                     || c.tags.iter().any(|t| t.contains(query))
             })
             .collect()

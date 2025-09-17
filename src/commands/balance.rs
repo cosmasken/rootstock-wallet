@@ -75,7 +75,7 @@ impl BalanceCommand {
         };
 
         // Format the balance with appropriate decimals
-        let decimals = if token_name == "RBTC" { 18 } else { 18 }; // Default to 18 for tokens
+        let decimals = 18; // Default to 18 for both RBTC and tokens
         let balance_str = ethers::utils::format_units(balance, decimals)
             .map_err(|e| anyhow!("Failed to format balance: {}", e))?;
 

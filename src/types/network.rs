@@ -115,7 +115,7 @@ impl Network {
         }
     }
 
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse_network_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "mainnet" => Some(Network::Mainnet),
             "testnet" => Some(Network::Testnet),

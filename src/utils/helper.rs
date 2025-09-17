@@ -39,7 +39,7 @@ pub struct Helper;
 
 impl Helper {
     pub async fn init_eth_client(network: &str) -> Result<(Config, EthClient)> {
-        let network_enum = Network::from_str(network).unwrap_or(Network::Mainnet);
+        let network_enum = Network::parse_network_string(network).unwrap_or(Network::Mainnet);
 
         // Load configuration to get API keys
         let config_manager = ConfigManager::new()?;
@@ -56,8 +56,10 @@ impl Helper {
         let mut net_cfg = network_enum.get_config();
         net_cfg.rpc_url = rpc_url.clone();
 
-        let mut config = Config::default();
-        config.network = net_cfg.clone();
+        let config = Config { 
+            network: net_cfg.clone(), 
+            ..Default::default() 
+        };
 
         // Log which RPC endpoint is being used
         let rpc_type = if rsk_api_key.is_some() {

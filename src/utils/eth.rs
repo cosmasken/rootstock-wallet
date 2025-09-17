@@ -139,7 +139,6 @@ impl EthClient {
                     value: Some(U256::zero()),
                     data: Some(data),
                     chain_id: Some(chain_id.into()),
-                    ..Default::default()
                 });
                 let gas_estimate = self
                     .provider
