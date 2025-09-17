@@ -7,6 +7,7 @@ mod api;
 mod commands;
 mod config;
 mod interactive;
+mod security;
 mod setup;
 mod types;
 mod utils;

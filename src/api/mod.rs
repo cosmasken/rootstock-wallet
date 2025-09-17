@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
 use std::fmt;
+
+use crate::security::redacted_debug::{RedactedDebug, redact_partial};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum ApiProvider {
@@ -23,12 +24,29 @@ impl fmt::Display for ApiProvider {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ApiKey {
     pub key: String,
     pub network: String, // "mainnet", "testnet", etc.
     pub provider: ApiProvider,
     pub name: Option<String>,
+}
+
+impl RedactedDebug for ApiKey {
+    fn redacted_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ApiKey")
+            .field("key", &redact_partial(&self.key, 3))
+            .field("network", &self.network)
+            .field("provider", &self.provider)
+            .field("name", &self.name)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ApiKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.redacted_fmt(f)
+    }
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]

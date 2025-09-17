@@ -4021,6 +4021,7 @@ dependencies = [
  "prettytable-rs",
  "qrcode",
  "rand 0.8.5",
+ "regex",
  "reqwest 0.12.20",
  "rpassword",
  "rustyline",

@@ -17,7 +17,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+use crate::security::redacted_debug::{RedactedDebug, redact_string};
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Wallet {
     pub address: Address,
     pub balance: U256,
@@ -29,7 +31,7 @@ pub struct Wallet {
     pub created_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct WalletData {
     pub current_wallet: String,
     pub wallets: HashMap<String, Wallet>,
@@ -132,6 +134,27 @@ impl Wallet {
 
         // Return the decrypted private key as a 0x-prefixed hex string
         Ok(format!("0x{}", hex::encode(decrypted)))
+    }
+}
+
+impl RedactedDebug for Wallet {
+    fn redacted_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Wallet")
+            .field("address", &self.address)
+            .field("balance", &self.balance)
+            .field("network", &self.network)
+            .field("name", &self.name)
+            .field("encrypted_private_key", &redact_string(&self.encrypted_private_key, false))
+            .field("salt", &redact_string(&self.salt, false))
+            .field("iv", &redact_string(&self.iv, false))
+            .field("created_at", &self.created_at)
+            .finish()
+    }
+}
+
+impl fmt::Debug for Wallet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.redacted_fmt(f)
     }
 }
 
@@ -253,5 +276,22 @@ impl WalletData {
                     || c.tags.iter().any(|t| t.contains(query))
             })
             .collect()
+    }
+}
+
+impl RedactedDebug for WalletData {
+    fn redacted_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("WalletData")
+            .field("current_wallet", &self.current_wallet)
+            .field("wallets_count", &self.wallets.len())
+            .field("contacts_count", &self.contacts.len())
+            .field("api_key", &self.api_key.as_ref().map(|_| "[REDACTED]"))
+            .finish()
+    }
+}
+
+impl fmt::Debug for WalletData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.redacted_fmt(f)
     }
 }
