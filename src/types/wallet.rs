@@ -144,7 +144,10 @@ impl RedactedDebug for Wallet {
             .field("balance", &self.balance)
             .field("network", &self.network)
             .field("name", &self.name)
-            .field("encrypted_private_key", &redact_string(&self.encrypted_private_key, false))
+            .field(
+                "encrypted_private_key",
+                &redact_string(&self.encrypted_private_key, false),
+            )
             .field("salt", &redact_string(&self.salt, false))
             .field("iv", &redact_string(&self.iv, false))
             .field("created_at", &self.created_at)

@@ -1,8 +1,8 @@
 //! SecureString implementation for protecting sensitive string data in memory
 
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt;
 use zeroize::Zeroize;
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 /// A secure wrapper for sensitive string data that automatically clears memory on drop
 #[derive(Clone)]

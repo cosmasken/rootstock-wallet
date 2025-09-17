@@ -3,7 +3,7 @@
 use std::fmt;
 
 /// Trait for types that contain sensitive data and need custom debug formatting
-/// 
+///
 /// This trait allows types to implement safe debug output that redacts sensitive
 /// information while still providing useful debugging information for non-sensitive fields.
 pub trait RedactedDebug {
@@ -12,7 +12,7 @@ pub trait RedactedDebug {
 }
 
 /// A wrapper type that implements Debug using RedactedDebug
-/// 
+///
 /// This can be used to wrap existing types and provide secure debug output
 #[derive(Clone, PartialEq, Eq)]
 pub struct SecureWrapper<T>(pub T);
@@ -119,7 +119,7 @@ mod tests {
 
         let wrapper = SecureWrapper::new(test_struct);
         let debug_output = format!("{:?}", wrapper);
-        
+
         assert!(debug_output.contains("visible"));
         assert!(debug_output.contains("[REDACTED"));
         assert!(!debug_output.contains("secret"));

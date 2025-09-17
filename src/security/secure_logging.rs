@@ -43,12 +43,12 @@ fn get_patterns() -> &'static SensitivePatterns {
 /// Check if a string contains potentially sensitive data
 pub fn is_sensitive_data(text: &str) -> bool {
     let patterns = get_patterns();
-    
-    patterns.private_key.is_match(text) ||
-    patterns.address.is_match(text) ||
-    patterns.tx_hash.is_match(text) ||
-    patterns.mnemonic.is_match(text) ||
-    is_potential_api_key(text)
+
+    patterns.private_key.is_match(text)
+        || patterns.address.is_match(text)
+        || patterns.tx_hash.is_match(text)
+        || patterns.mnemonic.is_match(text)
+        || is_potential_api_key(text)
 }
 
 /// Check if a string might be an API key (more conservative check)
@@ -57,12 +57,12 @@ fn is_potential_api_key(text: &str) -> bool {
     if text.len() < 20 || text.len() > 100 {
         return false;
     }
-    
+
     let has_upper = text.chars().any(|c| c.is_ascii_uppercase());
     let has_lower = text.chars().any(|c| c.is_ascii_lowercase());
     let has_digit = text.chars().any(|c| c.is_ascii_digit());
     let is_alphanumeric = text.chars().all(|c| c.is_ascii_alphanumeric());
-    
+
     is_alphanumeric && has_upper && has_lower && has_digit
 }
 
@@ -70,35 +70,50 @@ fn is_potential_api_key(text: &str) -> bool {
 pub fn sanitize_log_message(message: &str) -> String {
     let patterns = get_patterns();
     let mut sanitized = message.to_string();
-    
+
     // Redact private keys
-    sanitized = patterns.private_key.replace_all(&sanitized, "[PRIVATE_KEY_REDACTED]").to_string();
-    
+    sanitized = patterns
+        .private_key
+        .replace_all(&sanitized, "[PRIVATE_KEY_REDACTED]")
+        .to_string();
+
     // Redact full addresses but show partial for debugging
-    sanitized = patterns.address.replace_all(&sanitized, |caps: &regex::Captures| {
-        let addr = &caps[0];
-        format!("{}...{}", &addr[..6], &addr[addr.len()-4..])
-    }).to_string();
-    
+    sanitized = patterns
+        .address
+        .replace_all(&sanitized, |caps: &regex::Captures| {
+            let addr = &caps[0];
+            format!("{}...{}", &addr[..6], &addr[addr.len() - 4..])
+        })
+        .to_string();
+
     // Redact transaction hashes but show partial
-    sanitized = patterns.tx_hash.replace_all(&sanitized, |caps: &regex::Captures| {
-        let hash = &caps[0];
-        format!("{}...{}", &hash[..10], &hash[hash.len()-6..])
-    }).to_string();
-    
+    sanitized = patterns
+        .tx_hash
+        .replace_all(&sanitized, |caps: &regex::Captures| {
+            let hash = &caps[0];
+            format!("{}...{}", &hash[..10], &hash[hash.len() - 6..])
+        })
+        .to_string();
+
     // Redact mnemonic phrases
-    sanitized = patterns.mnemonic.replace_all(&sanitized, "[MNEMONIC_REDACTED]").to_string();
-    
+    sanitized = patterns
+        .mnemonic
+        .replace_all(&sanitized, "[MNEMONIC_REDACTED]")
+        .to_string();
+
     // Redact potential API keys using the regex pattern
-    sanitized = patterns.api_key.replace_all(&sanitized, |caps: &regex::Captures| {
-        let potential_key = &caps[0];
-        if is_potential_api_key(potential_key) {
-            "[API_KEY_REDACTED]".to_string()
-        } else {
-            potential_key.to_string()
-        }
-    }).to_string();
-    
+    sanitized = patterns
+        .api_key
+        .replace_all(&sanitized, |caps: &regex::Captures| {
+            let potential_key = &caps[0];
+            if is_potential_api_key(potential_key) {
+                "[API_KEY_REDACTED]".to_string()
+            } else {
+                potential_key.to_string()
+            }
+        })
+        .to_string();
+
     sanitized
 }
 
@@ -114,7 +129,7 @@ pub fn redact_private_key(key: &str) -> String {
 /// Redact an address for safe logging (show partial)
 pub fn redact_address(address: &str) -> String {
     if address.len() >= 10 {
-        format!("{}...{}", &address[..6], &address[address.len()-4..])
+        format!("{}...{}", &address[..6], &address[address.len() - 4..])
     } else {
         "[ADDRESS_REDACTED]".to_string()
     }
@@ -159,11 +174,15 @@ mod tests {
     #[test]
     fn test_is_sensitive_data() {
         // Test private key detection
-        assert!(is_sensitive_data("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"));
-        
+        assert!(is_sensitive_data(
+            "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        ));
+
         // Test address detection
-        assert!(is_sensitive_data("0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C"));
-        
+        assert!(is_sensitive_data(
+            "0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C"
+        ));
+
         // Test normal text
         assert!(!is_sensitive_data("This is just normal log text"));
     }
@@ -172,7 +191,7 @@ mod tests {
     fn test_sanitize_log_message() {
         let message = "Wallet address: 0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C with balance 100";
         let sanitized = sanitize_log_message(message);
-        
+
         assert!(sanitized.contains("0x742d...4C4C"));
         assert!(!sanitized.contains("0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C"));
     }
@@ -181,7 +200,7 @@ mod tests {
     fn test_redact_private_key() {
         let key = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
         let redacted = redact_private_key(key);
-        
+
         assert!(redacted.starts_with("1234"));
         assert!(redacted.contains("[REDACTED]"));
         assert!(!redacted.contains("abcdef"));
@@ -191,7 +210,7 @@ mod tests {
     fn test_redact_address() {
         let address = "0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C";
         let redacted = redact_address(address);
-        
+
         assert!(redacted.starts_with("0x742d"));
         assert!(redacted.ends_with("4C4C"));
         assert!(redacted.contains("..."));
@@ -201,25 +220,26 @@ mod tests {
     fn test_is_potential_api_key() {
         // Should detect mixed case alphanumeric strings
         assert!(is_potential_api_key("AbC123dEf456GhI789JkL012"));
-        
+
         // Should not detect short strings
         assert!(!is_potential_api_key("short"));
-        
+
         // Should not detect all lowercase
         assert!(!is_potential_api_key("alllowercasestring123"));
-        
+
         // Should not detect all uppercase
         assert!(!is_potential_api_key("ALLUPPERCASESTRING123"));
-        
+
         // Should not detect strings with special characters
         assert!(!is_potential_api_key("AbC123-dEf456_GhI789"));
     }
 
     #[test]
     fn test_sanitize_private_key_in_message() {
-        let message = "Private key: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+        let message =
+            "Private key: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
         let sanitized = sanitize_log_message(message);
-        
+
         assert!(sanitized.contains("[PRIVATE_KEY_REDACTED]"));
         assert!(!sanitized.contains("1234567890abcdef"));
     }
@@ -229,11 +249,11 @@ mod tests {
         // Test that the macros properly sanitize messages
         let test_message = "Wallet 0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C has key 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
         let sanitized = sanitize_log_message(test_message);
-        
+
         // Verify address is partially redacted
         assert!(sanitized.contains("0x742d...4C4C"));
         assert!(!sanitized.contains("0x742d35Cc6634C0532925a3b8D4C9db4C4C4C4C4C"));
-        
+
         // Verify private key is fully redacted
         assert!(sanitized.contains("[PRIVATE_KEY_REDACTED]"));
         assert!(!sanitized.contains("1234567890abcdef"));
@@ -244,10 +264,11 @@ mod tests {
         // This test ensures the macros compile and can be used
         // We can't easily test the actual log output in unit tests,
         // but we can verify the macros expand correctly
-        
+
         // These should compile without errors
-        let sensitive_data = "Private key: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
-        
+        let sensitive_data =
+            "Private key: 1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+
         // The macros should sanitize the message before logging
         // We can't capture the log output easily in tests, but we can verify
         // that the sanitization function works correctly
