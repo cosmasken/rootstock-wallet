@@ -1,8 +1,8 @@
 use crate::{
     config::ConfigManager,
+    security::prompt_secure_password,
     types::{network::Network, wallet::WalletData},
     utils::constants,
-    security::prompt_secure_password,
 };
 use anyhow::{Result, anyhow};
 use dialoguer::{Confirm, Input};

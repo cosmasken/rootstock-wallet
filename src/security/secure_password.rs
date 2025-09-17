@@ -113,11 +113,11 @@ pub fn prompt_secure_password_with_confirmation(
     loop {
         let password = prompt_secure_password(prompt)?;
         let confirm = prompt_secure_password(confirm_prompt)?;
-        
+
         if password == confirm {
             return Ok(password);
         }
-        
+
         eprintln!("Passwords don't match. Please try again.");
     }
 }
@@ -162,7 +162,7 @@ mod tests {
         let password1 = SecurePassword::new("same_password".to_string());
         let password2 = SecurePassword::new("same_password".to_string());
         let password3 = SecurePassword::new("different_password".to_string());
-        
+
         assert_eq!(password1, password2);
         assert_ne!(password1, password3);
     }

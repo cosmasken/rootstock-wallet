@@ -1,6 +1,6 @@
+use crate::security::SecurePassword;
 use crate::types::wallet::{Wallet, WalletData};
 use crate::utils::{constants, helper::Config, table::TableBuilder};
-use crate::security::SecurePassword;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;

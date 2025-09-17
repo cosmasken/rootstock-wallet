@@ -1,7 +1,7 @@
 // src/utils/alchemy.rs
+use crate::security::SecureHttpClient;
 use anyhow::{Result, anyhow};
 use serde_json::Value;
-use crate::security::SecureHttpClient;
 
 pub struct AlchemyClient {
     client: SecureHttpClient,

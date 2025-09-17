@@ -3,9 +3,9 @@
 //! This module provides test helpers and utilities for validating that sensitive
 //! data is properly protected in debug output, logs, and memory operations.
 
-use crate::security::{SecureString, RedactedDebug};
-use std::fmt;
+use crate::security::{RedactedDebug, SecureString};
 use std::collections::HashMap;
+use std::fmt;
 
 /// Mock sensitive data generator for testing
 pub struct MockSensitiveData {
@@ -115,9 +115,7 @@ impl DebugOutputValidator {
     pub fn new() -> Self {
         Self {
             forbidden_patterns: Vec::new(),
-            required_patterns: vec![
-                "[REDACTED]".to_string(),
-            ],
+            required_patterns: vec!["[REDACTED]".to_string()],
         }
     }
 
@@ -153,10 +151,13 @@ impl DebugOutputValidator {
 
         // Check for required redaction patterns (only if we have required patterns)
         if !self.required_patterns.is_empty() {
-            let has_any_redaction = self.required_patterns.iter().any(|pattern| debug_output.contains(pattern))
+            let has_any_redaction = self
+                .required_patterns
+                .iter()
+                .any(|pattern| debug_output.contains(pattern))
                 || debug_output.contains("REDACTED")
                 || debug_output.contains("...");
-            
+
             if !has_any_redaction {
                 missing_redactions.push("No redaction markers found in output".to_string());
             }
@@ -180,18 +181,18 @@ impl DebugOutputValidator {
     pub fn for_wallet_types() -> Self {
         let mock_data = MockSensitiveData::new();
         let mut validator = Self::new();
-        
+
         // Add all mock sensitive data as forbidden patterns
         validator.forbid_patterns(mock_data.private_keys);
         validator.forbid_patterns(mock_data.api_keys);
         validator.forbid_patterns(mock_data.mnemonics);
-        
+
         // Don't forbid addresses and tx hashes completely since they might be partially shown
         // Instead, we'll check that they're not shown in full
         for addr in &mock_data.addresses {
             if addr.len() > 10 {
                 // Forbid the middle part of addresses (they should be truncated)
-                let middle_part = &addr[6..addr.len()-4];
+                let middle_part = &addr[6..addr.len() - 4];
                 if middle_part.len() > 4 {
                     validator.forbid_pattern(middle_part.to_string());
                 }
@@ -229,7 +230,7 @@ impl ValidationResult {
         }
 
         let mut message = String::new();
-        
+
         if !self.violations.is_empty() {
             message.push_str("Security violations:\n");
             for violation in &self.violations {
@@ -252,7 +253,10 @@ impl ValidationResult {
     /// Assert that validation passed, panicking with details if it failed
     pub fn assert_valid(&self) {
         if !self.is_valid {
-            panic!("Debug output validation failed:\n{}", self.error_message().unwrap());
+            panic!(
+                "Debug output validation failed:\n{}",
+                self.error_message().unwrap()
+            );
         }
     }
 }
@@ -284,7 +288,10 @@ impl MemoryInspector {
             let data_str = String::from_utf8_lossy(data);
             for pattern in sensitive_patterns {
                 if data_str.contains(pattern) {
-                    violations.push(format!("Memory '{}' contains sensitive pattern: '{}'", name, pattern));
+                    violations.push(format!(
+                        "Memory '{}' contains sensitive pattern: '{}'",
+                        name, pattern
+                    ));
                 }
             }
         }
@@ -305,19 +312,19 @@ impl MemoryInspector {
     /// Create a test SecureString and verify it clears memory on drop
     pub fn test_secure_string_clearing(&mut self, test_data: &str) -> bool {
         let test_name = "secure_string_test".to_string();
-        
+
         // Create SecureString and track its memory
         {
             let _secure_string = SecureString::new(test_data.to_string());
             // We can't directly access the internal memory of SecureString,
             // but we can test that it implements the expected behavior
-            
+
             // Track the test data for comparison
             self.track_allocation(test_name.clone(), test_data.as_bytes().to_vec());
-            
+
             // SecureString should clear its memory when dropped
         } // SecureString drops here
-        
+
         // In a real implementation, we would check if the memory was actually cleared
         // For testing purposes, we assume the SecureString implementation is correct
         // and focus on testing the behavior we can observe
@@ -357,20 +364,33 @@ impl MockWalletBuilder {
 
     /// Create multiple mock wallets for testing
     pub fn build_multiple_wallets(&self, count: usize) -> Vec<MockWallet> {
-        (0..count).map(|i| {
-            MockWallet {
-                address: self.mock_data.addresses.get(i % self.mock_data.addresses.len())
-                    .unwrap_or(&self.mock_data.addresses[0]).clone(),
-                private_key: SecureString::new(
-                    self.mock_data.private_keys.get(i % self.mock_data.private_keys.len())
-                        .unwrap_or(&self.mock_data.private_keys[0]).clone()
-                ),
-                api_key: self.mock_data.api_keys.get(i % self.mock_data.api_keys.len())
-                    .unwrap_or(&self.mock_data.api_keys[0]).clone(),
-                balance: format!("{}000000000000000000", i + 1), // Different balances
-                network: if i % 2 == 0 { "mainnet" } else { "testnet" }.to_string(),
-            }
-        }).collect()
+        (0..count)
+            .map(|i| {
+                MockWallet {
+                    address: self
+                        .mock_data
+                        .addresses
+                        .get(i % self.mock_data.addresses.len())
+                        .unwrap_or(&self.mock_data.addresses[0])
+                        .clone(),
+                    private_key: SecureString::new(
+                        self.mock_data
+                            .private_keys
+                            .get(i % self.mock_data.private_keys.len())
+                            .unwrap_or(&self.mock_data.private_keys[0])
+                            .clone(),
+                    ),
+                    api_key: self
+                        .mock_data
+                        .api_keys
+                        .get(i % self.mock_data.api_keys.len())
+                        .unwrap_or(&self.mock_data.api_keys[0])
+                        .clone(),
+                    balance: format!("{}000000000000000000", i + 1), // Different balances
+                    network: if i % 2 == 0 { "mainnet" } else { "testnet" }.to_string(),
+                }
+            })
+            .collect()
     }
 }
 
@@ -393,7 +413,10 @@ pub struct MockWallet {
 impl RedactedDebug for MockWallet {
     fn redacted_fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MockWallet")
-            .field("address", &crate::security::redacted_debug::redact_partial(&self.address, 6))
+            .field(
+                "address",
+                &crate::security::redacted_debug::redact_partial(&self.address, 6),
+            )
             .field("private_key", &"[REDACTED]")
             .field("api_key", &"[REDACTED]")
             .field("balance", &self.balance)
@@ -408,7 +431,13 @@ impl fmt::Debug for MockWallet {
         // This is intentionally insecure for testing purposes
         f.debug_struct("MockWallet")
             .field("address", &self.address)
-            .field("private_key", &format!("SecureString({})", self.private_key.expose().unwrap_or("[ERROR]")))
+            .field(
+                "private_key",
+                &format!(
+                    "SecureString({})",
+                    self.private_key.expose().unwrap_or("[ERROR]")
+                ),
+            )
             .field("api_key", &self.api_key)
             .field("balance", &self.balance)
             .field("network", &self.network)
@@ -423,7 +452,7 @@ pub mod test_helpers {
     /// Assert that a debug output contains redaction markers and no sensitive data
     pub fn assert_debug_is_secure<T: fmt::Debug>(value: &T, sensitive_data: &[String]) {
         let debug_output = format!("{:?}", value);
-        
+
         // Check that sensitive data is not present
         for sensitive in sensitive_data {
             assert!(
@@ -443,9 +472,15 @@ pub mod test_helpers {
     }
 
     /// Assert that a RedactedDebug implementation properly redacts sensitive data
-    pub fn assert_redacted_debug_is_secure<T: RedactedDebug + Clone>(value: &T, sensitive_data: &[String]) {
-        let debug_output = format!("{:?}", crate::security::redacted_debug::SecureWrapper::new(value.clone()));
-        
+    pub fn assert_redacted_debug_is_secure<T: RedactedDebug + Clone>(
+        value: &T,
+        sensitive_data: &[String],
+    ) {
+        let debug_output = format!(
+            "{:?}",
+            crate::security::redacted_debug::SecureWrapper::new(value.clone())
+        );
+
         // Check that sensitive data is not present
         for sensitive in sensitive_data {
             assert!(
@@ -467,13 +502,13 @@ pub mod test_helpers {
     /// Test that a SecureString properly clears its memory
     pub fn test_secure_string_memory_clearing(test_data: &str) {
         let mut secure_string = SecureString::new(test_data.to_string());
-        
+
         // Verify the data is accessible before clearing
         assert_eq!(secure_string.expose().unwrap(), test_data);
-        
+
         // Clear the memory
         secure_string.clear();
-        
+
         // Verify the data is cleared (length should be 0)
         assert_eq!(secure_string.len(), 0);
         assert!(secure_string.is_empty());
@@ -487,19 +522,21 @@ pub mod test_helpers {
         T: fmt::Debug + RedactedDebug + Clone,
     {
         let instance = create_instance();
-        
+
         // Test regular Debug output (should be insecure for comparison)
         let debug_output = format!("{:?}", instance);
         println!("Regular Debug output: {}", debug_output);
-        
+
         // Test RedactedDebug output (should be secure)
         assert_redacted_debug_is_secure(&instance, &sensitive_data);
-        
+
         // Test with validator
         let mut validator = DebugOutputValidator::new();
         validator.forbid_patterns(sensitive_data);
-        
-        let result = validator.validate_debug(&crate::security::redacted_debug::SecureWrapper::new(instance.clone()));
+
+        let result = validator.validate_debug(
+            &crate::security::redacted_debug::SecureWrapper::new(instance.clone()),
+        );
         result.assert_valid();
     }
 }
@@ -511,13 +548,13 @@ mod tests {
     #[test]
     fn test_mock_sensitive_data() {
         let mock_data = MockSensitiveData::new();
-        
+
         assert!(!mock_data.private_keys.is_empty());
         assert!(!mock_data.addresses.is_empty());
         assert!(!mock_data.api_keys.is_empty());
         assert!(!mock_data.mnemonics.is_empty());
         assert!(!mock_data.tx_hashes.is_empty());
-        
+
         // Test that we can get random data
         assert!(!mock_data.random_private_key().is_empty());
         assert!(!mock_data.random_address().is_empty());
@@ -531,12 +568,12 @@ mod tests {
         let mut validator = DebugOutputValidator::new();
         validator.forbid_pattern("secret_key".to_string());
         validator.require_pattern("[REDACTED]".to_string());
-        
+
         // Test valid output (contains redaction, no forbidden patterns)
         let valid_output = "Wallet { address: 0x123...456, private_key: [REDACTED] }";
         let result = validator.validate_debug_output(valid_output);
         assert!(result.is_valid);
-        
+
         // Test invalid output (contains forbidden pattern)
         let invalid_output = "Wallet { address: 0x123...456, private_key: secret_key }";
         let result = validator.validate_debug_output(invalid_output);
@@ -547,14 +584,14 @@ mod tests {
     #[test]
     fn test_memory_inspector() {
         let mut inspector = MemoryInspector::new();
-        
+
         // Track some test data
         inspector.track_allocation("test".to_string(), b"sensitive_data".to_vec());
-        
+
         // Check for sensitive patterns
         let violations = inspector.contains_sensitive_data(&["sensitive_data".to_string()]);
         assert!(!violations.is_empty());
-        
+
         // Test with non-sensitive data
         inspector.track_allocation("safe".to_string(), b"public_data".to_vec());
         let violations = inspector.contains_sensitive_data(&["sensitive_data".to_string()]);
@@ -565,13 +602,13 @@ mod tests {
     fn test_mock_wallet_builder() {
         let builder = MockWalletBuilder::new();
         let wallet = builder.build_mock_wallet();
-        
+
         assert!(!wallet.address.is_empty());
         assert!(!wallet.private_key.expose().unwrap().is_empty());
         assert!(!wallet.api_key.is_empty());
         assert!(!wallet.balance.is_empty());
         assert!(!wallet.network.is_empty());
-        
+
         // Test multiple wallets
         let wallets = builder.build_multiple_wallets(3);
         assert_eq!(wallets.len(), 3);
@@ -581,14 +618,14 @@ mod tests {
     fn test_mock_wallet_redacted_debug() {
         let builder = MockWalletBuilder::new();
         let wallet = builder.build_mock_wallet();
-        
+
         // Test that RedactedDebug properly redacts sensitive data
         let mock_data = MockSensitiveData::new();
         let sensitive_data = vec![
             mock_data.random_private_key().to_string(),
             mock_data.random_api_key().to_string(),
         ];
-        
+
         test_helpers::assert_redacted_debug_is_secure(&wallet, &sensitive_data);
     }
 
@@ -600,7 +637,7 @@ mod tests {
             missing_redactions: vec!["Missing [REDACTED]".to_string()],
             debug_output: "test output".to_string(),
         };
-        
+
         let error_msg = result.error_message().unwrap();
         assert!(error_msg.contains("Security violations"));
         assert!(error_msg.contains("Missing redactions"));
@@ -614,7 +651,7 @@ mod tests {
             mock_data.random_private_key().to_string(),
             mock_data.random_api_key().to_string(),
         ];
-        
+
         test_helpers::run_comprehensive_security_tests(
             || MockWalletBuilder::new().build_mock_wallet(),
             sensitive_data,

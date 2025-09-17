@@ -5,13 +5,13 @@
 //! - Sanitizes requests and responses to prevent sensitive data logging
 //! - Provides secure error handling that doesn't expose API keys or sensitive data
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use reqwest::{Client, ClientBuilder, Request, Response};
 use serde::Serialize;
 use std::time::Duration;
 use url::Url;
 
-use crate::security::{sanitize_log_message, is_sensitive_data, redact_private_key};
+use crate::security::{is_sensitive_data, redact_private_key, sanitize_log_message};
 
 /// Secure HTTP client wrapper that enforces TLS and sanitizes requests/responses
 pub struct SecureHttpClient {
@@ -36,9 +36,7 @@ impl SecureHttpClient {
             builder = builder.https_only(true);
         }
 
-        let client = builder
-            .build()
-            .context("Failed to create HTTP client")?;
+        let client = builder.build().context("Failed to create HTTP client")?;
 
         Ok(Self {
             client,
@@ -50,7 +48,8 @@ impl SecureHttpClient {
     pub async fn post_json<T: Serialize>(&self, url: &str, body: &T) -> Result<Response> {
         self.validate_url(url)?;
 
-        let mut request = self.client
+        let mut request = self
+            .client
             .post(url)
             .json(body)
             .build()
@@ -65,7 +64,8 @@ impl SecureHttpClient {
     pub async fn get(&self, url: &str) -> Result<Response> {
         self.validate_url(url)?;
 
-        let mut request = self.client
+        let mut request = self
+            .client
             .get(url)
             .build()
             .context("Failed to build GET request")?;
@@ -79,7 +79,7 @@ impl SecureHttpClient {
     pub async fn send_request(&self, request: Request) -> Result<Response> {
         let method = request.method().clone();
         let url = request.url().clone();
-        
+
         // Log the request (sanitized)
         let sanitized_url = self.sanitize_url(&url);
         log::debug!("Sending {} request to: {}", method, sanitized_url);
@@ -100,11 +100,12 @@ impl SecureHttpClient {
 
     /// Validate that the URL uses HTTPS if TLS enforcement is enabled
     fn validate_url(&self, url: &str) -> Result<()> {
-        let parsed_url = Url::parse(url)
-            .context("Invalid URL")?;
+        let parsed_url = Url::parse(url).context("Invalid URL")?;
 
         if self.enforce_tls && parsed_url.scheme() != "https" {
-            return Err(anyhow!("Insecure HTTP connection attempted. Only HTTPS is allowed."));
+            return Err(anyhow!(
+                "Insecure HTTP connection attempted. Only HTTPS is allowed."
+            ));
         }
 
         Ok(())
@@ -116,9 +117,13 @@ impl SecureHttpClient {
         let headers = request.headers();
         for (name, value) in headers.iter() {
             if let Ok(value_str) = value.to_str()
-                && is_sensitive_data(value_str) {
-                    log::warn!("Potentially sensitive data detected in request header: {}", name);
-                }
+                && is_sensitive_data(value_str)
+            {
+                log::warn!(
+                    "Potentially sensitive data detected in request header: {}",
+                    name
+                );
+            }
         }
 
         // Note: We can't easily modify the request body here without reconstructing it,
@@ -129,12 +134,13 @@ impl SecureHttpClient {
     /// Sanitize URL for logging by redacting API keys and sensitive parameters
     fn sanitize_url(&self, url: &Url) -> String {
         let mut sanitized = url.clone();
-        
+
         // Clear query parameters that might contain sensitive data
         if let Some(query) = url.query()
-            && is_sensitive_data(query) {
-                sanitized.set_query(Some("[REDACTED]"));
-            }
+            && is_sensitive_data(query)
+        {
+            sanitized.set_query(Some("[REDACTED]"));
+        }
 
         // Redact API keys from the path
         let path = sanitized.path();
@@ -165,7 +171,7 @@ impl SecureHttpClient {
     /// Sanitize error messages to prevent sensitive data exposure
     fn sanitize_error_message(&self, error_msg: &str) -> String {
         let mut sanitized = sanitize_log_message(error_msg);
-        
+
         // Additional sanitization for common HTTP error patterns
         if sanitized.contains("api_key") || sanitized.contains("apikey") {
             sanitized = sanitized.replace("api_key", "[REDACTED]");
@@ -192,10 +198,10 @@ mod tests {
     #[test]
     fn test_url_validation_https_required() {
         let client = SecureHttpClient::with_config(true).unwrap();
-        
+
         // HTTPS should be allowed
         assert!(client.validate_url("https://example.com").is_ok());
-        
+
         // HTTP should be rejected when TLS is enforced
         assert!(client.validate_url("http://example.com").is_err());
     }
@@ -203,7 +209,7 @@ mod tests {
     #[test]
     fn test_url_validation_http_allowed() {
         let client = SecureHttpClient::with_config(false).unwrap();
-        
+
         // Both should be allowed when TLS enforcement is disabled
         assert!(client.validate_url("https://example.com").is_ok());
         assert!(client.validate_url("http://example.com").is_ok());
@@ -213,7 +219,7 @@ mod tests {
     fn test_url_sanitization() {
         let client = SecureHttpClient::new().unwrap();
         let url = Url::parse("https://rootstock-mainnet.g.alchemy.com/v2/abc123def456").unwrap();
-        
+
         let sanitized = client.sanitize_url(&url);
         assert!(sanitized.contains("[API_KEY_REDACTED]"));
         assert!(!sanitized.contains("abc123def456"));
@@ -223,7 +229,7 @@ mod tests {
     fn test_error_message_sanitization() {
         let client = SecureHttpClient::new().unwrap();
         let error_msg = "Request failed with api_key: abc123def456";
-        
+
         let sanitized = client.sanitize_error_message(error_msg);
         assert!(sanitized.contains("[REDACTED]"));
         assert!(!sanitized.contains("abc123def456"));

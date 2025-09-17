@@ -23,5 +23,7 @@ pub use secure_http_client::SecureHttpClient;
 pub use secure_logging::{
     is_sensitive_data, redact_address, redact_private_key, sanitize_log_message,
 };
-pub use secure_password::{SecurePassword, prompt_secure_password, prompt_secure_password_with_confirmation};
+pub use secure_password::{
+    SecurePassword, prompt_secure_password, prompt_secure_password_with_confirmation,
+};
 pub use secure_string::SecureString;

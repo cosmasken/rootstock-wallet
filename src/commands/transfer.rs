@@ -1,9 +1,9 @@
 use crate::config::ConfigManager;
+use crate::security::prompt_secure_password;
 use crate::types::wallet::WalletData;
 use crate::utils::constants;
 use crate::utils::eth::EthClient;
 use crate::utils::helper::Config as HelperConfig;
-use crate::security::prompt_secure_password;
 use anyhow::{Result, anyhow};
 use clap::Parser;
 use colored::Colorize;

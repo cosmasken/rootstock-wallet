@@ -19,7 +19,7 @@ use std::fmt;
 use zeroize::Zeroize;
 
 use crate::security::redacted_debug::RedactedDebug;
-use crate::security::{SecureString, SecurePassword};
+use crate::security::{SecurePassword, SecureString};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Wallet {
@@ -78,23 +78,35 @@ impl Wallet {
         buffer.extend(std::iter::repeat_n(pad_len as u8, pad_len));
         let encryptor = Encryptor::<Aes256>::new(&key.into(), &iv.into());
         let _ = encryptor.encrypt_padded_mut::<Pkcs7>(&mut buffer, pos);
-        
+
         // Clear the derived key from memory
         key.zeroize();
-        
+
         Ok((buffer, iv.to_vec(), salt.to_vec()))
     }
 
     pub fn decrypt_private_key(&self, password: &SecurePassword) -> Result<String, anyhow::Error> {
         // Decode Base64-encoded salt, IV, and encrypted key
         let salt = STANDARD
-            .decode(self.salt.expose().map_err(|e| anyhow!("Invalid UTF-8 in salt: {}", e))?)
+            .decode(
+                self.salt
+                    .expose()
+                    .map_err(|e| anyhow!("Invalid UTF-8 in salt: {}", e))?,
+            )
             .map_err(|e| anyhow!("Failed to decode salt: {}", e))?;
         let iv = STANDARD
-            .decode(self.iv.expose().map_err(|e| anyhow!("Invalid UTF-8 in IV: {}", e))?)
+            .decode(
+                self.iv
+                    .expose()
+                    .map_err(|e| anyhow!("Invalid UTF-8 in IV: {}", e))?,
+            )
             .map_err(|e| anyhow!("Failed to decode IV: {}", e))?;
         let encrypted_key = STANDARD
-            .decode(self.encrypted_private_key.expose().map_err(|e| anyhow!("Invalid UTF-8 in encrypted key: {}", e))?)
+            .decode(
+                self.encrypted_private_key
+                    .expose()
+                    .map_err(|e| anyhow!("Invalid UTF-8 in encrypted key: {}", e))?,
+            )
             .map_err(|e| anyhow!("Failed to decode encrypted private key: {}", e))?;
 
         // Validate lengths
@@ -140,7 +152,7 @@ impl Wallet {
 
         // Clear the derived key from memory
         key.zeroize();
-        
+
         // Return the decrypted private key as a 0x-prefixed hex string
         Ok(format!("0x{}", hex::encode(decrypted)))
     }
