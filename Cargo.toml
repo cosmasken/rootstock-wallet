@@ -36,7 +36,7 @@ anyhow = "1.0.99"
 chrono = { version = "0.4.41", features = ["serde"] }
 prettytable-rs = "0.10.0"
 dirs = "6.0.0"
-toml = "0.8.23"
+toml = "0.9.7"
 url = "2.5.7"
 aes = "0.8.4"
 block-modes = "0.9.1"
